@@ -1,0 +1,12 @@
+# 只保留 SD Dashboard 相關檔案，其餘全部排除
+*
+
+# 允許這些檔案追蹤
+!.gitignore
+!sd-dashboard.html
+!manifest.json
+!sw.js
+!icon-192.png
+!icon-512.png
+!generate-icons.html
+!serve.bat

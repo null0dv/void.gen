@@ -1,0 +1,15 @@
+{
+  "name": "SD 生成面板",
+  "short_name": "SD Panel",
+  "description": "Stable Diffusion ComfyUI 本地生成儀表板",
+  "start_url": "./sd-dashboard.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0d0d0d",
+  "theme_color": "#7c3aed",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

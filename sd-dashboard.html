@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>SD 生成面板</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7c3aed">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SD Panel">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d0d0d; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+
+  header { background: linear-gradient(135deg, #1a1a2e, #16213e); padding: 14px 24px;
+    border-bottom: 1px solid #7c3aed; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  header h1 { font-size: 1.4rem; color: #a78bfa; }
+  .badge { background: #7c3aed; color: #fff; font-size: 0.7rem; padding: 2px 8px;
+    border-radius: 99px; vertical-align: middle; }
+
+  .backend-group { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .be-btn { padding: 5px 14px; border: 1px solid #374151; border-radius: 6px;
+    background: #1f2937; color: #9ca3af; cursor: pointer; font-size: 0.8rem; transition: all .15s; }
+  .be-btn.active { background: #7c3aed; color: #fff; border-color: #7c3aed; }
+  .api-dot { font-size: 1rem; }
+  .api-label { font-size: 0.78rem; color: #6b7280; }
+
+  .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 0; height: calc(100vh - 60px); }
+  .panel { display: flex; flex-direction: column; overflow: hidden; }
+  .panel-title { background: #111827; padding: 9px 20px; font-size: 0.83rem;
+    color: #9ca3af; border-bottom: 1px solid #1f2937; letter-spacing: .05em; }
+
+  #editor { flex: 1; background: #111; color: #e2e8f0; border: none; outline: none;
+    padding: 20px; font-family: 'Cascadia Code','Consolas',monospace; font-size: 13px;
+    line-height: 1.7; resize: none; border-right: 1px solid #1f2937; }
+
+  .right-panel { display: flex; flex-direction: column; }
+  .controls { background: #111827; padding: 12px 18px; display: flex; gap: 8px;
+    flex-wrap: wrap; align-items: center; border-bottom: 1px solid #1f2937; }
+  .btn { padding: 7px 16px; border: none; border-radius: 6px; cursor: pointer;
+    font-size: 0.83rem; font-weight: 600; transition: all .2s; }
+  .btn-primary { background: #7c3aed; color: #fff; }
+  .btn-primary:hover { background: #6d28d9; }
+  .btn-secondary { background: #1f2937; color: #9ca3af; border: 1px solid #374151; }
+  .btn-secondary:hover { background: #374151; color: #e5e7eb; }
+
+  /* ── 模型設定面板 ── */
+  #settings-panel {
+    display: flex; flex-direction: column; gap: 0;
+    background: #0f172a; border-bottom: 1px solid #1f2937;
+  }
+  .setting-section {
+    padding: 10px 18px; border-bottom: 1px solid #1f2937;
+  }
+  .setting-label {
+    font-size: 0.7rem; color: #6b7280; letter-spacing: .08em;
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  .setting-row { display: flex; gap: 8px; align-items: center; }
+  .setting-select {
+    flex: 1; background: #1f2937; color: #e5e7eb; border: 1px solid #374151;
+    border-radius: 8px; padding: 7px 10px; font-size: 0.83rem; min-width: 0;
+  }
+  .setting-select:focus { outline: none; border-color: #7c3aed; }
+  .refresh-btn {
+    background: #1f2937; color: #6b7280; border: 1px solid #374151;
+    border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 0.85rem;
+  }
+  .refresh-btn:hover { color: #e5e7eb; border-color: #4b5563; }
+  .strength-input {
+    width: 62px; background: #1f2937; color: #e5e7eb; border: 1px solid #374151;
+    border-radius: 8px; padding: 7px 8px; font-size: 0.83rem; text-align: center;
+  }
+  .strength-slider {
+    flex: 1; accent-color: #7c3aed; cursor: pointer;
+  }
+  .lora-grid { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; }
+  .sampler-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .preset-btn {
+    background: #1f2937; border: 1px solid #374151; border-radius: 8px;
+    color: #9ca3af; cursor: pointer; padding: 5px 10px; font-size: 0.72rem;
+    line-height: 1.4; text-align: center; transition: all .15s;
+  }
+  .preset-btn span { font-size: 0.65rem; color: #6b7280; display:block; }
+  .pipeline-block { background:#111; border:1px solid #1f2937; border-radius:8px; overflow:hidden; }
+  .pipeline-toggle { display:flex; align-items:center; gap:8px; padding:9px 12px; cursor:pointer; }
+  .pipeline-toggle input[type=checkbox] { accent-color:#7c3aed; width:15px; height:15px; cursor:pointer; }
+  .pipeline-name { font-size:0.83rem; font-weight:600; color:#e5e7eb; }
+  .pipeline-desc { font-size:0.7rem; color:#6b7280; margin-left:auto; }
+  .pipeline-inner { padding:10px 12px; border-top:1px solid #1f2937; background:#0d0d0d; }
+  .preset-btn:hover, .preset-btn.active { background: #4c1d95; border-color: #7c3aed; color: #e9d5ff; }
+  .preset-btn.active span { color: #c4b5fd; }
+
+  .status-bar { padding: 7px 18px; background: #0f172a; font-size: 0.8rem;
+    border-bottom: 1px solid #1f2937; min-height: 32px; }
+  .status-ok  { color: #34d399; }
+  .status-err { color: #f87171; }
+  .status-run { color: #fbbf24; }
+
+  .tabs { display: flex; background: #111827; border-bottom: 1px solid #1f2937; }
+  .tab { padding: 8px 18px; font-size: 0.82rem; cursor: pointer; color: #6b7280;
+    border-bottom: 2px solid transparent; transition: all .2s; }
+  .tab.active { color: #a78bfa; border-bottom-color: #7c3aed; }
+
+  .task-list { flex: 1; overflow-y: auto; padding: 12px 18px; }
+  .task-item { background: #1f2937; border-radius: 8px; padding: 11px 13px;
+    margin-bottom: 8px; border-left: 3px solid #374151; }
+  .task-item.pending { border-left-color: #6b7280; }
+  .task-item.running { border-left-color: #fbbf24; }
+  .task-item.done    { border-left-color: #34d399; }
+  .task-item.error   { border-left-color: #f87171; }
+  .task-title { font-size: 0.84rem; font-weight: 600; margin-bottom: 3px; }
+  .task-meta  { font-size: 0.73rem; color: #6b7280; }
+  .task-status { float: right; font-size: 0.73rem; }
+
+  #gallery { flex: 1; overflow-y: auto; padding: 14px; display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; align-content: start; }
+  .img-card { background: #1f2937; border-radius: 8px; overflow: hidden;
+    border: 1px solid #374151; transition: transform .2s; }
+  .img-card:hover { transform: scale(1.03); border-color: #7c3aed; }
+  .img-card img { width: 100%; display: block; }
+  .img-card .img-label { padding: 5px 8px; font-size: 0.71rem; color: #9ca3af;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .empty-msg { color: #4b5563; text-align: center; margin-top: 40px; font-size: 0.88rem; }
+
+  /* ── 左側任務編輯器 ── */
+  .add-task-btn {
+    background: #7c3aed; color: #fff; border: none; border-radius: 6px;
+    padding: 5px 13px; font-size: 0.78rem; cursor: pointer; font-weight: 600;
+    transition: background .15s;
+  }
+  .add-task-btn:hover { background: #6d28d9; }
+
+  #task-tabs { scrollbar-width: thin; scrollbar-color: #374151 transparent; }
+  .task-tab {
+    display: flex; align-items: center; gap: 5px;
+    padding: 9px 14px; cursor: pointer; white-space: nowrap;
+    font-size: 0.8rem; color: #6b7280; border-bottom: 2px solid transparent;
+    transition: all .15s; flex-shrink: 0; user-select: none;
+  }
+  .task-tab.active { color: #a78bfa; border-bottom-color: #7c3aed; background: #1a1a2e; }
+  .task-tab:hover:not(.active) { color: #e5e7eb; }
+  .task-tab-del {
+    color: #374151; font-size: 0.82rem; line-height: 1; padding: 1px 4px;
+    border-radius: 3px; transition: all .15s;
+  }
+  .task-tab-del:hover { color: #f87171; background: #1f2937; }
+
+  .field-label {
+    font-size: 0.7rem; color: #6b7280; letter-spacing: .08em;
+    text-transform: uppercase; margin-bottom: 5px;
+  }
+  .field-input {
+    width: 100%; background: #1f2937; color: #e5e7eb; border: 1px solid #374151;
+    border-radius: 8px; padding: 8px 10px; font-size: 0.83rem;
+  }
+  .field-input:focus { outline: none; border-color: #7c3aed; background: #111827; }
+  textarea.field-input {
+    resize: vertical; font-family: 'Segoe UI', sans-serif; line-height: 1.6;
+    min-height: 80px;
+  }
+
+  /* Stop button */
+  .btn-danger { background: #991b1b; color: #fff; }
+  .btn-danger:hover { background: #7f1d1d; }
+
+  /* Seed lock */
+  .seed-lock-btn {
+    background: #1f2937; border: 1px solid #374151; border-radius: 8px;
+    padding: 6px 10px; cursor: pointer; font-size: 0.9rem; transition: all .15s; min-width: 36px;
+  }
+  .seed-lock-btn.locked { background: #4c1d95; border-color: #7c3aed; }
+  .seed-lock-btn:hover { border-color: #4b5563; }
+
+  /* Prompt tag chips */
+  .tag-section { margin-top: 6px; }
+  .tag-group { margin-bottom: 6px; }
+  .tag-group-label { font-size: 0.63rem; color: #374151; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 3px; }
+  .tag-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .tag-chip {
+    background: #111827; border: 1px solid #1f2937; border-radius: 99px;
+    padding: 2px 9px; font-size: 0.7rem; color: #6b7280; cursor: pointer; transition: all .15s;
+    user-select: none;
+  }
+  .tag-chip:hover { background: #4c1d95; border-color: #7c3aed; color: #e9d5ff; }
+
+  /* Gallery metadata overlay */
+  .img-card { position: relative; }
+  .img-meta {
+    display: none; position: absolute; inset: 0;
+    background: rgba(0,0,0,0.88); padding: 10px; overflow-y: auto;
+    font-size: 0.72rem; color: #e5e7eb; border-radius: 8px; z-index: 2;
+  }
+  .img-meta-row { margin-bottom: 6px; line-height: 1.4; word-break: break-word; }
+  .img-meta-row b { color: #a78bfa; display: block; font-size: 0.63rem; text-transform: uppercase; margin-bottom: 1px; }
+  .img-card:hover .img-meta { display: block; }
+
+  /* Collapsible setting sections */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; user-select: none;
+  }
+  .section-header:hover .section-toggle { color: #e5e7eb; }
+  .section-toggle {
+    color: #4b5563; font-size: 0.75rem; transition: transform .2s, color .15s;
+    flex-shrink: 0;
+  }
+  .section-toggle.open { transform: rotate(180deg); }
+  .section-body { overflow: hidden; transition: none; }
+
+  /* Live preview next to progress bar */
+  #preview-img {
+    width: 60px; height: 60px; object-fit: cover; border-radius: 6px;
+    border: 1px solid #374151; flex-shrink: 0; display: none;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>✦</div>
+  <h1>Stable Diffusion 生成面板 <span class="badge">ComfyUI</span></h1>
+  <div class="backend-group">
+    <span class="api-label">http://127.0.0.1:8188</span>
+    <span class="api-dot" id="api-dot" style="color:#6b7280;">●</span>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- 左：結構化任務編輯器 -->
+  <div class="panel">
+    <div class="panel-title" style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px">
+      <span>📝 任務列表</span>
+      <button class="add-task-btn" onclick="addTask()">＋ 新增任務</button>
+    </div>
+
+    <!-- 任務分頁 -->
+    <div id="task-tabs" style="display:flex;overflow-x:auto;background:#111827;border-bottom:1px solid #1f2937;min-height:38px"></div>
+
+    <!-- 任務編輯區 -->
+    <div id="task-editor" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px">
+      <div class="empty-msg">點「＋ 新增任務」開始</div>
+    </div>
+
+    <!-- 隱藏的 textarea 保持相容性 -->
+    <textarea id="editor" style="display:none" spellcheck="false"></textarea>
+  </div>
+
+  <!-- 右：控制 + 結果 -->
+  <div class="right-panel">
+    <div class="controls">
+      <button id="generate-btn" class="btn btn-primary" onclick="startGenerate()">▶ 開始生成</button>
+      <button id="stop-btn" class="btn btn-danger" onclick="stopGenerate()" style="display:none">■ 停止</button>
+      <button class="btn btn-secondary" onclick="saveMd()">💾 儲存</button>
+      <button class="btn btn-secondary" onclick="checkApi()">🔌 檢查連線</button>
+      <button class="btn btn-secondary" onclick="clearGallery()">🗑 清除</button>
+      <button class="btn btn-secondary" onclick="resetMd()">↺ 重置</button>
+    </div>
+
+    <!-- ComfyUI 模型設定面板 -->
+    <div id="settings-panel">
+
+      <!-- 基礎模型 -->
+      <div class="setting-section">
+        <div class="setting-label">基礎模型 Checkpoint</div>
+        <div class="setting-row">
+          <select id="model-select" class="setting-select"><option value="">載入中…</option></select>
+          <button class="refresh-btn" onclick="loadComfyModels()">↻</button>
+        </div>
+      </div>
+
+      <!-- Refiner 模型 -->
+      <div class="setting-section">
+        <div class="setting-label">Refiner 模型（第二層）</div>
+        <div class="setting-row">
+          <select id="refiner-select" class="setting-select"
+            onchange="document.getElementById('refiner-switch-wrap').style.display=this.value?'block':'none'">
+            <option value="">不使用</option>
+          </select>
+          <button class="refresh-btn" onclick="loadRefinerModels()">↻</button>
+        </div>
+        <div id="refiner-switch-wrap" style="display:none;margin-top:10px">
+          <div class="setting-label">切換點 — Base 跑前 <span id="switch-pct" style="color:#a78bfa">80</span>%，Refiner 跑後 <span id="switch-pct2" style="color:#c084fc">20</span>%</div>
+          <input id="switch-slider" class="strength-slider" type="range" min="10" max="90" step="5" value="80"
+            oninput="updateSwitch(this.value)" style="width:100%;margin-top:6px">
+        </div>
+      </div>
+
+      <!-- LoRA -->
+      <div class="setting-section">
+        <div class="section-header" onclick="toggleSection('lora-body','lora-arrow')">
+          <div class="setting-label" style="margin:0">LoRA（最多 6 個）</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <button class="refresh-btn" onclick="event.stopPropagation();loadComfyLoras()" style="font-size:0.75rem;padding:3px 8px">↻</button>
+            <span id="lora-arrow" class="section-toggle open">▼</span>
+          </div>
+        </div>
+        <div id="lora-body" class="section-body" style="margin-top:6px">
+          <div id="lora-slots"></div>
+        </div>
+      </div>
+
+      <!-- Steps + CFG -->
+      <div class="setting-section">
+        <div class="sampler-grid">
+          <div>
+            <div class="setting-label">Steps <span id="steps-val" style="color:#a78bfa">20</span></div>
+            <input id="steps-slider" class="strength-slider" type="range" min="1" max="150" step="1" value="20"
+              oninput="syncNum('steps')" style="width:100%">
+            <input id="steps-num" class="strength-input" type="number" value="20" min="1" max="150" step="1"
+              style="width:100%;margin-top:4px" oninput="syncSlider('steps')">
+          </div>
+          <div>
+            <div class="setting-label">CFG Scale <span id="cfg-val" style="color:#a78bfa">7</span></div>
+            <input id="cfg-slider" class="strength-slider" type="range" min="1" max="30" step="0.5" value="7"
+              oninput="syncNum('cfg')" style="width:100%">
+            <input id="cfg-num" class="strength-input" type="number" value="7" min="1" max="30" step="0.5"
+              style="width:100%;margin-top:4px" oninput="syncSlider('cfg')">
+          </div>
+        </div>
+      </div>
+
+      <!-- Seed -->
+      <div class="setting-section">
+        <div class="setting-label">Seed</div>
+        <div class="setting-row">
+          <input id="seed-input" class="strength-input" type="number" value="0" min="0" max="4294967295" step="1" style="flex:1;width:auto">
+          <button id="seed-lock-btn" class="seed-lock-btn" onclick="toggleSeedLock()" title="鎖定/解鎖 Seed">🎲</button>
+          <button class="refresh-btn" onclick="randomizeSeed()" title="隨機新 Seed">↻</button>
+        </div>
+        <div id="seed-status" style="font-size:0.7rem;color:#4b5563;margin-top:4px">每次生成隨機 Seed</div>
+      </div>
+
+      <!-- 採樣器 + 排程器 -->
+      <div class="setting-section">
+        <div class="setting-label">採樣器 / 排程器</div>
+        <div class="sampler-grid">
+          <select id="sampler-select" class="setting-select">
+            <option value="euler_ancestral">Euler a</option>
+            <option value="euler">Euler</option>
+            <option value="dpmpp_2m">DPM++ 2M</option>
+            <option value="dpmpp_2s_ancestral">DPM++ 2S a</option>
+            <option value="dpmpp_sde">DPM++ SDE</option>
+            <option value="ddim">DDIM</option>
+            <option value="uni_pc">UniPC</option>
+          </select>
+          <select id="scheduler-select" class="setting-select">
+            <option value="karras">Karras</option>
+            <option value="normal">Normal</option>
+            <option value="exponential">Exponential</option>
+            <option value="sgm_uniform">SGM Uniform</option>
+            <option value="simple">Simple</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- VAE -->
+      <div class="setting-section">
+        <div class="setting-label">VAE 模型</div>
+        <div class="setting-row">
+          <select id="vae-select" class="setting-select">
+            <option value="">內建（Checkpoint 預設）</option>
+          </select>
+          <button class="refresh-btn" onclick="loadComfyVAE()">↻</button>
+        </div>
+      </div>
+
+      <!-- 尺寸 -->
+      <div class="setting-section">
+        <div class="setting-label">輸出尺寸</div>
+        <div class="setting-row" style="gap:6px;flex-wrap:wrap">
+          <input id="size-w" class="strength-input" type="number" value="1024" min="64" max="2048" step="64" style="width:72px" oninput="updateRatioLabel()">
+          <span style="color:#6b7280;font-size:1rem">×</span>
+          <input id="size-h" class="strength-input" type="number" value="1024" min="64" max="2048" step="64" style="width:72px" oninput="updateRatioLabel()">
+          <button class="refresh-btn" onclick="flipSize()" title="直橫切換" style="font-size:1rem;padding:5px 10px">⇄</button>
+          <span id="ratio-label" style="font-size:0.75rem;color:#6b7280;align-self:center">1:1</span>
+        </div>
+        <div class="setting-row" style="margin-top:8px;gap:6px;flex-wrap:wrap">
+          <button class="preset-btn" onclick="setSize(1024,1024)">1:1<br><span>1024</span></button>
+          <button class="preset-btn" onclick="setSize(768,1344)">9:16<br><span>768×1344</span></button>
+          <button class="preset-btn" onclick="setSize(1344,768)">16:9<br><span>1344×768</span></button>
+          <button class="preset-btn" onclick="setSize(832,1216)">3:5<br><span>832×1216</span></button>
+          <button class="preset-btn" onclick="setSize(1216,832)">5:3<br><span>1216×832</span></button>
+          <button class="preset-btn" onclick="setSize(896,1152)">3:4<br><span>896×1152</span></button>
+        </div>
+      </div>
+
+      <!-- 生成管線 -->
+      <div class="setting-section">
+        <div class="section-header" onclick="toggleSection('pipeline-body','pipeline-arrow')">
+          <div class="setting-label" style="margin:0">生成管線</div>
+          <span id="pipeline-arrow" class="section-toggle open">▼</span>
+        </div>
+        <div id="pipeline-body" class="section-body" style="margin-top:8px">
+
+        <!-- Hi-res Fix -->
+        <div class="pipeline-block">
+          <label class="pipeline-toggle">
+            <input type="checkbox" id="hires-enable" onchange="togglePipeline('hires')">
+            <span class="pipeline-name">Hi-res Fix</span>
+            <span class="pipeline-desc">潛空間放大 + 二次去噪，細節更清晰</span>
+          </label>
+          <div id="hires-settings" class="pipeline-inner" style="display:none">
+            <div class="sampler-grid" style="margin-bottom:8px">
+              <div>
+                <div class="setting-label">放大倍率</div>
+                <div style="display:flex;gap:4px;margin-top:4px">
+                  <button class="preset-btn" onclick="setHiresScale(1.25)">1.25×</button>
+                  <button class="preset-btn active" onclick="setHiresScale(1.5)">1.5×</button>
+                  <button class="preset-btn" onclick="setHiresScale(2.0)">2×</button>
+                </div>
+                <input type="hidden" id="hires-scale" value="1.5">
+              </div>
+              <div>
+                <div class="setting-label">步數 <span id="hires-steps-val" style="color:#a78bfa">15</span></div>
+                <input id="hires-steps-slider" class="strength-slider" type="range" min="5" max="50" step="1" value="15"
+                  oninput="syncNum('hires-steps')" style="width:100%;margin-top:8px">
+                <input id="hires-steps-num" class="strength-input" type="number" value="15" min="5" max="50"
+                  style="width:100%;margin-top:4px" oninput="syncSlider('hires-steps')">
+              </div>
+            </div>
+            <div class="setting-label">去噪強度 <span id="hires-denoise-val" style="color:#a78bfa">0.5</span></div>
+            <input id="hires-denoise-slider" class="strength-slider" type="range" min="0.1" max="0.9" step="0.05" value="0.5"
+              oninput="syncNum('hires-denoise')" style="width:100%;margin-top:6px">
+            <input id="hires-denoise-num" class="strength-input" type="number" value="0.5" min="0.1" max="0.9" step="0.05"
+              style="width:60px;margin-top:4px" oninput="syncSlider('hires-denoise')">
+          </div>
+        </div>
+
+        <!-- Upscaler -->
+        <div class="pipeline-block" style="margin-top:8px">
+          <label class="pipeline-toggle">
+            <input type="checkbox" id="upscale-enable" onchange="togglePipeline('upscale')">
+            <span class="pipeline-name">Upscaler</span>
+            <span class="pipeline-desc">像素空間放大輸出尺寸</span>
+          </label>
+          <div id="upscale-settings" class="pipeline-inner" style="display:none">
+            <div class="setting-label" style="margin-bottom:6px">Upscale 模型</div>
+            <div class="setting-row">
+              <select id="upscale-model-select" class="setting-select">
+                <option value="">簡單插值（無模型）</option>
+              </select>
+              <button class="refresh-btn" onclick="loadUpscaleModels()">↻</button>
+            </div>
+            <div style="margin-top:8px">
+              <div class="setting-label">倍率</div>
+              <div style="display:flex;gap:4px;margin-top:4px">
+                <button class="preset-btn" onclick="setUpscaleFactor(2)">2×</button>
+                <button class="preset-btn active" onclick="setUpscaleFactor(4)">4×</button>
+              </div>
+              <input type="hidden" id="upscale-factor" value="4">
+            </div>
+          </div>
+        </div>
+
+        </div><!-- /pipeline-body -->
+      </div>
+
+    </div>
+    <div class="status-bar" id="status">等待中 — 請選擇後端並檢查連線</div>
+
+    <div id="progress-wrap" style="display:none;padding:8px 18px;background:#0f172a;border-bottom:1px solid #1f2937">
+      <div style="display:flex;align-items:center;gap:10px">
+        <img id="preview-img" alt="preview">
+        <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="flex:1;background:#1f2937;border-radius:99px;height:7px;overflow:hidden">
+              <div id="progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:99px;transition:width .2s"></div>
+            </div>
+            <span id="progress-text" style="font-size:0.75rem;color:#a78bfa;min-width:36px;text-align:right;font-weight:600">0%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('tasks')">任務列表</div>
+      <div class="tab"        onclick="showTab('gallery')">圖片結果</div>
+    </div>
+
+    <div id="tab-tasks"   class="task-list"><div class="empty-msg">解析 MD 後任務會顯示在這裡</div></div>
+    <div id="tab-gallery" class="task-list" style="display:none"><div id="gallery"></div></div>
+  </div>
+</div>
+
+<script>
+// ── 預設 MD ───────────────────────────────────────────────────
+const DEFAULT_MD = `# Stable Diffusion 圖片生成清單
+
+## 圖片 1 — 山中日落
+- prompt: beautiful sunset over mountains, golden hour, photorealistic, high detail, 8k
+- negative: blurry, low quality, watermark
+- steps: 25
+- cfg: 7
+- size: 512x512
+
+## 圖片 2 — 動漫少女
+- prompt: anime girl with blue hair, school uniform, cherry blossom background, detailed eyes
+- negative: bad anatomy, extra fingers, low quality
+- steps: 30
+- cfg: 7.5
+- size: 512x768
+
+## 圖片 3 — 賽博龐克城市
+- prompt: cyberpunk city night, neon lights, rain, futuristic buildings, cinematic
+- negative: daytime, low quality, cartoon
+- steps: 25
+- cfg: 8
+- size: 768x512
+`;
+
+// ── API ───────────────────────────────────────────────────────
+const COMFY_API = "http://127.0.0.1:8188";
+
+// ── UI 工具 ───────────────────────────────────────────────────
+const editor = document.getElementById("editor");
+const _stored = localStorage.getItem("sd-md");
+editor.value = (_stored && _stored.includes("## ")) ? _stored : DEFAULT_MD;
+
+function showTab(name) {
+  document.getElementById("tab-tasks").style.display   = name === "tasks"   ? "" : "none";
+  document.getElementById("tab-gallery").style.display = name === "gallery" ? "" : "none";
+  document.querySelectorAll(".tab").forEach((t, i) => {
+    t.classList.toggle("active", (i === 0 && name === "tasks") || (i === 1 && name === "gallery"));
+  });
+}
+
+function setStatus(msg, type = "") {
+  const el = document.getElementById("status");
+  el.textContent = msg;
+  el.className = "status-bar" + (type ? " status-" + type : "");
+}
+
+function toggleSection(bodyId, arrowId) {
+  const body = document.getElementById(bodyId);
+  const arrow = document.getElementById(arrowId);
+  const open = body.style.display !== "none";
+  body.style.display = open ? "none" : "";
+  arrow.classList.toggle("open", !open);
+}
+
+function togglePipeline(id) {
+  const on = document.getElementById(id + "-enable").checked;
+  document.getElementById(id + "-settings").style.display = on ? "block" : "none";
+}
+function setHiresScale(v) {
+  document.getElementById("hires-scale").value = v;
+  document.querySelectorAll("#hires-settings .preset-btn").forEach(b =>
+    b.classList.toggle("active", b.textContent.trim().startsWith(v)));
+}
+function setUpscaleFactor(v) {
+  document.getElementById("upscale-factor").value = v;
+  document.querySelectorAll("#upscale-settings .preset-btn").forEach(b =>
+    b.classList.toggle("active", b.textContent.trim() === v + "×"));
+}
+async function loadUpscaleModels() {
+  const sel = document.getElementById("upscale-model-select");
+  sel.innerHTML = `<option value="">載入中…</option>`;
+  try {
+    // 優先用 /models/upscale_models（較快），fallback 用 object_info
+    let models = [];
+    const r1 = await fetch(`${COMFY_API}/models/upscale_models`, { signal: AbortSignal.timeout(8000) });
+    if (r1.ok) {
+      models = await r1.json();
+    } else {
+      const r2 = await fetch(`${COMFY_API}/object_info/UpscaleModelLoader`, { signal: AbortSignal.timeout(8000) });
+      const data = await r2.json();
+      models = data?.UpscaleModelLoader?.input?.required?.model_name?.[0] || [];
+    }
+    sel.innerHTML = `<option value="">簡單插值（無模型）</option>` +
+      (models.length ? models.map(m => `<option value="${m}">${m}</option>`).join("") : "");
+    if (!models.length) sel.options[0].text = "找不到模型 — 請重啟 ComfyUI";
+  } catch (e) {
+    sel.innerHTML = `<option value="">錯誤: ${e.message}</option>`;
+  }
+}
+
+function setSize(w, h) {
+  document.getElementById("size-w").value = w;
+  document.getElementById("size-h").value = h;
+  updateRatioLabel();
+  document.querySelectorAll(".preset-btn").forEach(b => {
+    b.classList.toggle("active", b.onclick?.toString().includes(`${w},${h}`));
+  });
+}
+function flipSize() {
+  const w = document.getElementById("size-w");
+  const h = document.getElementById("size-h");
+  [w.value, h.value] = [h.value, w.value];
+  updateRatioLabel();
+}
+function updateRatioLabel() {
+  const w = parseInt(document.getElementById("size-w").value) || 1;
+  const h = parseInt(document.getElementById("size-h").value) || 1;
+  const g = (a, b) => b === 0 ? a : g(b, a % b);
+  const d = g(w, h);
+  document.getElementById("ratio-label").textContent = `${w/d}:${h/d}`;
+}
+
+function syncNum(id) {
+  const v = document.getElementById(id + "-slider").value;
+  document.getElementById(id + "-num").value = v;
+  document.getElementById(id + "-val").textContent = v;
+}
+function syncSlider(id) {
+  const v = document.getElementById(id + "-num").value;
+  document.getElementById(id + "-slider").value = v;
+  document.getElementById(id + "-val").textContent = v;
+}
+
+function saveMd() {
+  localStorage.setItem("sd-tasks", JSON.stringify(tasks));
+  setStatus("✅ 已儲存", "ok");
+}
+
+function resetMd() {
+  localStorage.removeItem("sd-tasks");
+  tasks = [{ title: "圖片 1", prompt: "", negative: "low quality, blurry", batch: 1 }];
+  activeTask = 0;
+  renderTaskTabs();
+  renderTaskEditor();
+  renderTasks(tasks);
+  setStatus("↺ 已重置", "ok");
+}
+
+// ── 任務編輯器 ────────────────────────────────────────────────
+let tasks = [];
+let activeTask = -1;
+
+function escHtml(s) {
+  return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function addTask() {
+  tasks.push({ title: `圖片 ${tasks.length + 1}`, prompt: "", negative: "low quality, blurry", batch: 1 });
+  activeTask = tasks.length - 1;
+  renderTaskTabs();
+  renderTaskEditor();
+  renderTasks(tasks);
+}
+
+function deleteTask(i) {
+  tasks.splice(i, 1);
+  if (activeTask >= tasks.length) activeTask = tasks.length - 1;
+  renderTaskTabs();
+  renderTaskEditor();
+  renderTasks(tasks);
+}
+
+function selectTask(i) {
+  activeTask = i;
+  renderTaskTabs();
+  renderTaskEditor();
+}
+
+function renderTaskTabs() {
+  const wrap = document.getElementById("task-tabs");
+  if (!tasks.length) { wrap.innerHTML = ""; return; }
+  wrap.innerHTML = tasks.map((t, i) => `
+    <div class="task-tab ${i === activeTask ? "active" : ""}" onclick="selectTask(${i})">
+      <span>${escHtml(t.title || "無標題")}</span>
+      <span class="task-tab-del" title="複製任務" onclick="event.stopPropagation();duplicateTask(${i})" style="opacity:.6">⎘</span>
+      <span class="task-tab-del" onclick="event.stopPropagation();deleteTask(${i})">×</span>
+    </div>
+  `).join("");
+}
+
+function renderTaskEditor() {
+  const wrap = document.getElementById("task-editor");
+  if (activeTask < 0 || !tasks.length) {
+    wrap.innerHTML = '<div class="empty-msg">點「＋ 新增任務」開始</div>';
+    return;
+  }
+  const t = tasks[activeTask];
+  const idx = activeTask;
+  wrap.innerHTML = `
+    <div>
+      <div class="field-label">任務名稱</div>
+      <input id="te-title" class="field-input" type="text" value="${escHtml(t.title)}"
+        placeholder="任務名稱…"
+        oninput="tasks[${idx}].title=this.value;renderTaskTabs()">
+    </div>
+    <div>
+      <div class="field-label">正向提示詞 Prompt</div>
+      <textarea id="te-prompt" class="field-input" rows="6"
+        placeholder="描述你想生成的圖片，例如：beautiful sunset, photorealistic, 8k…"
+        oninput="tasks[${idx}].prompt=this.value">${escHtml(t.prompt)}</textarea>
+      <div class="tag-section">${renderTagGroups()}</div>
+    </div>
+    <div>
+      <div class="field-label">負向提示詞 Negative</div>
+      <textarea id="te-neg" class="field-input" rows="3"
+        placeholder="不想要的元素，例如：low quality, blurry, watermark…"
+        oninput="tasks[${idx}].negative=this.value">${escHtml(t.negative)}</textarea>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div>
+        <div class="field-label">批次數量</div>
+        <input id="te-batch" class="field-input" type="number" value="${t.batch || 1}" min="1" max="8" step="1"
+          style="width:72px" oninput="tasks[${idx}].batch=Math.max(1,parseInt(this.value)||1)">
+      </div>
+      <div style="font-size:0.7rem;color:#374151;align-self:flex-end;padding-bottom:4px">任務 ${idx + 1} / ${tasks.length}</div>
+    </div>
+  `;
+  bindTagChips(wrap);
+}
+
+// ── 連線檢查 ──────────────────────────────────────────────────
+async function checkApi() {
+  const dot = document.getElementById("api-dot");
+  try {
+    const r = await fetch(`${COMFY_API}/system_stats`, { signal: AbortSignal.timeout(4000) });
+    dot.style.color = r.ok ? "#34d399" : "#f87171";
+    setStatus(r.ok ? "✅ ComfyUI 連線正常" : "❌ 連線失敗", r.ok ? "ok" : "err");
+    if (r.ok) { loadComfyModels(); loadRefinerModels(); loadComfyLoras(); loadComfyVAE(); loadUpscaleModels(); }
+  } catch {
+    dot.style.color = "#f87171";
+    setStatus("❌ 無法連線 — 請確認 ComfyUI 已啟動", "err");
+  }
+}
+
+// ── ComfyUI 模型 / LoRA 列表 ─────────────────────────────────
+async function loadComfyModels() {
+  const sel = document.getElementById("model-select");
+  sel.innerHTML = "<option>載入中…</option>";
+  try {
+    const r = await fetch(`${COMFY_API}/object_info/CheckpointLoaderSimple`, { signal: AbortSignal.timeout(6000) });
+    const data = await r.json();
+    const models = data?.CheckpointLoaderSimple?.input?.required?.ckpt_name?.[0] || [];
+    sel.innerHTML = models.length
+      ? models.map(m => `<option value="${m}">${m}</option>`).join("")
+      : "<option value=''>找不到模型</option>";
+  } catch {
+    sel.innerHTML = "<option value=''>連線失敗</option>";
+  }
+}
+
+async function loadRefinerModels() {
+  const sel = document.getElementById("refiner-select");
+  try {
+    const r = await fetch(`${COMFY_API}/object_info/CheckpointLoaderSimple`, { signal: AbortSignal.timeout(6000) });
+    const data = await r.json();
+    const models = data?.CheckpointLoaderSimple?.input?.required?.ckpt_name?.[0] || [];
+    sel.innerHTML = `<option value="">不使用</option>` +
+      models.map(m => `<option value="${m}">${m}</option>`).join("");
+  } catch {
+    sel.innerHTML = `<option value="">不使用</option>`;
+  }
+}
+
+function updateSwitch(v) {
+  document.getElementById("switch-pct").textContent  = v;
+  document.getElementById("switch-pct2").textContent = 100 - v;
+}
+
+async function loadComfyVAE() {
+  const sel = document.getElementById("vae-select");
+  try {
+    const r = await fetch(`${COMFY_API}/object_info/VAELoader`, { signal: AbortSignal.timeout(6000) });
+    const data = await r.json();
+    const vaes = data?.VAELoader?.input?.required?.vae_name?.[0] || [];
+    sel.innerHTML = `<option value="">內建（Checkpoint 預設）</option>` +
+      vaes.map(v => `<option value="${v}">${v}</option>`).join("");
+  } catch {
+    sel.innerHTML = `<option value="">內建（Checkpoint 預設）</option>`;
+  }
+}
+
+let loraList = [];
+let seedLocked = false;
+let stopRequested = false;
+
+function toggleSeedLock() {
+  seedLocked = !seedLocked;
+  const btn = document.getElementById("seed-lock-btn");
+  btn.textContent = seedLocked ? "🔒" : "🎲";
+  btn.classList.toggle("locked", seedLocked);
+  document.getElementById("seed-status").textContent = seedLocked ? "Seed 已鎖定（固定復現）" : "每次生成隨機 Seed";
+}
+
+function randomizeSeed() {
+  document.getElementById("seed-input").value = Math.floor(Math.random() * 2 ** 32);
+}
+
+function getEffectiveSeed() {
+  if (seedLocked) return parseInt(document.getElementById("seed-input").value) || 0;
+  const s = Math.floor(Math.random() * 2 ** 32);
+  document.getElementById("seed-input").value = s;
+  return s;
+}
+
+function stopGenerate() {
+  stopRequested = true;
+  fetch(`${COMFY_API}/interrupt`, { method: "POST" }).catch(() => {});
+  setStatus("⏹ 停止中…", "run");
+}
+
+function showPreview(url) {
+  const img = document.getElementById("preview-img");
+  if (img._prevUrl) URL.revokeObjectURL(img._prevUrl);
+  img._prevUrl = url;
+  img.src = url;
+  img.style.display = "block";
+}
+function clearPreview() {
+  const img = document.getElementById("preview-img");
+  if (img._prevUrl) { URL.revokeObjectURL(img._prevUrl); img._prevUrl = null; }
+  img.style.display = "none";
+  img.src = "";
+}
+
+function duplicateTask(i) {
+  const copy = { ...tasks[i], title: tasks[i].title + " (複製)" };
+  tasks.splice(i + 1, 0, copy);
+  activeTask = i + 1;
+  renderTaskTabs();
+  renderTaskEditor();
+  renderTasks(tasks);
+}
+
+function renderTagGroups() {
+  const groups = [
+    { label: "品質", tags: ["masterpiece", "best quality", "ultra-detailed", "8k", "photorealistic", "RAW photo"] },
+    { label: "風格", tags: ["anime style", "cinematic", "oil painting", "cyberpunk", "watercolor", "fantasy", "concept art"] },
+    { label: "光線", tags: ["golden hour", "studio lighting", "neon lights", "dramatic lighting", "soft light"] },
+  ];
+  return groups.map(g =>
+    `<div class="tag-group">` +
+    `<div class="tag-group-label">${g.label}</div>` +
+    `<div class="tag-chips">` +
+    g.tags.map(tag => `<span class="tag-chip" data-tag="${escHtml(tag)}">${tag}</span>`).join("") +
+    `</div></div>`
+  ).join("");
+}
+
+function bindTagChips(wrap) {
+  wrap.querySelectorAll(".tag-chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      const el = document.getElementById("te-prompt");
+      if (!el) return;
+      const v = el.value.trim();
+      el.value = v ? v + ", " + chip.dataset.tag : chip.dataset.tag;
+      tasks[activeTask].prompt = el.value;
+    });
+  });
+}
+
+function renderLoraSlots() {
+  const wrap = document.getElementById("lora-slots");
+  wrap.innerHTML = [0, 1, 2, 3, 4, 5].map(i => `
+    <div style="margin-bottom:10px">
+      <div style="font-size:0.7rem;color:#4b5563;margin-bottom:4px">LoRA ${i + 1}</div>
+      <div class="lora-grid">
+        <select id="lora-sel-${i}" class="setting-select">
+          <option value="">(不套用)</option>
+          ${loraList.map(l => `<option value="${l}">${l}</option>`).join("")}
+        </select>
+        <input id="lora-num-${i}" class="strength-input" type="number" value="0.8" min="0" max="2" step="0.05"
+          oninput="document.getElementById('lora-sldr-${i}').value=this.value">
+      </div>
+      <input id="lora-sldr-${i}" class="strength-slider" type="range" min="0" max="2" step="0.05" value="0.8"
+        style="width:100%;margin-top:6px"
+        oninput="document.getElementById('lora-num-${i}').value=this.value">
+    </div>
+  `).join("");
+}
+
+async function loadComfyLoras() {
+  try {
+    const r = await fetch(`${COMFY_API}/object_info/LoraLoader`, { signal: AbortSignal.timeout(6000) });
+    const data = await r.json();
+    loraList = data?.LoraLoader?.input?.required?.lora_name?.[0] || [];
+  } catch {
+    loraList = [];
+  }
+  renderLoraSlots();
+}
+
+// ── MD 解析 ───────────────────────────────────────────────────
+function parseMd(text) {
+  const tasks = [];
+  const blocks = text.split(/\n##\s+/);
+  for (const block of blocks.slice(1)) {
+    const lines = block.split(/\r?\n/);
+    const title = lines[0].trim();
+    const p = { title, steps: 20, cfg: 7.0, size: "512x512", negative: "low quality, blurry" };
+    for (const line of lines.slice(1)) {
+      const clean = line.trim().replace(/^-\s*/, "");
+      for (const key of ["prompt", "negative", "steps", "cfg", "size", "model", "lora", "lora_strength", "sampler"]) {
+        if (clean.toLowerCase().startsWith(key + ":")) {
+          const val = clean.slice(key.length + 1).trim();
+          p[key] = (key === "steps") ? parseInt(val)
+                 : (key === "cfg" || key === "lora_strength") ? parseFloat(val)
+                 : val;
+        }
+      }
+    }
+    if (p.prompt) tasks.push(p);
+  }
+  return tasks;
+}
+
+function renderTasks(taskList, statuses = {}) {
+  const el = document.getElementById("tab-tasks");
+  if (!taskList.length) { el.innerHTML = '<div class="empty-msg">還沒有任務</div>'; return; }
+  el.innerHTML = taskList.map((t, i) => {
+    const st = statuses[i] || "pending";
+    const label = { pending: "⏳ 等待", running: "⚙️ 生成中", done: "✅ 完成", error: "❌ 失敗" }[st];
+    const preview = (t.prompt || "(無提示詞)").slice(0, 60);
+    return `<div class="task-item ${st}">
+      <div class="task-title">${escHtml(t.title || "無標題")} <span class="task-status">${label}</span></div>
+      <div class="task-meta">${escHtml(preview)}…</div>
+    </div>`;
+  }).join("");
+}
+
+function addToGallery(src, title, meta = {}) {
+  const gallery = document.getElementById("gallery");
+  const card = document.createElement("div");
+  card.className = "img-card";
+  const imgSrc = src.startsWith("data:") ? src : `data:image/png;base64,${src}`;
+  const metaHtml = meta.prompt ? `
+    <div class="img-meta">
+      <div class="img-meta-row"><b>Prompt</b>${escHtml((meta.prompt || "").slice(0, 150))}${meta.prompt.length > 150 ? "…" : ""}</div>
+      ${meta.negative ? `<div class="img-meta-row"><b>Negative</b>${escHtml(meta.negative.slice(0, 80))}</div>` : ""}
+      <div class="img-meta-row"><b>Seed</b>${meta.seed ?? "?"}</div>
+      <div class="img-meta-row"><b>Model</b>${escHtml((meta.model || "?").split(/[\\/]/).pop())}</div>
+    </div>` : "";
+  card.innerHTML = `<img src="${imgSrc}"><div class="img-label">${escHtml(title)}</div>${metaHtml}`;
+  card.querySelector("img").onclick = () => {
+    const a = document.createElement("a");
+    a.href = imgSrc;
+    a.download = title.replace(/\s+/g, "_") + ".png";
+    a.click();
+  };
+  gallery.prepend(card);
+  showTab("gallery");
+}
+
+function clearGallery() {
+  document.getElementById("gallery").innerHTML = "";
+  showTab("tasks");
+}
+
+// ── ComfyUI 生成 ──────────────────────────────────────────────
+function buildWorkflow(task, modelName, seed) {
+  const sizeStr = task.size;
+  const w = sizeStr ? parseInt(sizeStr.split("x")[0]) : (parseInt(document.getElementById("size-w").value) || 1024);
+  const h = sizeStr ? parseInt(sizeStr.split("x")[1]) : (parseInt(document.getElementById("size-h").value) || 1024);
+  const vaeName  = task.vae  || document.getElementById("vae-select").value;
+  const loras = [0, 1, 2, 3, 4, 5].map(i => ({
+    name: document.getElementById(`lora-sel-${i}`)?.value || "",
+    strength: parseFloat(document.getElementById(`lora-num-${i}`)?.value || 0.8)
+  })).filter(l => l.name);
+  const sampler   = task.sampler   || document.getElementById("sampler-select").value   || "euler_ancestral";
+  const scheduler = task.scheduler || document.getElementById("scheduler-select").value || "karras";
+  const steps     = task.steps  || parseInt(document.getElementById("steps-num").value)  || 20;
+  const cfg       = task.cfg    || parseFloat(document.getElementById("cfg-num").value)  || 7;
+  const wf = {
+    "1": { class_type: "CheckpointLoaderSimple", inputs: { ckpt_name: modelName } },
+    "4": { class_type: "EmptyLatentImage", inputs: { width: w, height: h, batch_size: task.batch || 1 } },
+  };
+
+  // 串接所有 LoRA（10, 11, 12...）
+  let modelRef = ["1", 0];
+  let clipRef  = ["1", 1];
+  loras.forEach((lora, i) => {
+    const nodeId = String(10 + i);
+    wf[nodeId] = { class_type: "LoraLoader", inputs: {
+      model: modelRef, clip: clipRef,
+      lora_name: lora.name,
+      strength_model: lora.strength,
+      strength_clip: lora.strength
+    }};
+    modelRef = [nodeId, 0];
+    clipRef  = [nodeId, 1];
+  });
+
+  wf["2"] = { class_type: "CLIPTextEncode", inputs: { text: task.prompt,                   clip: clipRef } };
+  wf["3"] = { class_type: "CLIPTextEncode", inputs: { text: task.negative || "low quality", clip: clipRef } };
+
+  const refinerName = document.getElementById("refiner-select")?.value;
+  const switchPct   = parseInt(document.getElementById("switch-slider")?.value || 80) / 100;
+  const switchStep  = Math.round(steps * switchPct);
+
+  if (refinerName) {
+    // Base：KSamplerAdvanced，跑 0 → switchStep
+    wf["5"] = { class_type: "KSamplerAdvanced", inputs: {
+      add_noise: "enable", noise_seed: seed, steps, cfg,
+      sampler_name: sampler, scheduler, start_at_step: 0, end_at_step: switchStep,
+      return_with_leftover_noise: "enable",
+      model: modelRef, positive: ["2", 0], negative: ["3", 0], latent_image: ["4", 0]
+    }};
+    // Refiner 模型
+    wf["30"] = { class_type: "CheckpointLoaderSimple", inputs: { ckpt_name: refinerName } };
+    wf["31"] = { class_type: "CLIPTextEncode", inputs: { text: task.prompt,                   clip: ["30", 1] } };
+    wf["32"] = { class_type: "CLIPTextEncode", inputs: { text: task.negative || "low quality", clip: ["30", 1] } };
+    // Refiner：KSamplerAdvanced，跑 switchStep → steps
+    wf["33"] = { class_type: "KSamplerAdvanced", inputs: {
+      add_noise: "disable", noise_seed: seed, steps, cfg,
+      sampler_name: sampler, scheduler, start_at_step: switchStep, end_at_step: steps,
+      return_with_leftover_noise: "disable",
+      model: ["30", 0], positive: ["31", 0], negative: ["32", 0], latent_image: ["5", 0]
+    }};
+    // 後續接 Refiner 的輸出
+    Object.keys(wf).filter(k => ["20","21","6"].includes(k)).forEach(k => {
+      const inp = wf[k].inputs;
+      if (inp.samples?.[0] === "5") inp.samples = ["33", 0];
+      if (inp.latent_image?.[0] === "5") inp.latent_image = ["33", 0];
+    });
+    if (!wf["20"] && !wf["21"]) {
+      const vaeRef2 = vaeName ? ["9", 0] : ["30", 2];
+      wf["6"] = { class_type: "VAEDecode", inputs: { samples: ["33", 0], vae: vaeRef2 } };
+    }
+  } else {
+    wf["5"] = { class_type: "KSampler", inputs: {
+      seed, steps, cfg,
+      sampler_name: sampler, scheduler, denoise: 1,
+      model: modelRef, positive: ["2", 0], negative: ["3", 0], latent_image: ["4", 0]
+    }};
+  }
+
+  const vaeRef = vaeName
+    ? (wf["9"] = { class_type: "VAELoader", inputs: { vae_name: vaeName } }, ["9", 0])
+    : ["1", 2];
+
+  const hiresOn   = document.getElementById("hires-enable")?.checked;
+  const upscaleOn = document.getElementById("upscale-enable")?.checked;
+
+  let latentRef = ["5", 0];
+
+  if (hiresOn) {
+    const hiresScale  = parseFloat(document.getElementById("hires-scale").value  || 1.5);
+    const hiresSteps  = parseInt(document.getElementById("hires-steps-num").value || 15);
+    const hiresDenoise= parseFloat(document.getElementById("hires-denoise-num").value || 0.5);
+    wf["20"] = { class_type: "LatentUpscale", inputs: {
+      samples: latentRef, upscale_method: "nearest-exact",
+      width: Math.round(w * hiresScale / 64) * 64,
+      height: Math.round(h * hiresScale / 64) * 64,
+      crop: "disabled"
+    }};
+    wf["21"] = { class_type: "KSampler", inputs: {
+      seed: seed + 1,
+      steps: hiresSteps, cfg, sampler_name: sampler, scheduler, denoise: hiresDenoise,
+      model: modelRef, positive: ["2", 0], negative: ["3", 0], latent_image: ["20", 0]
+    }};
+    latentRef = ["21", 0];
+  }
+
+  wf["6"] = { class_type: "VAEDecode", inputs: { samples: latentRef, vae: vaeRef } };
+
+  if (upscaleOn) {
+    const upscaleModel  = document.getElementById("upscale-model-select").value;
+    const upscaleFactor = parseInt(document.getElementById("upscale-factor").value || 4);
+    if (upscaleModel) {
+      wf["23"] = { class_type: "UpscaleModelLoader",    inputs: { model_name: upscaleModel } };
+      wf["24"] = { class_type: "ImageUpscaleWithModel", inputs: { upscale_model: ["23", 0], image: ["6", 0] } };
+      wf["7"]  = { class_type: "SaveImage", inputs: { filename_prefix: "dashboard", images: ["24", 0] } };
+    } else {
+      const fw = hiresOn
+        ? Math.round(w * parseFloat(document.getElementById("hires-scale").value||1.5) / 64)*64
+        : w;
+      const fh = hiresOn
+        ? Math.round(h * parseFloat(document.getElementById("hires-scale").value||1.5) / 64)*64
+        : h;
+      wf["24"] = { class_type: "ImageScale", inputs: {
+        image: ["6", 0], upscale_method: "lanczos",
+        width: fw * upscaleFactor, height: fh * upscaleFactor, crop: "disabled"
+      }};
+      wf["7"] = { class_type: "SaveImage", inputs: { filename_prefix: "dashboard", images: ["24", 0] } };
+    }
+  } else {
+    wf["7"] = { class_type: "SaveImage", inputs: { filename_prefix: "dashboard", images: ["6", 0] } };
+  }
+
+  return wf;
+}
+
+function setProgress(value, max) {
+  const pct = max > 0 ? Math.round(value / max * 100) : 0;
+  document.getElementById("progress-bar").style.width = pct + "%";
+  document.getElementById("progress-text").textContent = `${pct}%`;
+  document.getElementById("progress-wrap").style.display = "block";
+}
+function hideProgress() {
+  document.getElementById("progress-wrap").style.display = "none";
+  document.getElementById("progress-bar").style.width = "0%";
+  document.getElementById("progress-text").textContent = "0%";
+}
+
+async function comfyuiGenerate(task) {
+  const modelName = task.model || document.getElementById("model-select").value;
+  if (!modelName) throw new Error("請先選擇模型");
+
+  const seed = getEffectiveSeed();
+  const clientId = crypto.randomUUID();
+  const ws = new WebSocket(`ws://127.0.0.1:8188/ws?clientId=${clientId}`);
+
+  await new Promise((res, rej) => {
+    ws.onopen = res;
+    ws.onerror = () => rej(new Error("WebSocket 連線失敗"));
+    setTimeout(() => rej(new Error("WebSocket 連線超時")), 5000);
+  });
+
+  const r = await fetch(`${COMFY_API}/prompt`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt: buildWorkflow(task, modelName, seed), client_id: clientId })
+  });
+  if (!r.ok) { ws.close(); throw new Error(`HTTP ${r.status}`); }
+  const { prompt_id } = await r.json();
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      ws.close(); hideProgress(); clearPreview();
+      reject(new Error("生成超時（4 分鐘）"));
+    }, 4 * 60 * 1000);
+
+    ws.onmessage = async (event) => {
+      try {
+        // Binary = latent preview image from ComfyUI
+        if (event.data instanceof Blob) {
+          const buf = await event.data.arrayBuffer();
+          const view = new DataView(buf);
+          if (view.getUint32(0) === 1) { // PREVIEW_IMAGE type
+            const previewBlob = new Blob([buf.slice(8)], { type: "image/jpeg" });
+            showPreview(URL.createObjectURL(previewBlob));
+          }
+          return;
+        }
+
+        const msg = JSON.parse(event.data);
+        if (msg.type === "progress" && msg.data.prompt_id === prompt_id) {
+          setProgress(msg.data.value, msg.data.max);
+        }
+        if (msg.type === "executed" && msg.data.prompt_id === prompt_id) {
+          const images = msg.data.output?.images;
+          if (images?.length) {
+            clearTimeout(timeout);
+            ws.close();
+            hideProgress(); clearPreview();
+            const dataUrls = await Promise.all(images.map(async img => {
+              const imgUrl = `${COMFY_API}/view?filename=${encodeURIComponent(img.filename)}&subfolder=${encodeURIComponent(img.subfolder)}&type=${img.type}`;
+              const blob = await (await fetch(imgUrl)).blob();
+              return new Promise((res, rej) => {
+                const reader = new FileReader();
+                reader.onload = () => res(reader.result);
+                reader.onerror = rej;
+                reader.readAsDataURL(blob);
+              });
+            }));
+            resolve({ dataUrls, seed, model: modelName });
+          }
+        }
+        if (msg.type === "execution_error" && msg.data.prompt_id === prompt_id) {
+          clearTimeout(timeout);
+          ws.close(); hideProgress(); clearPreview();
+          reject(new Error(msg.data.exception_message || "ComfyUI 執行錯誤"));
+        }
+      } catch (e) { /* 忽略非 JSON 訊息 */ }
+    };
+
+    ws.onerror = () => {
+      clearTimeout(timeout); hideProgress(); clearPreview();
+      reject(new Error("WebSocket 中斷"));
+    };
+  });
+}
+
+async function generateOne(task) {
+  return await comfyuiGenerate(task);
+}
+
+async function startGenerate() {
+  if (!tasks.length) { setStatus("⚠️ 請先新增任務", "err"); return; }
+  const missing = tasks.filter(t => !t.prompt.trim());
+  if (missing.length) { setStatus(`⚠️ 有 ${missing.length} 個任務缺少提示詞`, "err"); return; }
+
+  saveMd();
+  stopRequested = false;
+  document.getElementById("stop-btn").style.display = "";
+  document.getElementById("generate-btn").disabled = true;
+
+  const statuses = {};
+  tasks.forEach((_, i) => statuses[i] = "pending");
+  renderTasks(tasks, statuses);
+  showTab("tasks");
+
+  let ok = 0, fail = 0;
+  for (let i = 0; i < tasks.length; i++) {
+    if (stopRequested) { setStatus(`⏹ 已停止（完成 ${ok} 張）`, "err"); break; }
+    statuses[i] = "running";
+    renderTasks(tasks, statuses);
+    setStatus(`⚙️ 生成中 [${i+1}/${tasks.length}]: ${tasks[i].title}`, "run");
+    try {
+      const { dataUrls, seed, model } = await generateOne(tasks[i]);
+      dataUrls.forEach((dataUrl, j) => {
+        addToGallery(dataUrl, tasks[i].title + (dataUrls.length > 1 ? ` #${j+1}` : ""), {
+          prompt: tasks[i].prompt, negative: tasks[i].negative, seed, model
+        });
+      });
+      statuses[i] = "done"; ok += dataUrls.length;
+    } catch (e) {
+      statuses[i] = "error"; fail++;
+      setStatus(`❌ 任務 ${i+1} 失敗: ${e.message}`, "err");
+    }
+    renderTasks(tasks, statuses);
+  }
+
+  document.getElementById("stop-btn").style.display = "none";
+  document.getElementById("generate-btn").disabled = false;
+  if (!stopRequested) setStatus(`🎉 完成！成功 ${ok} 張，失敗 ${fail} 張`, ok > 0 ? "ok" : "err");
+}
+
+// ── PWA Service Worker ────────────────────────────────────────
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js").catch(() => {});
+}
+
+// ── 啟動 ──────────────────────────────────────────────────────
+renderLoraSlots();
+
+// 從 localStorage 載入任務，否則建立預設第一個
+const _savedTasks = localStorage.getItem("sd-tasks");
+if (_savedTasks) {
+  try { tasks = JSON.parse(_savedTasks); } catch { tasks = []; }
+}
+if (!tasks.length) {
+  tasks = [{ title: "圖片 1", prompt: "", negative: "low quality, blurry", batch: 1 }];
+}
+activeTask = 0;
+renderTaskTabs();
+renderTaskEditor();
+renderTasks(tasks);
+checkApi();
+</script>
+</body>
+</html>
