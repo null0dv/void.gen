@@ -651,6 +651,27 @@ function setApiOnline(ok) {
   document.getElementById('sb-backend').className = 'sb-item ' + (ok ? 'ok' : 'error');
 }
 
+// ── STARTUP DEFAULTS ─────────────────────────────────────────────
+const DEFAULTS = {
+  model:   'novaAnimeXL_ilV180.safetensors',
+  refiner: 'JANKUTrainedChenkinNoobai_v777.safetensors',
+  baseSwitch: 80,
+  loras: [
+    { name: 'Hyper-SDXL-2steps-lora', strength: 0.80 },
+    { name: 'dmd2_sdxl_4step_lora',   strength: 0.80 },
+    { name: 'Nai_emul style',         strength: 0.80 },
+    { name: 'Stocking Meow_Nai V0',   strength: 0.80 },
+    { name: 'nai origen',             strength: 0.80 },
+  ]
+};
+function findOption(sel, name) {
+  const n = name.toLowerCase();
+  return [...sel.options].find(o => {
+    const v = o.value.replace(/\.(safetensors|ckpt|pt)$/i,'').toLowerCase();
+    return v === n || v.includes(n) || n.includes(v);
+  });
+}
+
 // ── MODELS ────────────────────────────────────────────────────────
 async function loadComfyModels() {
   const sel = document.getElementById('model-select');
@@ -661,6 +682,10 @@ async function loadComfyModels() {
     sel.innerHTML = models.length
       ? models.map(m => `<option value="${m}" ${m===prev?'selected':''}>${m}</option>`).join('')
       : '<option value="">— no models found —</option>';
+    if (!prev) {
+      const def = findOption(sel, DEFAULTS.model);
+      if (def) sel.value = def.value;
+    }
     if (models.length) document.getElementById('m-model').textContent = sel.value.replace(/\.(safetensors|ckpt|pt)$/i,'').slice(0,16);
   } catch { sel.innerHTML = '<option value="">— connection failed —</option>'; }
 }
@@ -669,7 +694,23 @@ async function loadRefinerModels() {
   try {
     const d = await (await fetch(`${COMFY_API}/object_info/CheckpointLoaderSimple`, { signal: AbortSignal.timeout(6000) })).json();
     const models = d?.CheckpointLoaderSimple?.input?.required?.ckpt_name?.[0] || [];
+    const prev = sel.value;
     sel.innerHTML = '<option value="">NONE</option>' + models.map(m => `<option value="${m}">${m}</option>`).join('');
+    if (prev) {
+      sel.value = prev;
+    } else {
+      const def = findOption(sel, DEFAULTS.refiner);
+      if (def) {
+        sel.value = def.value;
+        document.getElementById('refiner-switch-wrap').style.display = 'block';
+        const sw = document.getElementById('switch-slider');
+        sw.value = DEFAULTS.baseSwitch;
+        document.getElementById('switch-val').textContent = DEFAULTS.baseSwitch;
+        const body = document.getElementById('refiner-body');
+        const caret = document.getElementById('refiner-caret');
+        if (body.style.display === 'none') { body.style.display = ''; caret.classList.add('open'); }
+      }
+    }
   } catch {}
 }
 async function loadComfyVAE() {
@@ -686,6 +727,21 @@ async function loadComfyLoras() {
     loraList = d?.LoraLoader?.input?.required?.lora_name?.[0] || [];
   } catch { loraList = []; }
   renderLoraSlots();
+  applyLoraDefaults();
+}
+function applyLoraDefaults() {
+  DEFAULTS.loras.forEach((def, i) => {
+    const sel  = document.getElementById(`lora-sel-${i}`);
+    const sldr = document.getElementById(`lora-sldr-${i}`);
+    const valEl = document.getElementById(`lora-val-${i}`);
+    if (!sel || sel.value) return;
+    const match = findOption(sel, def.name);
+    if (match) {
+      sel.value = match.value;
+      if (sldr)  sldr.value = def.strength;
+      if (valEl) valEl.textContent = def.strength.toFixed(2);
+    }
+  });
 }
 async function loadUpscaleModels() {
   const sel = document.getElementById('upscale-model-select');
