@@ -307,6 +307,30 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
       </div>
 
       <div class="ss">
+        <div class="sec-label clickable" onclick="toggleCol('refiner-body','refiner-caret')">
+          REFINER
+          <span class="caret" id="refiner-caret">▼</span>
+        </div>
+        <div class="collapsible-body" id="refiner-body" style="display:none;margin-top:8px">
+          <div style="display:flex;gap:6px;align-items:center">
+            <select id="refiner-select" class="sel" style="flex:1"
+              onchange="document.getElementById('refiner-switch-wrap').style.display=this.value?'block':'none'">
+              <option value="">NONE</option>
+            </select>
+            <span style="cursor:pointer;color:var(--muted);font-size:14px" onclick="loadRefinerModels()">↻</span>
+          </div>
+          <div id="refiner-switch-wrap" style="display:none;margin-top:9px">
+            <div class="param-row" style="margin-bottom:0">
+              <span class="param-name">BASE %</span>
+              <input type="range" class="slider" id="switch-slider" min="10" max="90" step="5" value="80"
+                oninput="document.getElementById('switch-val').textContent=this.value">
+              <span class="param-val" id="switch-val">80</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ss">
         <div class="sec-label">SAMPLER</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
           <select class="sel" id="sampler-select">
@@ -396,30 +420,6 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
         </div>
         <div class="collapsible-body" id="lora-body" style="margin-top:6px">
           <div id="lora-slots"></div>
-        </div>
-      </div>
-
-      <div class="ss">
-        <div class="sec-label clickable" onclick="toggleCol('refiner-body','refiner-caret')">
-          REFINER
-          <span class="caret" id="refiner-caret">▼</span>
-        </div>
-        <div class="collapsible-body" id="refiner-body" style="display:none;margin-top:8px">
-          <div style="display:flex;gap:6px;align-items:center">
-            <select id="refiner-select" class="sel" style="flex:1"
-              onchange="document.getElementById('refiner-switch-wrap').style.display=this.value?'block':'none'">
-              <option value="">NONE</option>
-            </select>
-            <span style="cursor:pointer;color:var(--muted);font-size:14px" onclick="loadRefinerModels()">↻</span>
-          </div>
-          <div id="refiner-switch-wrap" style="display:none;margin-top:9px">
-            <div class="param-row" style="margin-bottom:0">
-              <span class="param-name">BASE %</span>
-              <input type="range" class="slider" id="switch-slider" min="10" max="90" step="5" value="80"
-                oninput="document.getElementById('switch-val').textContent=this.value">
-              <span class="param-val" id="switch-val">80</span>
-            </div>
-          </div>
         </div>
       </div>
 
