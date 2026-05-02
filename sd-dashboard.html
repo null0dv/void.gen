@@ -216,6 +216,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13
 .resize-handle{width:5px;cursor:col-resize;flex-shrink:0;background:transparent;transition:background .15s;z-index:5}
 .resize-handle:hover,.resize-handle.active{background:var(--line2)}
 
+/* TOKEN BAR */
+#token-bar-wrap{display:flex;align-items:center;gap:6px;margin-top:3px;margin-bottom:4px}
+#token-bar-track{flex:1;height:3px;background:var(--line2);border-radius:2px;position:relative}
+#token-bar-fill{position:absolute;top:0;left:0;bottom:0;width:0%;border-radius:2px;transition:width .15s,background .2s}
+.chunk-mark{position:absolute;top:0;bottom:0;width:1px;background:var(--bg1);z-index:1}
+#token-bar-label{font-size:9px;color:var(--muted2);white-space:nowrap;min-width:40px;text-align:right;transition:color .2s;font-family:var(--mono);letter-spacing:.04em}
+
 /* ICON BUTTONS (clear / copy) */
 .icon-btn{cursor:pointer;font-size:10px;color:var(--muted);padding:1px 5px;border:1px solid var(--line2);border-radius:3px;font-family:var(--mono);transition:all .15s;user-select:none}
 .icon-btn:hover{color:var(--text);border-color:var(--muted)}
@@ -1010,7 +1017,14 @@ function renderTaskEditor() {
       oninput="tasks[${idx}].title=this.value;renderTaskTabs()">
     <textarea class="prompt-area" id="te-prompt" rows="5" placeholder="describe your vision…"
       oninput="tasks[${idx}].prompt=this.value;updateTokenCount()">${escHtml(t.prompt)}</textarea>
-    <div id="token-count" style="font-size:9px;color:var(--muted2);letter-spacing:.06em;text-align:right;margin-top:2px;margin-bottom:4px;transition:color .2s"></div>
+    <div id="token-bar-wrap">
+      <div id="token-bar-track">
+        <div id="token-bar-fill"></div>
+        <div class="chunk-mark" style="left:33.33%"></div>
+        <div class="chunk-mark" style="left:66.67%"></div>
+      </div>
+      <span id="token-bar-label">0t</span>
+    </div>
     <textarea class="prompt-area neg-area" id="te-neg" rows="2" placeholder="negative…"
       oninput="tasks[${idx}].negative=this.value">${escHtml(t.negative)}</textarea>
     <div class="tag-section">${renderTagGroups()}</div>`;
@@ -1051,12 +1065,22 @@ function countClipTokens(text) {
   return n;
 }
 function updateTokenCount() {
-  const ta = document.getElementById('te-prompt');
-  const el = document.getElementById('token-count');
-  if (!ta || !el) return;
+  const ta   = document.getElementById('te-prompt');
+  const fill = document.getElementById('token-bar-fill');
+  const lbl  = document.getElementById('token-bar-label');
+  if (!ta || !fill || !lbl) return;
   const n = countClipTokens(ta.value);
-  el.textContent = `${n} / 75 tokens`;
-  el.style.color = n > 75 ? 'var(--red)' : n > 60 ? 'var(--yellow)' : 'var(--muted2)';
+  fill.style.width = Math.min((n / 225) * 100, 100) + '%';
+  if (n <= 75) {
+    fill.style.background = 'var(--muted2)'; lbl.style.color = 'var(--muted2)';
+    lbl.textContent = n ? `${n}t` : '0t';
+  } else if (n <= 150) {
+    fill.style.background = 'var(--accent2)'; lbl.style.color = 'var(--muted)';
+    lbl.textContent = `${n}t · 2ch`;
+  } else {
+    fill.style.background = 'var(--yellow)'; lbl.style.color = 'var(--yellow)';
+    lbl.textContent = `${n}t · ${Math.ceil(n/75)}ch`;
+  }
 }
 
 // ── LORA ──────────────────────────────────────────────────────────
