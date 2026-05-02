@@ -1,7 +1,7 @@
 {
-  "name": "SD 生成面板",
-  "short_name": "SD Panel",
-  "description": "Stable Diffusion ComfyUI 本地生成儀表板",
+  "name": "SD · PANEL",
+  "short_name": "SD·PANEL",
+  "description": "Local Stable Diffusion generation UI powered by ComfyUI",
   "start_url": "./sd-dashboard.html",
   "scope": "./",
   "display": "standalone",
