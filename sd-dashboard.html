@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SD · PANEL</title>
+<title>Void.gen</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#080808">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="SD·PANEL">
+<meta name="apple-mobile-web-app-title" content="Void.gen">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap');
@@ -244,7 +244,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 <body>
 
 <div class="topbar">
-  <div class="logo">SD<span> · PANEL</span></div>
+  <div class="logo">VOID<span>.gen</span></div>
   <div class="topbar-right">
     <button class="tb-btn" onclick="saveTasks()">SAVE</button>
     <button class="tb-btn" onclick="checkApi()">CHECK</button>
@@ -572,7 +572,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 </div><!-- /main -->
 
 <div class="statusbar">
-  <div class="sb-item" id="sb-main">SD · PANEL</div>
+  <div class="sb-item" id="sb-main">Void.gen</div>
   <div class="sb-item" style="margin-left:auto" id="sb-backend">ComfyUI · 127.0.0.1:8188</div>
 </div>
 
@@ -858,13 +858,13 @@ function setStatus(msg, type='') {
 }
 function saveTasks() {
   localStorage.setItem('sd-tasks', JSON.stringify(tasks));
-  setStatus('SAVED', 'ok'); setTimeout(() => setStatus('SD · PANEL'), 1500);
+  setStatus('SAVED', 'ok'); setTimeout(() => setStatus('Void.gen'), 1500);
 }
 function resetTasks() {
   localStorage.removeItem('sd-tasks');
   tasks = [{ title:'Image 1', prompt:'', negative:'low quality, blurry', batch:1 }];
   activeTask = 0; renderTaskTabs(); renderTaskEditor(); renderQueue();
-  setStatus('RESET', 'ok'); setTimeout(() => setStatus('SD · PANEL'), 1500);
+  setStatus('RESET', 'ok'); setTimeout(() => setStatus('Void.gen'), 1500);
 }
 
 // ── QUEUE ─────────────────────────────────────────────────────────
@@ -913,7 +913,7 @@ function clearGallery() {
   const grid = document.getElementById('gallery-grid');
   grid.innerHTML = ''; grid.style.display = 'none';
   document.getElementById('gallery-empty').style.display = 'flex';
-  setStatus('GALLERY CLEARED','ok'); setTimeout(()=>setStatus('SD · PANEL'),1500);
+  setStatus('GALLERY CLEARED','ok'); setTimeout(()=>setStatus('Void.gen'),1500);
 }
 function switchCenterTab(tab, el) {
   document.querySelectorAll('.center-tab').forEach(t => t.classList.remove('active'));
@@ -992,7 +992,7 @@ function sendToI2IFromGallery(dataUrl) {
 }
 function copyPrompt() {
   const p = tasks[activeTask]?.prompt || '';
-  if (p) navigator.clipboard.writeText(p).then(() => { setStatus('PROMPT COPIED','ok'); setTimeout(()=>setStatus('SD · PANEL'),1500); });
+  if (p) navigator.clipboard.writeText(p).then(() => { setStatus('PROMPT COPIED','ok'); setTimeout(()=>setStatus('Void.gen'),1500); });
 }
 
 // ── WORKFLOW ──────────────────────────────────────────────────────

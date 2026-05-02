@@ -1,6 +1,6 @@
 {
-  "name": "SD · PANEL",
-  "short_name": "SD·PANEL",
+  "name": "Void.gen",
+  "short_name": "Void.gen",
   "description": "Local Stable Diffusion generation UI powered by ComfyUI",
   "start_url": "./sd-dashboard.html",
   "scope": "./",
