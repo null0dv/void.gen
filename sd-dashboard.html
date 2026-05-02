@@ -151,10 +151,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13
 @keyframes spin{to{transform:rotate(360deg)}}
 .stop-btn{width:100%;padding:6px;background:transparent;color:var(--red);border:1px solid rgba(255,68,68,.3);border-radius:6px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;cursor:pointer;margin-top:5px;transition:all .15s;display:none}
 .stop-btn:hover{background:rgba(255,68,68,.1);border-color:var(--red)}
-.progress-wrap{margin-bottom:7px;display:none}
-.prog-bg{height:2px;background:var(--line2);border-radius:1px;overflow:hidden}
-.prog-fill{height:100%;background:var(--text);border-radius:1px;width:0%;transition:width .2s}
-.prog-label{font-size:9px;color:var(--muted);margin-top:4px;letter-spacing:.06em}
+#progress-wrap{position:fixed;bottom:0;left:0;right:0;height:24px;z-index:50;overflow:hidden;align-items:center;justify-content:center;background:rgba(8,8,8,.9);border-top:1px solid var(--line)}
+#progress-fill{position:absolute;left:0;top:0;bottom:0;background:var(--text);width:0%;transition:width .3s;opacity:.15}
+#progress-label{position:relative;z-index:1;font-size:9px;letter-spacing:.12em;color:var(--text);font-family:var(--mono)}
 
 /* CENTER */
 .center{flex:1;display:flex;flex-direction:column;overflow:hidden}
@@ -502,10 +501,6 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
     </div><!-- /sidebar-scroll -->
 
     <div class="gen-wrap">
-      <div class="progress-wrap" id="progress-wrap">
-        <div class="prog-bg"><div class="prog-fill" id="progress-fill"></div></div>
-        <div class="prog-label" id="progress-label">0%</div>
-      </div>
       <button class="gen-btn" id="gen-btn" onclick="startGenerate()">
         <div class="spinner"></div>
         <span id="gen-label">GENERATE</span>
@@ -583,6 +578,12 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
     <img class="modal-img" id="modal-img">
     <div id="modal-meta" style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px"></div>
   </div>
+</div>
+
+<!-- FULL-WIDTH PROGRESS BAR -->
+<div id="progress-wrap" style="display:none">
+  <div id="progress-fill"></div>
+  <span id="progress-label">0%</span>
 </div>
 
 <script>
@@ -1116,7 +1117,7 @@ async function comfyuiGenerate(task) {
           const pct = Math.round(msg.data.value / msg.data.max * 100);
           document.getElementById('progress-fill').style.width = pct+'%';
           document.getElementById('progress-label').textContent = pct+'%';
-          document.getElementById('progress-wrap').style.display = 'block';
+          document.getElementById('progress-wrap').style.display = 'flex';
         }
         if (msg.type==='executed' && msg.data.prompt_id===prompt_id) {
           const images = msg.data.output?.images;
