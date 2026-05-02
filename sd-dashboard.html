@@ -842,11 +842,11 @@ const DEFAULTS = {
   refiner: 'JANKUTrainedChenkinNoobai_v777.safetensors',
   baseSwitch: 80,
   loras: [
-    { name: 'Hyper-SDXL-2steps-lora', strength: 0.80 },
-    { name: 'dmd2_sdxl_4step_lora',   strength: 0.80 },
-    { name: 'Nai_emul style',         strength: 0.80 },
-    { name: 'Stocking Meow_Nai V0',   strength: 0.80 },
-    { name: 'nai origen',             strength: 0.80 },
+    { name: 'Hyper-SDXL-2steps-lora', strength: 0.70 },
+    { name: 'dmd2_sdxl_4step_lora',   strength: 0.70 },
+    { name: 'Nai_emul style',         strength: 0.70 },
+    { name: 'Stocking Meow_Nai V0',   strength: 0.70 },
+    { name: 'nai origen',             strength: 0.70 },
   ]
 };
 function findOption(sel, name) {
@@ -932,7 +932,7 @@ function applyLoraDefaults() {
     if (sv !== undefined) {
       if ([...sel.options].some(o => o.value === sv.name)) {
         sel.value = sv.name;
-        if (sldr)  { sldr.value = sv.strength; if (valEl) valEl.textContent = parseFloat(sv.strength).toFixed(2); }
+        if (sldr)  { sldr.value = sv.strength; if (valEl) valEl.textContent = parseFloat(sv.strength).toFixed(1); }
         return;
       }
     }
@@ -943,7 +943,7 @@ function applyLoraDefaults() {
     if (match) {
       sel.value = match.value;
       if (sldr)  sldr.value = def.strength;
-      if (valEl) valEl.textContent = def.strength.toFixed(2);
+      if (valEl) valEl.textContent = def.strength.toFixed(1);
     }
   });
   saveSettings();
@@ -1091,9 +1091,9 @@ function renderLoraSlots() {
         <option value="">(none)</option>
         ${loraList.map(l=>`<option value="${l}">${l.replace(/\.(safetensors|ckpt|pt)$/i,'').slice(0,22)}</option>`).join('')}
       </select>
-      <input type="range" class="slider" id="lora-sldr-${i}" min="0" max="2" step="0.05" value="0.8"
-        oninput="document.getElementById('lora-val-${i}').textContent=parseFloat(this.value).toFixed(2)">
-      <span class="lora-val" id="lora-val-${i}">0.80</span>
+      <input type="range" class="slider" id="lora-sldr-${i}" min="0" max="2" step="0.1" value="0.7"
+        oninput="document.getElementById('lora-val-${i}').textContent=parseFloat(this.value).toFixed(1)">
+      <span class="lora-val" id="lora-val-${i}">0.7</span>
     </div>`).join('');
 }
 
