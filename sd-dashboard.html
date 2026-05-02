@@ -1244,20 +1244,28 @@ async function comfyuiGenerate(task) {
         if (msg.type==='executed' && msg.data.prompt_id===prompt_id) {
           const images = msg.data.output?.images;
           if (images?.length) {
-            clearTimeout(timeout); ws.close(); clearLivePreview();
-            const dataUrls = await Promise.all(images.map(async img => {
-              const url = `${COMFY_API}/view?filename=${encodeURIComponent(img.filename)}&subfolder=${encodeURIComponent(img.subfolder)}&type=${img.type}`;
-              const blob = await (await fetch(url)).blob();
-              return new Promise((res,rej) => { const rd=new FileReader(); rd.onload=()=>res(rd.result); rd.onerror=rej; rd.readAsDataURL(blob); });
-            }));
-            resolve({ dataUrls, seed, model: modelName });
+            clearTimeout(timeout); clearLivePreview();
+            try {
+              const dataUrls = await Promise.all(images.map(async img => {
+                const url = `${COMFY_API}/view?filename=${encodeURIComponent(img.filename)}&subfolder=${encodeURIComponent(img.subfolder)}&type=${img.type}`;
+                const resp = await fetch(url);
+                if (!resp.ok) throw new Error(`fetch /view ${resp.status}`);
+                const blob = await resp.blob();
+                return new Promise((res,rej) => { const rd=new FileReader(); rd.onload=()=>res(rd.result); rd.onerror=rej; rd.readAsDataURL(blob); });
+              }));
+              ws.close();
+              resolve({ dataUrls, seed, model: modelName });
+            } catch(fetchErr) {
+              ws.close();
+              reject(new Error('圖片讀取失敗: ' + fetchErr.message));
+            }
           }
         }
         if (msg.type==='execution_error' && msg.data.prompt_id===prompt_id) {
           clearTimeout(timeout); ws.close(); clearLivePreview();
           reject(new Error(msg.data.exception_message || 'ComfyUI error'));
         }
-      } catch {}
+      } catch(e) { /* ignore parse errors */ }
     };
     ws.onerror = () => { clearTimeout(timeout); clearLivePreview(); reject(new Error('WebSocket disconnected')); };
   });
@@ -1289,7 +1297,7 @@ async function startGenerate() {
   const activeTasks = tasks.filter(t => t.prompt.trim());
   _progressTotal = activeTasks.length || 1;
   _progressCompleted = 0;
-  const t0 = Date.now(); let ok = 0, fail = 0;
+  const t0 = Date.now(); let ok = 0, fail = 0, lastErr = '';
   for (let i = 0; i < tasks.length; i++) {
     if (stopRequested) { setStatus(`STOPPED · ${ok} done`,'warn'); break; }
     if (!tasks[i].prompt.trim()) { queueStatuses[i]='error'; renderQueue(); continue; }
@@ -1311,6 +1319,7 @@ async function startGenerate() {
     } catch(e) {
       queueStatuses[i] = 'error'; fail++;
       _progressCompleted++;
+      lastErr = e.message;
       setStatus(`ERROR · ${e.message}`, 'error');
     }
     renderQueue();
@@ -1322,8 +1331,12 @@ async function startGenerate() {
   document.getElementById('progress-wrap').style.display = 'none';
   document.getElementById('preview-loading').style.display = 'none';
   if (!stopRequested) {
-    setStatus(`DONE · ${ok} image${ok!==1?'s':''} · ${fail} failed`, ok>0?'ok':'error');
-    switchCenterTab('gallery', document.querySelectorAll('.center-tab')[0]);
+    if (fail > 0 && ok === 0) {
+      setStatus(`FAILED · ${lastErr}`, 'error');
+    } else {
+      setStatus(`DONE · ${ok} image${ok!==1?'s':''}${fail?' · '+fail+' failed':''}`, ok>0?'ok':'error');
+      switchCenterTab('gallery', document.querySelectorAll('.center-tab')[0]);
+    }
   }
 }
 
