@@ -1,11 +1,11 @@
 # ================================================================
 #  SD 生成面板 - ComfyUI 自動安裝腳本
-#  安裝後即可使用：https://null0dv.github.io/sd-panel/sd-dashboard.html
+#  安裝後即可使用：https://null0dv.github.io/void.gen/sd-dashboard.html
 # ================================================================
 
 $ErrorActionPreference = "Stop"
 $InstallDir = "C:\ComfyUI_portable"
-$PanelUrl   = "https://null0dv.github.io/sd-panel/sd-dashboard.html"
+$PanelUrl   = "https://null0dv.github.io/void.gen/sd-dashboard.html"
 
 function Write-Step($n, $msg) {
     Write-Host "`n[$n] $msg" -ForegroundColor Cyan

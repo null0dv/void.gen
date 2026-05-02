@@ -4,7 +4,7 @@
 
 ## 開啟面板
 
-**[https://null0dv.github.io/sd-panel/sd-dashboard.html](https://null0dv.github.io/sd-panel/sd-dashboard.html)**
+**[https://null0dv.github.io/void.gen/sd-dashboard.html](https://null0dv.github.io/void.gen/sd-dashboard.html)**
 
 > 需要在本機安裝並啟動 ComfyUI 才能運作
 
@@ -179,7 +179,7 @@ C:\ComfyUI_portable\ComfyUI\models\upscale_models\
 
 ```
 1. 雙擊桌面「ComfyUI 後端」（等待出現 http://127.0.0.1:8188）
-2. 開啟 Chrome → https://null0dv.github.io/sd-panel/sd-dashboard.html
+2. 開啟 Chrome → https://null0dv.github.io/void.gen/sd-dashboard.html
 3. 右上角按 CHECK → 狀態點變綠色
 4. 左側選模型 → 輸入 Prompt → 按 GENERATE
 ```

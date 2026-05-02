@@ -24,7 +24,7 @@
 body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;height:100vh;overflow:hidden;display:flex;flex-direction:column}
 
 /* TOP BAR */
-.topbar{height:44px;display:flex;align-items:center;padding:0 20px;border-bottom:1px solid var(--line);gap:16px;flex-shrink:0}
+.topbar{height:50px;display:flex;align-items:center;padding:0 20px;border-bottom:1px solid var(--line);gap:16px;flex-shrink:0;overflow:visible}
 .logo{font-family:var(--sans);font-weight:800;font-size:15px;letter-spacing:.12em}
 .logo span{color:var(--muted)}
 .topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
@@ -972,9 +972,9 @@ function closeModal(e) {
 }
 
 // ── ACTIONS ───────────────────────────────────────────────────────
-function saveLastImg() { if (lastResult) downloadImg(lastResult.dataUrl, 'sd-panel-'+Date.now()); }
+function saveLastImg() { if (lastResult) downloadImg(lastResult.dataUrl, 'void-gen-'+Date.now()); }
 function downloadImg(dataUrl, name) {
-  const a = document.createElement('a'); a.href = dataUrl; a.download = (name||'sd-panel')+'.png'; a.click();
+  const a = document.createElement('a'); a.href = dataUrl; a.download = (name||'void-gen')+'.png'; a.click();
 }
 function sendToImg2Img() {
   if (!lastResult) return;
@@ -1068,15 +1068,15 @@ function buildWorkflow(task, modelName, seed) {
     if (um) {
       wf["23"] = { class_type:"UpscaleModelLoader", inputs:{ model_name:um } };
       wf["24"] = { class_type:"ImageUpscaleWithModel", inputs:{ upscale_model:["23",0], image:["6",0] } };
-      wf["7"]  = { class_type:"SaveImage", inputs:{ filename_prefix:"sd-panel", images:["24",0] } };
+      wf["7"]  = { class_type:"SaveImage", inputs:{ filename_prefix:"void-gen", images:["24",0] } };
     } else {
       const fw = hiresOn ? Math.round(w*parseFloat(document.getElementById('hires-scale').value||1.5)/64)*64 : w;
       const fh = hiresOn ? Math.round(h*parseFloat(document.getElementById('hires-scale').value||1.5)/64)*64 : h;
       wf["24"] = { class_type:"ImageScale", inputs:{ image:["6",0], upscale_method:"lanczos", width:fw*uf, height:fh*uf, crop:"disabled" } };
-      wf["7"]  = { class_type:"SaveImage", inputs:{ filename_prefix:"sd-panel", images:["24",0] } };
+      wf["7"]  = { class_type:"SaveImage", inputs:{ filename_prefix:"void-gen", images:["24",0] } };
     }
   } else {
-    wf["7"] = { class_type:"SaveImage", inputs:{ filename_prefix:"sd-panel", images:["6",0] } };
+    wf["7"] = { class_type:"SaveImage", inputs:{ filename_prefix:"void-gen", images:["6",0] } };
   }
   return wf;
 }
