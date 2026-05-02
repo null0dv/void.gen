@@ -24,8 +24,8 @@
 body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;height:100vh;overflow:hidden;display:flex;flex-direction:column}
 
 /* TOP BAR */
-.topbar{height:50px;display:flex;align-items:center;padding:0 20px;border-bottom:1px solid var(--line);gap:16px;flex-shrink:0;overflow:visible;position:relative;z-index:10}
-.logo{font-family:var(--sans);font-weight:800;font-size:15px;letter-spacing:.12em}
+.topbar{height:54px;display:flex;align-items:center;padding:0 20px;border-bottom:1px solid var(--line);gap:16px;flex-shrink:0;overflow:visible;position:relative;z-index:10}
+.logo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;white-space:nowrap;font-family:var(--sans);font-weight:800;font-size:15px;letter-spacing:.12em}
 .logo span{color:var(--muted)}
 .topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
 .tb-btn{padding:4px 11px;font-size:10px;letter-spacing:.08em;color:var(--muted);border:1px solid var(--line2);border-radius:4px;cursor:pointer;font-family:var(--mono);background:transparent;transition:all .15s}
@@ -1009,11 +1009,13 @@ function renderTaskEditor() {
       type="text" id="te-title" value="${escHtml(t.title)}" placeholder="Task name…"
       oninput="tasks[${idx}].title=this.value;renderTaskTabs()">
     <textarea class="prompt-area" id="te-prompt" rows="5" placeholder="describe your vision…"
-      oninput="tasks[${idx}].prompt=this.value">${escHtml(t.prompt)}</textarea>
+      oninput="tasks[${idx}].prompt=this.value;updateTokenCount()">${escHtml(t.prompt)}</textarea>
+    <div id="token-count" style="font-size:9px;color:var(--muted2);letter-spacing:.06em;text-align:right;margin-top:2px;margin-bottom:4px;transition:color .2s"></div>
     <textarea class="prompt-area neg-area" id="te-neg" rows="2" placeholder="negative…"
       oninput="tasks[${idx}].negative=this.value">${escHtml(t.negative)}</textarea>
     <div class="tag-section">${renderTagGroups()}</div>`;
   bindTagChips(wrap);
+  updateTokenCount();
 }
 function renderTagGroups() {
   const groups = [
@@ -1035,6 +1037,26 @@ function bindTagChips(wrap) {
       tasks[activeTask].prompt = el.value;
     });
   });
+}
+
+// ── TOKEN COUNTER ─────────────────────────────────────────────────
+function countClipTokens(text) {
+  if (!text.trim()) return 0;
+  // Approximate CLIP BPE: split into word-pieces, short words=1 token, longer=more
+  const pieces = text.toLowerCase().match(/[a-z0-9]+|[^a-z0-9\s]/g) || [];
+  let n = 0;
+  for (const p of pieces) {
+    n += /^[a-z0-9]+$/.test(p) ? Math.max(1, Math.ceil(p.length / 5)) : 1;
+  }
+  return n;
+}
+function updateTokenCount() {
+  const ta = document.getElementById('te-prompt');
+  const el = document.getElementById('token-count');
+  if (!ta || !el) return;
+  const n = countClipTokens(ta.value);
+  el.textContent = `${n} / 75 tokens`;
+  el.style.color = n > 75 ? 'var(--red)' : n > 60 ? 'var(--yellow)' : 'var(--muted2)';
 }
 
 // ── LORA ──────────────────────────────────────────────────────────
