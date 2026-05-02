@@ -1,12 +1,12 @@
-# SD 生成面板
+# Void.gen
 
 > 本地 Stable Diffusion 生成介面，基於 ComfyUI — 免費、無限制、完全在你的電腦上運行
 
-## 使用此面板
+## 開啟面板
 
 **[https://null0dv.github.io/sd-panel/sd-dashboard.html](https://null0dv.github.io/sd-panel/sd-dashboard.html)**
 
-> 此面板需要在你的電腦上安裝並啟動 ComfyUI 才能運作
+> 需要在本機安裝並啟動 ComfyUI 才能運作
 
 ---
 
@@ -16,8 +16,8 @@
 
 1. 下載 **[install.ps1](install.ps1)**
 2. 右鍵 → **用 PowerShell 執行**
-3. 等待安裝完成（首次約 5–10 分鐘，需下載 ~2GB）
-4. 腳本結束後依照提示下載 AI 模型
+3. 等待完成（首次約 5–10 分鐘，需下載約 2GB）
+4. 完成後依照提示下載 AI 模型
 
 ### 方法二：手動安裝
 
@@ -38,10 +38,7 @@ pause
 
 **步驟 3 — 下載 AI 模型**
 
-下載任一 Stable Diffusion 模型（`.safetensors`），放到：
-```
-C:\ComfyUI_portable\ComfyUI\models\checkpoints\
-```
+下載任一 `.safetensors` 模型，放到 `C:\ComfyUI_portable\ComfyUI\models\checkpoints\`
 
 </details>
 
@@ -60,23 +57,114 @@ C:\ComfyUI_portable\ComfyUI\models\checkpoints\
 
 ---
 
-## 推薦 AI 模型
+## 模型安裝指南
+
+所有模型檔案都放到 ComfyUI 對應資料夾後，**重啟 ComfyUI**，再按面板右上角 **CHECK** 重新讀取清單。
+
+---
+
+### Checkpoint（主模型）
+
+放到：
+```
+C:\ComfyUI_portable\ComfyUI\models\checkpoints\
+```
 
 | 模型 | 大小 | 適合 | 下載 |
 |------|------|------|------|
 | Stable Diffusion XL Base 1.0 | 6.9GB | 高品質寫實、通用 | [HuggingFace](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors) |
 | DreamShaper XL | 2.1GB | 動漫、藝術風格 | [CivitAI](https://civitai.com/models/112902) |
-| RealVisXL | 3.9GB | 超寫實人像 | [CivitAI](https://civitai.com/models/139562) |
+| RealVisXL V4 | 3.9GB | 超寫實人像 | [CivitAI](https://civitai.com/models/139562) |
+| Juggernaut XL | 6.9GB | 寫實人像、商業攝影 | [CivitAI](https://civitai.com/models/133005) |
 
-下載後放到 `ComfyUI\models\checkpoints\` 並重啟 ComfyUI。
+下載頁面通常在 **Files** 分頁，點 `.safetensors` 旁邊的下載箭頭。
+
+---
+
+### Refiner 模型（可選）
+
+Refiner 用於二階段生成，先用主模型跑大部分步數，再由 Refiner 細化細節，適合 SDXL 流程。
+
+放到：
+```
+C:\ComfyUI_portable\ComfyUI\models\checkpoints\
+```
+
+> 和主模型放同一個資料夾
+
+| 模型 | 大小 | 說明 | 下載 |
+|------|------|------|------|
+| SDXL Refiner 1.0 | 6.1GB | 官方 Refiner，搭配 SDXL Base 使用 | [HuggingFace](https://huggingface.co/stabilityai/stable-diffusion-xl-refiner-1.0/resolve/main/sd_xl_refiner_1.0.safetensors) |
+
+**使用方式：**
+1. 在面板左側展開 **REFINER**
+2. 選擇 Refiner 模型
+3. 調整 **BASE %**（建議 70–80%，代表主模型跑完這個比例後交給 Refiner）
+
+---
+
+### LoRA
+
+LoRA 是附加風格 / 人物 / 畫風的小型模型，可同時疊加最多 6 個。
+
+放到：
+```
+C:\ComfyUI_portable\ComfyUI\models\loras\
+```
+
+| 推薦來源 | 說明 |
+|----------|------|
+| [CivitAI LoRA](https://civitai.com/models?type=LORA) | 最大社群，分類齊全 |
+| [HuggingFace](https://huggingface.co/models?library=diffusers&other=lora) | 官方 / 研究向 |
+
+**使用方式：**
+1. 下載 `.safetensors` 格式的 LoRA 檔案
+2. 放到 `models/loras/` 後重啟 ComfyUI
+3. 面板左側 **LORA** 區塊選取，強度建議 0.5–0.9
+4. 可同時開啟多個 LoRA，強度會相加，不要全部設 1.0
+
+> 注意：LoRA 必須與主模型版本相符（SD 1.5 的 LoRA 不能用在 SDXL 上）
+
+---
+
+### VAE（可選）
+
+VAE 影響圖片色彩和銳利度，大部分現代模型已內建良好的 VAE，不一定需要額外下載。
+
+放到：
+```
+C:\ComfyUI_portable\ComfyUI\models\vae\
+```
+
+| 模型 | 適用 | 下載 |
+|------|------|------|
+| sdxl_vae.safetensors | SDXL 系列 | [HuggingFace](https://huggingface.co/stabilityai/sdxl-vae/resolve/main/sdxl_vae.safetensors) |
+| vae-ft-mse-840000 | SD 1.5 系列 | [HuggingFace](https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors) |
+
+**使用方式：** 面板左側展開 **VAE** → 選擇模型（選 `BUILT-IN` 則使用 Checkpoint 內建）
+
+---
+
+### Upscale 模型（可選）
+
+用於 Pipeline → Upscaler，將生成結果放大 2–4 倍。
+
+放到：
+```
+C:\ComfyUI_portable\ComfyUI\models\upscale_models\
+```
+
+| 模型 | 適合 | 下載 |
+|------|------|------|
+| RealESRGAN_x4plus.pth | 通用寫實 4× | [GitHub](https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth) |
+| RealESRGAN_x4plus_anime_6B.pth | 動漫 4× | [GitHub](https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.2.4/RealESRGAN_x4plus_anime_6B.pth) |
+| 4x-UltraSharp.pth | 超銳利通用 4× | [CivitAI](https://civitai.com/models/116225) |
 
 ---
 
 ## 解除瀏覽器限制（必要步驟）
 
-此面板使用 HTTPS（GitHub Pages），但 ComfyUI 在本機用 HTTP，Chrome 預設會封鎖此連線。
-
-**解法：**
+面板使用 HTTPS（GitHub Pages），但 ComfyUI 在本機用 HTTP，Chrome / Edge 預設會封鎖此連線。
 
 1. 用 Chrome / Edge 開啟面板網址
 2. 網址列左側點 **🔒 → 網站設定**
@@ -87,24 +175,26 @@ C:\ComfyUI_portable\ComfyUI\models\checkpoints\
 
 ---
 
-## 安裝後使用流程
+## 使用流程
 
 ```
-1. 雙擊桌面「ComfyUI 後端」啟動（等待出現 "To see the GUI go to: http://127.0.0.1:8188"）
+1. 雙擊桌面「ComfyUI 後端」（等待出現 http://127.0.0.1:8188）
 2. 開啟 Chrome → https://null0dv.github.io/sd-panel/sd-dashboard.html
-3. 點「🔌 檢查連線」→ 顯示綠色表示成功
-4. 選擇模型 → 輸入提示詞 → ▶ 開始生成
+3. 右上角按 CHECK → 狀態點變綠色
+4. 左側選模型 → 輸入 Prompt → 按 GENERATE
 ```
 
 ---
 
 ## 功能一覽
 
-- 基礎模型 + Refiner 雙模型管線
-- 最多 6 個 LoRA 同時疊加
-- Hi-res Fix + Upscaler 高清放大
-- Seed 鎖定復現、批次生成
-- 實時生成預覽（進度條旁）
+- TXT→IMG / IMG→IMG 雙模式
+- 主模型 + Refiner 雙模型管線
+- 最多 6 個 LoRA 同時疊加（可調強度）
+- Hi-res Fix 潛空間放大 + Upscaler 像素放大
+- Seed 鎖定復現、批次生成（×1 / ×2 / ×4 / ×8）
+- WebSocket 即時生成預覽
 - 提示詞快捷標籤（品質 / 風格 / 光線）
-- 圖片 Gallery + metadata 顯示
+- Gallery 圖片 + metadata hover 顯示
+- 全螢幕進度條
 - PWA 可安裝為桌面 APP
