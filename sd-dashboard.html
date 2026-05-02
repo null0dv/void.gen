@@ -832,7 +832,27 @@ function handleUpload2txt(input) {
 async function runInterrogate() {
   if (!img2txtBase64) { setStatus('UPLOAD AN IMAGE FIRST','warn'); return; }
   const btn = document.getElementById('interrogate-btn');
-  btn.textContent = 'ANALYZING…'; btn.disabled = true;
+  const out = document.getElementById('tagger-output');
+  btn.textContent = 'CHECKING…'; btn.disabled = true;
+
+  // Check if WD14Tagger node exists
+  try {
+    const chk = await fetch(`${COMFY_API}/object_info/WD14Tagger%7Cpysssss`, { signal: AbortSignal.timeout(4000) });
+    const info = await chk.json();
+    if (!info?.['WD14Tagger|pysssss']) throw new Error('not found');
+  } catch {
+    out.innerHTML =
+      '<b style="color:var(--yellow)">WD14Tagger 未安裝</b><br><br>' +
+      '請停止 ComfyUI，在 custom_nodes 資料夾執行：<br><br>' +
+      '<span style="color:var(--accent2)">git clone https://github.com/pythongosssss/ComfyUI-Custom-Scripts</span><br><br>' +
+      '然後重啟 ComfyUI。';
+    out.style.display = 'block';
+    btn.textContent = 'INTERROGATE'; btn.disabled = false;
+    setStatus('WD14TAGGER NOT INSTALLED', 'error');
+    return;
+  }
+
+  btn.textContent = 'ANALYZING…';
   setStatus('UPLOADING IMAGE…');
   try {
     const blob = await fetch('data:image/png;base64,'+img2txtBase64).then(r=>r.blob());
@@ -854,7 +874,7 @@ async function runInterrogate() {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ prompt:workflow, client_id:clientId })
     });
-    if (!r.ok) { ws.close(); throw new Error(`HTTP ${r.status} — is WD14Tagger installed?`); }
+    if (!r.ok) { ws.close(); throw new Error(`HTTP ${r.status}`); }
     const { prompt_id } = await r.json();
     setStatus('INTERROGATING…');
 
