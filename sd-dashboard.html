@@ -50,7 +50,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13
 .collapsible-body{overflow:hidden}
 
 /* MODE */
-.mode-toggle{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--bg2);border-radius:6px;padding:3px}
+.mode-toggle{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;background:var(--bg2);border-radius:6px;padding:3px}
 .mode-btn{padding:7px;text-align:center;cursor:pointer;border-radius:4px;font-size:11px;letter-spacing:.05em;color:var(--muted);transition:all .15s;font-family:var(--mono);border:1px solid transparent}
 .mode-btn.active{background:var(--bg3);color:var(--text);border-color:var(--line2)}
 
@@ -265,6 +265,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
         <div class="mode-toggle">
           <div class="mode-btn active" onclick="setMode('txt2img',this)">TXT → IMG</div>
           <div class="mode-btn" onclick="setMode('img2img',this)">IMG → IMG</div>
+          <div class="mode-btn" onclick="setMode('img2txt',this)">IMG → TXT</div>
         </div>
       </div>
 
@@ -281,6 +282,26 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
             oninput="document.getElementById('denoise-val').textContent=parseFloat(this.value).toFixed(2)">
           <span class="param-val" id="denoise-val">0.75</span>
         </div>
+      </div>
+
+      <div class="ss" id="img2txt-section" style="display:none">
+        <div class="sec-label">SOURCE IMAGE</div>
+        <div class="img-upload vis" id="img2txt-upload" onclick="triggerUpload2txt()">
+          <span>↑</span>
+          <span class="ul">CLICK TO UPLOAD</span>
+        </div>
+        <input type="file" id="file-input-2txt" accept="image/*" style="display:none" onchange="handleUpload2txt(this)">
+        <div class="param-row" style="margin-top:10px;margin-bottom:6px">
+          <span class="param-name">THRESHOLD</span>
+          <input type="range" class="slider" id="tagger-threshold" min="0.1" max="0.9" step="0.05" value="0.35"
+            oninput="document.getElementById('tagger-threshold-val').textContent=parseFloat(this.value).toFixed(2)">
+          <span class="param-val" id="tagger-threshold-val">0.35</span>
+        </div>
+        <button id="interrogate-btn" onclick="runInterrogate()"
+          style="width:100%;padding:8px;background:var(--bg3);border:1px solid var(--line2);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:11px;letter-spacing:.08em;cursor:pointer">
+          INTERROGATE
+        </button>
+        <div id="tagger-output" style="display:none;margin-top:8px;background:var(--bg2);border:1px solid var(--line2);border-radius:5px;padding:8px;font-size:10px;color:var(--muted);line-height:1.6;font-family:var(--mono);word-break:break-word"></div>
       </div>
 
       <div class="ss">
@@ -593,8 +614,9 @@ let tasks = [], activeTask = -1;
 let currentMode = 'txt2img';
 let currentW = 1024, currentH = 1024, currentBatch = 1;
 let seedLocked = false, stopRequested = false, isGenerating = false;
-let img2imgBase64 = null, lastResult = null, loraList = [];
+let img2imgBase64 = null, img2txtBase64 = null, lastResult = null, loraList = [];
 let queueStatuses = {};
+let _progressTotal = 1, _progressCompleted = 0;
 
 // ── INIT ─────────────────────────────────────────────────────────
 (function(){
@@ -780,6 +802,7 @@ function setMode(mode, el) {
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('img2img-section').style.display = mode==='img2img' ? 'block' : 'none';
+  document.getElementById('img2txt-section').style.display = mode==='img2txt' ? 'block' : 'none';
 }
 function triggerUpload() { document.getElementById('file-input').click(); }
 function handleUpload(input) {
@@ -792,6 +815,84 @@ function handleUpload(input) {
     up.innerHTML = `<img src="${e.target.result}"><span class="ul" style="color:var(--text)">✓ LOADED</span>`;
   };
   reader.readAsDataURL(file);
+}
+function triggerUpload2txt() { document.getElementById('file-input-2txt').click(); }
+function handleUpload2txt(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    img2txtBase64 = e.target.result.split(',')[1];
+    const up = document.getElementById('img2txt-upload');
+    up.classList.add('has-img');
+    up.innerHTML = `<img src="${e.target.result}"><span class="ul" style="color:var(--text)">✓ LOADED</span>`;
+    document.getElementById('tagger-output').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+async function runInterrogate() {
+  if (!img2txtBase64) { setStatus('UPLOAD AN IMAGE FIRST','warn'); return; }
+  const btn = document.getElementById('interrogate-btn');
+  btn.textContent = 'ANALYZING…'; btn.disabled = true;
+  setStatus('UPLOADING IMAGE…');
+  try {
+    const blob = await fetch('data:image/png;base64,'+img2txtBase64).then(r=>r.blob());
+    const fd = new FormData();
+    fd.append('image', blob, 'tagger_input.png');
+    const up = await fetch(`${COMFY_API}/upload/image`, { method:'POST', body:fd });
+    if (!up.ok) throw new Error('Image upload failed');
+    const { name } = await up.json();
+
+    const threshold = parseFloat(document.getElementById('tagger-threshold').value) || 0.35;
+    const clientId = crypto.randomUUID();
+    const workflow = {
+      "1": { class_type:"LoadImage", inputs:{ image:name, upload:"image" } },
+      "2": { class_type:"WD14Tagger|pysssss", inputs:{ image:["1",0], model:"wd-v1-4-moat-tagger-v2", threshold, character_threshold:0.85, replace_underscore:false, trailing_comma:false, exclude_tags:"" } }
+    };
+    const ws = new WebSocket(`ws://127.0.0.1:8188/ws?clientId=${clientId}`);
+    await new Promise((res,rej) => { ws.onopen=res; ws.onerror=()=>rej(new Error('WS failed')); setTimeout(()=>rej(new Error('timeout')),5000); });
+    const r = await fetch(`${COMFY_API}/prompt`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ prompt:workflow, client_id:clientId })
+    });
+    if (!r.ok) { ws.close(); throw new Error(`HTTP ${r.status} — is WD14Tagger installed?`); }
+    const { prompt_id } = await r.json();
+    setStatus('INTERROGATING…');
+
+    const tags = await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => { ws.close(); reject(new Error('Timeout')); }, 90000);
+      ws.onmessage = async (event) => {
+        if (event.data instanceof Blob) return;
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type==='executed' && msg.data.prompt_id===prompt_id) {
+            clearTimeout(timeout); ws.close();
+            const hist = await (await fetch(`${COMFY_API}/history/${prompt_id}`)).json();
+            const out = hist[prompt_id]?.outputs?.['2'];
+            resolve(out?.tags?.[0] || out?.text?.[0] || '');
+          }
+          if (msg.type==='execution_error' && msg.data.prompt_id===prompt_id) {
+            clearTimeout(timeout); ws.close();
+            reject(new Error(msg.data.exception_message || 'Tagger error'));
+          }
+        } catch {}
+      };
+      ws.onerror = () => { clearTimeout(timeout); reject(new Error('WS disconnected')); };
+    });
+
+    const out = document.getElementById('tagger-output');
+    out.textContent = tags || '(no tags)';
+    out.style.display = 'block';
+    if (tags && activeTask >= 0) {
+      const ta = document.getElementById('te-prompt');
+      if (ta) { ta.value = tags; tasks[activeTask].prompt = tags; }
+    }
+    setStatus('TAGS EXTRACTED — PROMPT FILLED','ok');
+    setTimeout(() => setStatus('Void.gen'), 2500);
+  } catch(e) {
+    setStatus(`TAGGER ERROR · ${e.message}`,'error');
+  } finally {
+    btn.textContent = 'INTERROGATE'; btn.disabled = false;
+  }
 }
 function setSize(w, h, el) {
   currentW = w; currentH = h;
@@ -1114,9 +1215,10 @@ async function comfyuiGenerate(task) {
         }
         const msg = JSON.parse(event.data);
         if (msg.type==='progress' && msg.data.prompt_id===prompt_id) {
-          const pct = Math.round(msg.data.value / msg.data.max * 100);
-          document.getElementById('progress-fill').style.width = pct+'%';
-          document.getElementById('progress-label').textContent = pct+'%';
+          const taskPct = msg.data.value / msg.data.max;
+          const globalPct = Math.round((_progressCompleted + taskPct) / _progressTotal * 100);
+          document.getElementById('progress-fill').style.width = globalPct+'%';
+          document.getElementById('progress-label').textContent = globalPct+'%';
           document.getElementById('progress-wrap').style.display = 'flex';
         }
         if (msg.type==='executed' && msg.data.prompt_id===prompt_id) {
@@ -1164,6 +1266,9 @@ async function startGenerate() {
   renderQueue();
   switchCenterTab('queue', document.querySelectorAll('.center-tab')[1]);
 
+  const activeTasks = tasks.filter(t => t.prompt.trim());
+  _progressTotal = activeTasks.length || 1;
+  _progressCompleted = 0;
   const t0 = Date.now(); let ok = 0, fail = 0;
   for (let i = 0; i < tasks.length; i++) {
     if (stopRequested) { setStatus(`STOPPED · ${ok} done`,'warn'); break; }
@@ -1182,8 +1287,10 @@ async function startGenerate() {
         showPreviewFinal(dataUrl, meta);
       });
       queueStatuses[i] = 'done'; ok += dataUrls.length;
+      _progressCompleted++;
     } catch(e) {
       queueStatuses[i] = 'error'; fail++;
+      _progressCompleted++;
       setStatus(`ERROR · ${e.message}`, 'error');
     }
     renderQueue();
