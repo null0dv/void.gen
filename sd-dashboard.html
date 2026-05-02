@@ -220,6 +220,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13
 .icon-btn{cursor:pointer;font-size:10px;color:var(--muted);padding:1px 5px;border:1px solid var(--line2);border-radius:3px;font-family:var(--mono);transition:all .15s;user-select:none}
 .icon-btn:hover{color:var(--text);border-color:var(--muted)}
 
+/* CONTEXT MENU */
+#ctx-menu{position:fixed;z-index:300;background:var(--bg1);border:1px solid var(--line2);border-radius:6px;padding:4px;min-width:164px;display:none;box-shadow:0 4px 20px rgba(0,0,0,.7)}
+.ctx-item{padding:6px 10px;font-size:10px;color:var(--muted);cursor:pointer;border-radius:4px;letter-spacing:.06em;transition:all .1s}
+.ctx-item:hover{background:var(--bg3);color:var(--text)}
+.ctx-sep{height:1px;background:var(--line2);margin:3px 4px}
+
+/* PROMPT HISTORY */
+#prompt-hist-drop{position:absolute;right:0;top:calc(100% + 2px);z-index:60;background:var(--bg1);border:1px solid var(--line2);border-radius:6px;padding:4px;min-width:220px;max-height:180px;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,.7);display:none}
+.hist-item{padding:5px 8px;font-size:10px;color:var(--muted);cursor:pointer;border-radius:4px;transition:all .1s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-item:hover{background:var(--bg3);color:var(--text)}
+
 /* STATUS BAR */
 .statusbar{height:24px;border-top:1px solid var(--line);display:flex;align-items:center;padding:0 16px;gap:14px;flex-shrink:0}
 .sb-item{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:5px}
@@ -297,9 +308,12 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
           SOURCE IMAGE
           <span style="font-size:8px;color:var(--muted2);letter-spacing:.06em">PixAI v0.9</span>
         </div>
-        <div class="img-upload vis" id="img2txt-upload" onclick="triggerUpload2txt()">
+        <div class="img-upload vis" id="img2txt-upload" onclick="triggerUpload2txt()"
+          ondragover="event.preventDefault();this.style.borderColor='var(--muted)'"
+          ondragleave="this.style.borderColor=''"
+          ondrop="handleDrop2txt(event)">
           <span>↑</span>
-          <span class="ul">CLICK TO UPLOAD</span>
+          <span class="ul">CLICK OR DROP</span>
         </div>
         <input type="file" id="file-input-2txt" accept="image/*" style="display:none" onchange="handleUpload2txt(this)">
         <div class="param-row" style="margin-top:10px;margin-bottom:4px">
@@ -628,6 +642,14 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
     <img class="modal-img" id="modal-img">
     <div id="modal-meta" style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px"></div>
   </div>
+</div>
+
+<!-- CONTEXT MENU -->
+<div id="ctx-menu">
+  <div class="ctx-item" onclick="ctxSendToI2I()">→ IMG → IMG</div>
+  <div class="ctx-item" onclick="ctxRestoreSettings()">↺ Restore Settings</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" onclick="ctxDownload()">↓ Download</div>
 </div>
 
 <!-- FULL-WIDTH PROGRESS BAR -->
@@ -973,9 +995,15 @@ function renderTaskEditor() {
   }
   const t = tasks[activeTask], idx = activeTask;
   wrap.innerHTML = `
-    <div class="sec-label" style="margin-bottom:6px">
-      PROMPT <span style="font-size:9px;color:var(--muted2)">${idx+1} / ${tasks.length}</span>
-      <span class="icon-btn" onclick="clearPrompt(${idx})">CLR</span>
+    <div style="position:relative;margin-bottom:6px">
+      <div class="sec-label" style="margin-bottom:0">
+        PROMPT <span style="font-size:9px;color:var(--muted2)">${idx+1} / ${tasks.length}</span>
+        <div style="display:flex;gap:4px;align-items:center">
+          <span class="icon-btn" id="hist-btn" onclick="togglePromptHistory()">▾</span>
+          <span class="icon-btn" onclick="clearPrompt(${idx})">CLR</span>
+        </div>
+      </div>
+      <div id="prompt-hist-drop"></div>
     </div>
     <input style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--line2);border-radius:5px;padding:5px 8px;font-size:10px;font-family:var(--mono);outline:none;margin-bottom:6px"
       type="text" id="te-title" value="${escHtml(t.title)}" placeholder="Task name…"
@@ -1052,15 +1080,27 @@ function handleUpload(input) {
 function triggerUpload2txt() { document.getElementById('file-input-2txt').click(); }
 function handleUpload2txt(input) {
   const file = input.files[0]; if (!file) return;
+  _load2txtFile(file);
+}
+function _load2txtFile(file) {
   const reader = new FileReader();
   reader.onload = e => {
     img2txtBase64 = e.target.result.split(',')[1];
     const up = document.getElementById('img2txt-upload');
     up.classList.add('has-img');
     up.innerHTML = `<img src="${e.target.result}"><span class="ul" style="color:var(--text)">✓ LOADED</span>`;
+    up.style.borderColor = '';
     document.getElementById('tagger-output-wrap').style.display = 'none';
+    runInterrogate();
   };
   reader.readAsDataURL(file);
+}
+function handleDrop2txt(e) {
+  e.preventDefault();
+  e.currentTarget.style.borderColor = '';
+  const file = e.dataTransfer.files[0];
+  if (!file || !file.type.startsWith('image/')) return;
+  _load2txtFile(file);
 }
 async function runInterrogate() {
   if (!img2txtBase64) { setStatus('UPLOAD AN IMAGE FIRST','warn'); return; }
@@ -1241,6 +1281,7 @@ function addToGallery(dataUrl, title, meta={}, dbId=null) {
     </div>`;
   card.querySelector('img').onclick = null;
   card.onclick = () => openModal(dataUrl, title, meta);
+  card.oncontextmenu = e => showCtxMenu(e, dataUrl, title, meta);
   grid.prepend(card);
 }
 function deleteFromGallery(card) {
@@ -1362,6 +1403,96 @@ function copyTaggerOutput() {
     btn.textContent = 'COPIED';
     setTimeout(() => btn.textContent = 'COPY', 1500);
   });
+}
+
+// ── CONTEXT MENU ─────────────────────────────────────────────────
+let _ctxData = null;
+function showCtxMenu(e, dataUrl, title, meta) {
+  e.preventDefault(); e.stopPropagation();
+  _ctxData = { dataUrl, title, meta };
+  const menu = document.getElementById('ctx-menu');
+  menu.style.display = 'block';
+  menu.style.left = Math.min(e.clientX, window.innerWidth  - 175) + 'px';
+  menu.style.top  = Math.min(e.clientY, window.innerHeight - 130) + 'px';
+}
+function hideCtxMenu() {
+  document.getElementById('ctx-menu').style.display = 'none';
+  _ctxData = null;
+}
+function ctxSendToI2I() {
+  if (!_ctxData) return;
+  sendToI2IFromGallery(_ctxData.dataUrl);
+  hideCtxMenu();
+}
+function ctxRestoreSettings() {
+  if (!_ctxData?.meta) return;
+  restoreFromMeta(_ctxData.meta);
+  hideCtxMenu();
+}
+function ctxDownload() {
+  if (!_ctxData) return;
+  downloadImg(_ctxData.dataUrl, _ctxData.title);
+  hideCtxMenu();
+}
+function restoreFromMeta(meta) {
+  if (!meta || activeTask < 0) return;
+  if (meta.prompt) {
+    tasks[activeTask].prompt = meta.prompt;
+    const ta = document.getElementById('te-prompt');
+    if (ta) ta.value = meta.prompt;
+  }
+  if (meta.seed !== undefined) {
+    document.getElementById('seed-input').value = meta.seed;
+    if (!seedLocked) {
+      seedLocked = true;
+      const btn = document.getElementById('seed-lock-btn');
+      btn.textContent = '🔒'; btn.classList.add('locked');
+      document.getElementById('seed-status').textContent = 'SEED LOCKED';
+    }
+  }
+  if (meta.model) {
+    const msel = document.getElementById('model-select');
+    if ([...msel.options].some(o => o.value === meta.model)) msel.value = meta.model;
+  }
+  if (meta.steps) { document.getElementById('steps-slider').value = meta.steps; syncParam('steps', meta.steps); }
+  if (meta.cfg)   { document.getElementById('cfg-slider').value   = meta.cfg;   syncParam('cfg',   meta.cfg);   }
+  if (meta.sampler) document.getElementById('sampler-select').value = meta.sampler;
+  saveSettings();
+  setStatus('SETTINGS RESTORED','ok');
+  setTimeout(() => setStatus('Void.gen'), 2000);
+}
+
+// ── PROMPT HISTORY ────────────────────────────────────────────────
+const HIST_KEY = 'void-gen-prompt-hist';
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); } catch { return []; }
+}
+function saveToHistory(prompt) {
+  if (!prompt?.trim()) return;
+  let hist = getHistory().filter(p => p !== prompt);
+  hist.unshift(prompt);
+  localStorage.setItem(HIST_KEY, JSON.stringify(hist.slice(0, 10)));
+}
+function togglePromptHistory() {
+  const drop = document.getElementById('prompt-hist-drop');
+  if (!drop) return;
+  const open = drop.style.display === 'block';
+  if (open) { drop.style.display = 'none'; return; }
+  const hist = getHistory();
+  drop.innerHTML = hist.length
+    ? hist.map((p, i) =>
+        `<div class="hist-item" onclick="applyHistoryItem(${i})" title="${escHtml(p)}">${escHtml(p.length > 52 ? p.slice(0,52)+'…' : p)}</div>`
+      ).join('')
+    : '<div style="padding:5px 8px;font-size:9px;color:var(--muted2)">NO HISTORY YET</div>';
+  drop.style.display = 'block';
+}
+function applyHistoryItem(i) {
+  const hist = getHistory();
+  if (!hist[i] || activeTask < 0) return;
+  tasks[activeTask].prompt = hist[i];
+  const ta = document.getElementById('te-prompt');
+  if (ta) ta.value = hist[i];
+  document.getElementById('prompt-hist-drop').style.display = 'none';
 }
 
 // ── PANEL RESIZE ──────────────────────────────────────────────────
@@ -1583,6 +1714,7 @@ async function startGenerate() {
   for (let i = 0; i < tasks.length; i++) {
     if (stopRequested) { setStatus(`STOPPED · ${ok} done`,'warn'); break; }
     if (!tasks[i].prompt.trim()) { queueStatuses[i]='error'; renderQueue(); continue; }
+    saveToHistory(tasks[i].prompt);
     queueStatuses[i] = 'running'; renderQueue();
     setStatus(`GENERATING ${i+1}/${tasks.length} · ${tasks[i].title}`);
     try {
@@ -1637,6 +1769,17 @@ document.getElementById('sampler-select').addEventListener('change', () => {
 
 document.addEventListener('input',  saveSettings, { passive: true });
 document.addEventListener('change', saveSettings, { passive: true });
+
+// dismiss context menu & history dropdown on outside click
+document.addEventListener('click', e => {
+  if (!document.getElementById('ctx-menu').contains(e.target)) hideCtxMenu();
+  const drop = document.getElementById('prompt-hist-drop');
+  if (drop && !drop.contains(e.target) && e.target.id !== 'hist-btn')
+    drop.style.display = 'none';
+});
+document.addEventListener('contextmenu', e => {
+  if (!e.target.closest('.gallery-card')) hideCtxMenu();
+});
 </script>
 </body>
 </html>
