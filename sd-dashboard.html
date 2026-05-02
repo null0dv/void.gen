@@ -2,1239 +2,1215 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<title>SD 生成面板</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SD · PANEL</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#7c3aed">
+<meta name="theme-color" content="#080808">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="SD Panel">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #0d0d0d; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap');
+:root {
+  --bg:#080808; --bg1:#0f0f0f; --bg2:#141414; --bg3:#1a1a1a;
+  --line:#222; --line2:#2e2e2e;
+  --text:#e8e8e8; --muted:#555; --muted2:#3a3a3a;
+  --accent2:#c0c0c0;
+  --red:#ff4444; --green:#44ff88; --yellow:#ffd166;
+  --mono:'DM Mono',monospace; --sans:'Syne',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;height:100vh;overflow:hidden;display:flex;flex-direction:column}
 
-  header { background: linear-gradient(135deg, #1a1a2e, #16213e); padding: 14px 24px;
-    border-bottom: 1px solid #7c3aed; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-  header h1 { font-size: 1.4rem; color: #a78bfa; }
-  .badge { background: #7c3aed; color: #fff; font-size: 0.7rem; padding: 2px 8px;
-    border-radius: 99px; vertical-align: middle; }
+/* TOP BAR */
+.topbar{height:44px;display:flex;align-items:center;padding:0 20px;border-bottom:1px solid var(--line);gap:16px;flex-shrink:0}
+.logo{font-family:var(--sans);font-weight:800;font-size:15px;letter-spacing:.12em}
+.logo span{color:var(--muted)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.tb-btn{padding:4px 11px;font-size:10px;letter-spacing:.08em;color:var(--muted);border:1px solid var(--line2);border-radius:4px;cursor:pointer;font-family:var(--mono);background:transparent;transition:all .15s}
+.tb-btn:hover{color:var(--text);border-color:var(--muted)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--muted2);display:inline-block;transition:background .3s}
+.status-dot.online{background:var(--green);box-shadow:0 0 6px var(--green)}
+.status-dot.error{background:var(--red)}
+.status-text{font-size:10px;color:var(--muted);letter-spacing:.06em}
 
-  .backend-group { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-  .be-btn { padding: 5px 14px; border: 1px solid #374151; border-radius: 6px;
-    background: #1f2937; color: #9ca3af; cursor: pointer; font-size: 0.8rem; transition: all .15s; }
-  .be-btn.active { background: #7c3aed; color: #fff; border-color: #7c3aed; }
-  .api-dot { font-size: 1rem; }
-  .api-label { font-size: 0.78rem; color: #6b7280; }
+/* LAYOUT */
+.main{flex:1;display:flex;overflow:hidden}
 
-  .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 0; height: calc(100vh - 60px); }
-  .panel { display: flex; flex-direction: column; overflow: hidden; }
-  .panel-title { background: #111827; padding: 9px 20px; font-size: 0.83rem;
-    color: #9ca3af; border-bottom: 1px solid #1f2937; letter-spacing: .05em; }
+/* SIDEBAR */
+.sidebar{width:300px;border-right:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0}
+.sidebar-scroll{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
+.ss{border-bottom:1px solid var(--line);padding:11px 15px}
+.sec-label{font-size:9px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.sec-label.clickable{cursor:pointer;user-select:none}
+.sec-label.clickable:hover .caret{color:var(--accent2)}
+.caret{font-size:10px;color:var(--muted2);transition:transform .2s,color .15s}
+.caret.open{transform:rotate(180deg)}
+.collapsible-body{overflow:hidden}
 
-  #editor { flex: 1; background: #111; color: #e2e8f0; border: none; outline: none;
-    padding: 20px; font-family: 'Cascadia Code','Consolas',monospace; font-size: 13px;
-    line-height: 1.7; resize: none; border-right: 1px solid #1f2937; }
+/* MODE */
+.mode-toggle{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--bg2);border-radius:6px;padding:3px}
+.mode-btn{padding:7px;text-align:center;cursor:pointer;border-radius:4px;font-size:11px;letter-spacing:.05em;color:var(--muted);transition:all .15s;font-family:var(--mono);border:1px solid transparent}
+.mode-btn.active{background:var(--bg3);color:var(--text);border-color:var(--line2)}
 
-  .right-panel { display: flex; flex-direction: column; }
-  .controls { background: #111827; padding: 12px 18px; display: flex; gap: 8px;
-    flex-wrap: wrap; align-items: center; border-bottom: 1px solid #1f2937; }
-  .btn { padding: 7px 16px; border: none; border-radius: 6px; cursor: pointer;
-    font-size: 0.83rem; font-weight: 600; transition: all .2s; }
-  .btn-primary { background: #7c3aed; color: #fff; }
-  .btn-primary:hover { background: #6d28d9; }
-  .btn-secondary { background: #1f2937; color: #9ca3af; border: 1px solid #374151; }
-  .btn-secondary:hover { background: #374151; color: #e5e7eb; }
+/* IMG2IMG UPLOAD */
+.img-upload{display:none;border:1px dashed var(--line2);border-radius:6px;height:80px;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:11px;letter-spacing:.05em;flex-direction:column;gap:6px;transition:all .2s;background:var(--bg2);position:relative;overflow:hidden}
+.img-upload.vis{display:flex}
+.img-upload:hover{border-color:var(--muted);color:var(--text)}
+.img-upload.has-img{border-style:solid}
+.img-upload img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5}
+.img-upload .ul{position:relative;z-index:1}
 
-  /* ── 模型設定面板 ── */
-  #settings-panel {
-    display: flex; flex-direction: column; gap: 0;
-    background: #0f172a; border-bottom: 1px solid #1f2937;
-  }
-  .setting-section {
-    padding: 10px 18px; border-bottom: 1px solid #1f2937;
-  }
-  .setting-label {
-    font-size: 0.7rem; color: #6b7280; letter-spacing: .08em;
-    text-transform: uppercase; margin-bottom: 6px;
-  }
-  .setting-row { display: flex; gap: 8px; align-items: center; }
-  .setting-select {
-    flex: 1; background: #1f2937; color: #e5e7eb; border: 1px solid #374151;
-    border-radius: 8px; padding: 7px 10px; font-size: 0.83rem; min-width: 0;
-  }
-  .setting-select:focus { outline: none; border-color: #7c3aed; }
-  .refresh-btn {
-    background: #1f2937; color: #6b7280; border: 1px solid #374151;
-    border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 0.85rem;
-  }
-  .refresh-btn:hover { color: #e5e7eb; border-color: #4b5563; }
-  .strength-input {
-    width: 62px; background: #1f2937; color: #e5e7eb; border: 1px solid #374151;
-    border-radius: 8px; padding: 7px 8px; font-size: 0.83rem; text-align: center;
-  }
-  .strength-slider {
-    flex: 1; accent-color: #7c3aed; cursor: pointer;
-  }
-  .lora-grid { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; }
-  .sampler-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .preset-btn {
-    background: #1f2937; border: 1px solid #374151; border-radius: 8px;
-    color: #9ca3af; cursor: pointer; padding: 5px 10px; font-size: 0.72rem;
-    line-height: 1.4; text-align: center; transition: all .15s;
-  }
-  .preset-btn span { font-size: 0.65rem; color: #6b7280; display:block; }
-  .pipeline-block { background:#111; border:1px solid #1f2937; border-radius:8px; overflow:hidden; }
-  .pipeline-toggle { display:flex; align-items:center; gap:8px; padding:9px 12px; cursor:pointer; }
-  .pipeline-toggle input[type=checkbox] { accent-color:#7c3aed; width:15px; height:15px; cursor:pointer; }
-  .pipeline-name { font-size:0.83rem; font-weight:600; color:#e5e7eb; }
-  .pipeline-desc { font-size:0.7rem; color:#6b7280; margin-left:auto; }
-  .pipeline-inner { padding:10px 12px; border-top:1px solid #1f2937; background:#0d0d0d; }
-  .preset-btn:hover, .preset-btn.active { background: #4c1d95; border-color: #7c3aed; color: #e9d5ff; }
-  .preset-btn.active span { color: #c4b5fd; }
+/* TASK TABS */
+.task-tabs-row{display:flex;align-items:center;gap:4px;overflow-x:auto;scrollbar-width:none;min-height:28px;flex-wrap:nowrap}
+.task-tabs-row::-webkit-scrollbar{display:none}
+.task-tab{display:flex;align-items:center;gap:3px;padding:4px 9px;border-radius:4px;cursor:pointer;font-size:10px;color:var(--muted);border:1px solid transparent;transition:all .15s;white-space:nowrap;flex-shrink:0;font-family:var(--mono)}
+.task-tab.active{color:var(--text);border-color:var(--line2);background:var(--bg2)}
+.task-tab:hover:not(.active){color:var(--accent2)}
+.ttd{color:var(--muted2);font-size:10px;padding:1px 3px;border-radius:3px;transition:color .15s}
+.ttd:hover{color:var(--red)}
+.ttdup{color:var(--muted2);font-size:10px;padding:1px 3px;border-radius:3px;transition:color .15s;opacity:.5}
+.ttdup:hover{color:var(--accent2);opacity:1}
+.add-task-btn{padding:4px 9px;border-radius:4px;cursor:pointer;font-size:10px;color:var(--muted);border:1px solid var(--line2);background:transparent;font-family:var(--mono);transition:all .15s;flex-shrink:0}
+.add-task-btn:hover{color:var(--text);border-color:var(--muted)}
 
-  .status-bar { padding: 7px 18px; background: #0f172a; font-size: 0.8rem;
-    border-bottom: 1px solid #1f2937; min-height: 32px; }
-  .status-ok  { color: #34d399; }
-  .status-err { color: #f87171; }
-  .status-run { color: #fbbf24; }
+/* PROMPT */
+.prompt-area{width:100%;background:var(--bg2);border:1px solid var(--line2);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:12px;line-height:1.7;padding:9px 11px;resize:vertical;outline:none;transition:border-color .15s;min-height:76px}
+.prompt-area:focus{border-color:var(--muted)}
+.prompt-area::placeholder{color:var(--muted2)}
+.neg-area{min-height:48px;margin-top:6px}
 
-  .tabs { display: flex; background: #111827; border-bottom: 1px solid #1f2937; }
-  .tab { padding: 8px 18px; font-size: 0.82rem; cursor: pointer; color: #6b7280;
-    border-bottom: 2px solid transparent; transition: all .2s; }
-  .tab.active { color: #a78bfa; border-bottom-color: #7c3aed; }
+/* TAG CHIPS */
+.tag-section{margin-top:8px}
+.tag-group{margin-bottom:5px}
+.tag-group-label{font-size:8px;color:var(--muted2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+.tag-chips{display:flex;flex-wrap:wrap;gap:3px}
+.tag-chip{background:var(--bg2);border:1px solid var(--line2);border-radius:99px;padding:2px 8px;font-size:9px;color:var(--muted);cursor:pointer;transition:all .15s;user-select:none;font-family:var(--mono)}
+.tag-chip:hover{background:var(--bg3);border-color:var(--muted);color:var(--text)}
 
-  .task-list { flex: 1; overflow-y: auto; padding: 12px 18px; }
-  .task-item { background: #1f2937; border-radius: 8px; padding: 11px 13px;
-    margin-bottom: 8px; border-left: 3px solid #374151; }
-  .task-item.pending { border-left-color: #6b7280; }
-  .task-item.running { border-left-color: #fbbf24; }
-  .task-item.done    { border-left-color: #34d399; }
-  .task-item.error   { border-left-color: #f87171; }
-  .task-title { font-size: 0.84rem; font-weight: 600; margin-bottom: 3px; }
-  .task-meta  { font-size: 0.73rem; color: #6b7280; }
-  .task-status { float: right; font-size: 0.73rem; }
+/* SELECT */
+.sel{width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--line2);border-radius:6px;padding:7px 10px;font-size:11px;font-family:var(--mono);outline:none;cursor:pointer;appearance:none;-webkit-appearance:none}
+.sel:focus{border-color:var(--muted)}
 
-  #gallery { flex: 1; overflow-y: auto; padding: 14px; display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; align-content: start; }
-  .img-card { background: #1f2937; border-radius: 8px; overflow: hidden;
-    border: 1px solid #374151; transition: transform .2s; }
-  .img-card:hover { transform: scale(1.03); border-color: #7c3aed; }
-  .img-card img { width: 100%; display: block; }
-  .img-card .img-label { padding: 5px 8px; font-size: 0.71rem; color: #9ca3af;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* PARAMS */
+.param-row{display:grid;grid-template-columns:64px 1fr 38px;align-items:center;gap:8px;margin-bottom:7px}
+.param-name{font-size:10px;color:var(--muted);letter-spacing:.06em}
+.slider{-webkit-appearance:none;appearance:none;height:2px;background:var(--line2);border-radius:1px;outline:none;cursor:pointer;width:100%}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--text);cursor:pointer;transition:transform .1s}
+.slider::-webkit-slider-thumb:hover{transform:scale(1.3)}
+.param-val{font-size:10px;color:var(--accent2);text-align:right;font-variant-numeric:tabular-nums}
 
-  .empty-msg { color: #4b5563; text-align: center; margin-top: 40px; font-size: 0.88rem; }
+/* SEED */
+.seed-row{display:flex;align-items:center;gap:5px;margin-bottom:5px}
+.seed-input{flex:1;background:var(--bg2);color:var(--text);border:1px solid var(--line2);border-radius:6px;padding:6px 8px;font-size:11px;font-family:var(--mono);outline:none}
+.seed-input:focus{border-color:var(--muted)}
+.seed-icon-btn{width:28px;height:28px;background:var(--bg2);border:1px solid var(--line2);border-radius:5px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:var(--muted);transition:all .15s;flex-shrink:0}
+.seed-icon-btn:hover{border-color:var(--muted);color:var(--text)}
+.seed-icon-btn.locked{background:var(--bg3);border-color:var(--muted);color:var(--text)}
+.seed-status{font-size:9px;color:var(--muted2);letter-spacing:.05em}
 
-  /* ── 左側任務編輯器 ── */
-  .add-task-btn {
-    background: #7c3aed; color: #fff; border: none; border-radius: 6px;
-    padding: 5px 13px; font-size: 0.78rem; cursor: pointer; font-weight: 600;
-    transition: background .15s;
-  }
-  .add-task-btn:hover { background: #6d28d9; }
+/* SIZE */
+.size-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.size-btn{padding:5px 3px;text-align:center;cursor:pointer;border-radius:4px;font-size:9px;color:var(--muted);border:1px solid transparent;transition:all .15s;letter-spacing:.03em;font-family:var(--mono);line-height:1.4}
+.size-btn:hover{color:var(--text);border-color:var(--line2)}
+.size-btn.active{color:var(--text);border-color:var(--line2);background:var(--bg3)}
+.size-custom{display:flex;align-items:center;gap:5px;margin-top:7px}
+.size-input{width:62px;background:var(--bg2);color:var(--text);border:1px solid var(--line2);border-radius:5px;padding:5px 7px;font-size:11px;font-family:var(--mono);outline:none;text-align:center}
+.size-input:focus{border-color:var(--muted)}
+.size-sep{color:var(--muted2);font-size:12px}
+.flip-btn{padding:5px 7px;background:var(--bg2);border:1px solid var(--line2);border-radius:5px;cursor:pointer;font-size:11px;color:var(--muted);transition:all .15s}
+.flip-btn:hover{color:var(--text)}
 
-  #task-tabs { scrollbar-width: thin; scrollbar-color: #374151 transparent; }
-  .task-tab {
-    display: flex; align-items: center; gap: 5px;
-    padding: 9px 14px; cursor: pointer; white-space: nowrap;
-    font-size: 0.8rem; color: #6b7280; border-bottom: 2px solid transparent;
-    transition: all .15s; flex-shrink: 0; user-select: none;
-  }
-  .task-tab.active { color: #a78bfa; border-bottom-color: #7c3aed; background: #1a1a2e; }
-  .task-tab:hover:not(.active) { color: #e5e7eb; }
-  .task-tab-del {
-    color: #374151; font-size: 0.82rem; line-height: 1; padding: 1px 4px;
-    border-radius: 3px; transition: all .15s;
-  }
-  .task-tab-del:hover { color: #f87171; background: #1f2937; }
+/* BATCH */
+.batch-row{display:flex;gap:4px}
+.batch-btn{flex:1;padding:6px;text-align:center;cursor:pointer;border-radius:4px;font-size:10px;color:var(--muted);border:1px solid transparent;transition:all .15s;font-family:var(--mono)}
+.batch-btn:hover{color:var(--text)}
+.batch-btn.active{color:var(--text);border-color:var(--line2);background:var(--bg3)}
 
-  .field-label {
-    font-size: 0.7rem; color: #6b7280; letter-spacing: .08em;
-    text-transform: uppercase; margin-bottom: 5px;
-  }
-  .field-input {
-    width: 100%; background: #1f2937; color: #e5e7eb; border: 1px solid #374151;
-    border-radius: 8px; padding: 8px 10px; font-size: 0.83rem;
-  }
-  .field-input:focus { outline: none; border-color: #7c3aed; background: #111827; }
-  textarea.field-input {
-    resize: vertical; font-family: 'Segoe UI', sans-serif; line-height: 1.6;
-    min-height: 80px;
-  }
+/* LORA */
+.lora-item{display:grid;grid-template-columns:1fr 72px 34px;align-items:center;gap:7px;margin-bottom:7px}
+.lora-val{font-size:10px;color:var(--muted);text-align:right}
 
-  /* Stop button */
-  .btn-danger { background: #991b1b; color: #fff; }
-  .btn-danger:hover { background: #7f1d1d; }
+/* PIPELINE */
+.pipeline-block{background:var(--bg2);border:1px solid var(--line2);border-radius:6px;overflow:hidden;margin-bottom:6px}
+.pipeline-toggle{display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer}
+.pipeline-toggle input[type=checkbox]{accent-color:var(--text);width:13px;height:13px;cursor:pointer}
+.pipeline-name{font-size:11px;color:var(--text)}
+.pipeline-desc{font-size:9px;color:var(--muted);margin-left:auto}
+.pipeline-inner{padding:10px;border-top:1px solid var(--line2);background:var(--bg)}
 
-  /* Seed lock */
-  .seed-lock-btn {
-    background: #1f2937; border: 1px solid #374151; border-radius: 8px;
-    padding: 6px 10px; cursor: pointer; font-size: 0.9rem; transition: all .15s; min-width: 36px;
-  }
-  .seed-lock-btn.locked { background: #4c1d95; border-color: #7c3aed; }
-  .seed-lock-btn:hover { border-color: #4b5563; }
+/* GENERATE */
+.gen-wrap{padding:11px 15px;background:var(--bg);border-top:1px solid var(--line);flex-shrink:0}
+.gen-btn{width:100%;padding:12px;background:var(--text);color:var(--bg);border:none;border-radius:6px;font-family:var(--sans);font-weight:700;font-size:13px;letter-spacing:.12em;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.gen-btn:hover{background:var(--accent2)}
+.gen-btn:active{transform:scale(.98)}
+.gen-btn.running{background:var(--bg3);color:var(--muted);cursor:not-allowed;border:1px solid var(--line2)}
+.spinner{width:12px;height:12px;border:2px solid var(--muted2);border-top-color:var(--muted);border-radius:50%;animation:spin .7s linear infinite;display:none}
+.gen-btn.running .spinner{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.stop-btn{width:100%;padding:6px;background:transparent;color:var(--red);border:1px solid rgba(255,68,68,.3);border-radius:6px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;cursor:pointer;margin-top:5px;transition:all .15s;display:none}
+.stop-btn:hover{background:rgba(255,68,68,.1);border-color:var(--red)}
+.progress-wrap{margin-bottom:7px;display:none}
+.prog-bg{height:2px;background:var(--line2);border-radius:1px;overflow:hidden}
+.prog-fill{height:100%;background:var(--text);border-radius:1px;width:0%;transition:width .2s}
+.prog-label{font-size:9px;color:var(--muted);margin-top:4px;letter-spacing:.06em}
 
-  /* Prompt tag chips */
-  .tag-section { margin-top: 6px; }
-  .tag-group { margin-bottom: 6px; }
-  .tag-group-label { font-size: 0.63rem; color: #374151; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 3px; }
-  .tag-chips { display: flex; flex-wrap: wrap; gap: 4px; }
-  .tag-chip {
-    background: #111827; border: 1px solid #1f2937; border-radius: 99px;
-    padding: 2px 9px; font-size: 0.7rem; color: #6b7280; cursor: pointer; transition: all .15s;
-    user-select: none;
-  }
-  .tag-chip:hover { background: #4c1d95; border-color: #7c3aed; color: #e9d5ff; }
+/* CENTER */
+.center{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.center-tabs{display:flex;border-bottom:1px solid var(--line);flex-shrink:0}
+.center-tab{padding:10px 18px;font-size:11px;letter-spacing:.08em;color:var(--muted);cursor:pointer;border-bottom:1px solid transparent;transition:all .15s;font-family:var(--mono)}
+.center-tab.active{color:var(--text);border-bottom-color:var(--text)}
+.center-tab:hover:not(.active){color:var(--accent2)}
 
-  /* Gallery metadata overlay */
-  .img-card { position: relative; }
-  .img-meta {
-    display: none; position: absolute; inset: 0;
-    background: rgba(0,0,0,0.88); padding: 10px; overflow-y: auto;
-    font-size: 0.72rem; color: #e5e7eb; border-radius: 8px; z-index: 2;
-  }
-  .img-meta-row { margin-bottom: 6px; line-height: 1.4; word-break: break-word; }
-  .img-meta-row b { color: #a78bfa; display: block; font-size: 0.63rem; text-transform: uppercase; margin-bottom: 1px; }
-  .img-card:hover .img-meta { display: block; }
+/* GALLERY */
+#gallery-view{flex:1;overflow-y:auto;padding:15px;scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:9px}
+.gallery-card{background:var(--bg2);border-radius:6px;overflow:hidden;border:1px solid var(--line);cursor:pointer;transition:all .2s;position:relative}
+.gallery-card:hover{border-color:var(--line2);transform:translateY(-2px)}
+.gallery-card img{width:100%;display:block;aspect-ratio:1;object-fit:cover}
+.card-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.8) 0%,transparent 50%);opacity:0;transition:opacity .2s;display:flex;align-items:flex-end;padding:10px}
+.gallery-card:hover .card-overlay{opacity:1}
+.card-prompt{font-size:10px;color:var(--accent2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-actions{position:absolute;top:7px;right:7px;display:flex;gap:4px;opacity:0;transition:opacity .2s}
+.gallery-card:hover .card-actions{opacity:1}
+.card-action-btn{width:26px;height:26px;background:rgba(0,0,0,.7);border:1px solid var(--line2);border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;transition:all .15s}
+.card-action-btn:hover{background:rgba(0,0,0,.9);border-color:var(--muted)}
 
-  /* Collapsible setting sections */
-  .section-header {
-    display: flex; align-items: center; justify-content: space-between;
-    cursor: pointer; user-select: none;
-  }
-  .section-header:hover .section-toggle { color: #e5e7eb; }
-  .section-toggle {
-    color: #4b5563; font-size: 0.75rem; transition: transform .2s, color .15s;
-    flex-shrink: 0;
-  }
-  .section-toggle.open { transform: rotate(180deg); }
-  .section-body { overflow: hidden; transition: none; }
+/* QUEUE */
+#queue-view{flex:1;overflow-y:auto;padding:15px;display:none;scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
+.queue-item{display:flex;align-items:center;gap:11px;padding:9px 12px;background:var(--bg2);border-radius:6px;border:1px solid var(--line);margin-bottom:5px}
+.q-status{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.q-status.pending{background:var(--muted2)}
+.q-status.running{background:var(--yellow);box-shadow:0 0 6px var(--yellow);animation:pulse 1s infinite}
+.q-status.done{background:var(--green)}
+.q-status.error{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.q-info{flex:1;min-width:0}
+.q-title{font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.q-meta{font-size:9px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.q-badge{font-size:9px;letter-spacing:.06em;padding:2px 7px;border-radius:3px;text-transform:uppercase;flex-shrink:0}
+.q-badge.pending{background:var(--bg3);color:var(--muted)}
+.q-badge.running{background:rgba(255,209,102,.1);color:var(--yellow)}
+.q-badge.done{background:rgba(68,255,136,.1);color:var(--green)}
+.q-badge.error{background:rgba(255,68,68,.1);color:var(--red)}
 
-  /* Live preview next to progress bar */
-  #preview-img {
-    width: 60px; height: 60px; object-fit: cover; border-radius: 6px;
-    border: 1px solid #374151; flex-shrink: 0; display: none;
-  }
+/* RIGHT PANEL */
+.right-panel{width:240px;border-left:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0}
+.rp-header{padding:10px 14px;border-bottom:1px solid var(--line);font-size:9px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+.preview-wrap{padding:12px;border-bottom:1px solid var(--line)}
+.preview-box{background:var(--bg2);border-radius:6px;border:1px solid var(--line);aspect-ratio:1;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.preview-box img{width:100%;height:100%;object-fit:contain}
+.preview-ph{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--muted2);font-size:10px;letter-spacing:.06em}
+.preview-icon{font-size:24px;opacity:.3}
+.preview-loading{position:absolute;inset:0;background:var(--bg2);display:none;align-items:center;justify-content:center}
+.spinner-lg{width:22px;height:22px;border:2px solid var(--line2);border-top-color:var(--muted);border-radius:50%;animation:spin .7s linear infinite}
+.meta-list{padding:12px 14px;display:flex;flex-direction:column;gap:7px;flex:1;overflow:hidden}
+.meta-row{display:flex;justify-content:space-between;align-items:center}
+.meta-key{font-size:10px;color:var(--muted)}
+.meta-val{font-size:10px;color:var(--accent2);text-align:right;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.action-row{padding:11px 14px;display:flex;gap:5px;border-top:1px solid var(--line);flex-shrink:0}
+.action-btn{flex:1;padding:7px;text-align:center;cursor:pointer;border-radius:5px;font-size:10px;color:var(--muted);border:1px solid var(--line2);transition:all .15s;font-family:var(--mono);background:var(--bg2);letter-spacing:.04em}
+.action-btn:hover{color:var(--text);border-color:var(--muted)}
+
+/* STATUS BAR */
+.statusbar{height:24px;border-top:1px solid var(--line);display:flex;align-items:center;padding:0 16px;gap:14px;flex-shrink:0}
+.sb-item{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.sb-item.ok{color:var(--green)}
+.sb-item.error{color:var(--red)}
+.sb-item.warn{color:var(--yellow)}
+
+/* EMPTY */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;color:var(--muted2)}
+.empty-icon{font-size:28px;opacity:.25}
+.empty-text{font-size:11px;letter-spacing:.06em}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:100}
+.modal-bg.open{display:flex}
+.modal{background:var(--bg1);border:1px solid var(--line2);border-radius:8px;padding:24px;width:480px;max-width:94vw;max-height:90vh;overflow-y:auto}
+.modal-title{font-family:var(--sans);font-weight:700;font-size:15px;margin-bottom:18px;letter-spacing:.04em}
+.modal-img{width:100%;border-radius:6px;margin-bottom:15px;display:block}
+.modal-close{float:right;cursor:pointer;color:var(--muted);font-size:18px;transition:color .15s}
+.modal-close:hover{color:var(--text)}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line2);border-radius:2px}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 </style>
 </head>
 <body>
 
-<header>
-  <div>✦</div>
-  <h1>Stable Diffusion 生成面板 <span class="badge">ComfyUI</span></h1>
-  <div class="backend-group">
-    <span class="api-label">http://127.0.0.1:8188</span>
-    <span class="api-dot" id="api-dot" style="color:#6b7280;">●</span>
+<div class="topbar">
+  <div class="logo">SD<span> · PANEL</span></div>
+  <div class="topbar-right">
+    <button class="tb-btn" onclick="saveTasks()">SAVE</button>
+    <button class="tb-btn" onclick="checkApi()">CHECK</button>
+    <button class="tb-btn" onclick="clearGallery()">CLEAR</button>
+    <button class="tb-btn" onclick="resetTasks()">RESET</button>
+    <span class="status-dot" id="api-dot"></span>
+    <span class="status-text" id="api-text">CONNECTING</span>
   </div>
-</header>
+</div>
 
-<div class="layout">
-  <!-- 左：結構化任務編輯器 -->
-  <div class="panel">
-    <div class="panel-title" style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px">
-      <span>📝 任務列表</span>
-      <button class="add-task-btn" onclick="addTask()">＋ 新增任務</button>
-    </div>
+<div class="main">
 
-    <!-- 任務分頁 -->
-    <div id="task-tabs" style="display:flex;overflow-x:auto;background:#111827;border-bottom:1px solid #1f2937;min-height:38px"></div>
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-scroll">
 
-    <!-- 任務編輯區 -->
-    <div id="task-editor" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px">
-      <div class="empty-msg">點「＋ 新增任務」開始</div>
-    </div>
-
-    <!-- 隱藏的 textarea 保持相容性 -->
-    <textarea id="editor" style="display:none" spellcheck="false"></textarea>
-  </div>
-
-  <!-- 右：控制 + 結果 -->
-  <div class="right-panel">
-    <div class="controls">
-      <button id="generate-btn" class="btn btn-primary" onclick="startGenerate()">▶ 開始生成</button>
-      <button id="stop-btn" class="btn btn-danger" onclick="stopGenerate()" style="display:none">■ 停止</button>
-      <button class="btn btn-secondary" onclick="saveMd()">💾 儲存</button>
-      <button class="btn btn-secondary" onclick="checkApi()">🔌 檢查連線</button>
-      <button class="btn btn-secondary" onclick="clearGallery()">🗑 清除</button>
-      <button class="btn btn-secondary" onclick="resetMd()">↺ 重置</button>
-    </div>
-
-    <!-- ComfyUI 模型設定面板 -->
-    <div id="settings-panel">
-
-      <!-- 基礎模型 -->
-      <div class="setting-section">
-        <div class="setting-label">基礎模型 Checkpoint</div>
-        <div class="setting-row">
-          <select id="model-select" class="setting-select"><option value="">載入中…</option></select>
-          <button class="refresh-btn" onclick="loadComfyModels()">↻</button>
+      <div class="ss">
+        <div class="sec-label">MODE</div>
+        <div class="mode-toggle">
+          <div class="mode-btn active" onclick="setMode('txt2img',this)">TXT → IMG</div>
+          <div class="mode-btn" onclick="setMode('img2img',this)">IMG → IMG</div>
         </div>
       </div>
 
-      <!-- Refiner 模型 -->
-      <div class="setting-section">
-        <div class="setting-label">Refiner 模型（第二層）</div>
-        <div class="setting-row">
-          <select id="refiner-select" class="setting-select"
-            onchange="document.getElementById('refiner-switch-wrap').style.display=this.value?'block':'none'">
-            <option value="">不使用</option>
+      <div class="ss" id="img2img-section" style="display:none">
+        <div class="sec-label">SOURCE IMAGE</div>
+        <div class="img-upload vis" id="img-upload" onclick="triggerUpload()">
+          <span>↑</span>
+          <span class="ul">CLICK TO UPLOAD</span>
+        </div>
+        <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleUpload(this)">
+        <div class="param-row" style="margin-top:10px;margin-bottom:0">
+          <span class="param-name">DENOISE</span>
+          <input type="range" class="slider" id="denoise-slider" min="0" max="1" step="0.01" value="0.75"
+            oninput="document.getElementById('denoise-val').textContent=parseFloat(this.value).toFixed(2)">
+          <span class="param-val" id="denoise-val">0.75</span>
+        </div>
+      </div>
+
+      <div class="ss">
+        <div class="sec-label">
+          TASKS
+          <button class="add-task-btn" onclick="addTask()">+ NEW</button>
+        </div>
+        <div class="task-tabs-row" id="task-tabs"></div>
+      </div>
+
+      <div class="ss" id="task-editor">
+        <div class="empty-state" style="height:60px">
+          <div class="empty-text">ADD A TASK TO BEGIN</div>
+        </div>
+      </div>
+
+      <div class="ss">
+        <div class="sec-label">
+          MODEL
+          <span style="cursor:pointer;color:var(--muted);font-size:14px" onclick="loadComfyModels()" title="Refresh">↻</span>
+        </div>
+        <select class="sel" id="model-select"><option value="">— no models loaded —</option></select>
+      </div>
+
+      <div class="ss">
+        <div class="sec-label">SAMPLER</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <select class="sel" id="sampler-select">
+            <option value="euler_ancestral" selected>euler_a</option>
+            <option value="euler">euler</option>
+            <option value="dpmpp_2m">dpmpp_2m</option>
+            <option value="dpmpp_2s_ancestral">dpmpp_2s_a</option>
+            <option value="dpmpp_sde">dpmpp_sde</option>
+            <option value="ddim">ddim</option>
+            <option value="uni_pc">uni_pc</option>
           </select>
-          <button class="refresh-btn" onclick="loadRefinerModels()">↻</button>
-        </div>
-        <div id="refiner-switch-wrap" style="display:none;margin-top:10px">
-          <div class="setting-label">切換點 — Base 跑前 <span id="switch-pct" style="color:#a78bfa">80</span>%，Refiner 跑後 <span id="switch-pct2" style="color:#c084fc">20</span>%</div>
-          <input id="switch-slider" class="strength-slider" type="range" min="10" max="90" step="5" value="80"
-            oninput="updateSwitch(this.value)" style="width:100%;margin-top:6px">
+          <select class="sel" id="scheduler-select">
+            <option value="karras" selected>karras</option>
+            <option value="normal">normal</option>
+            <option value="exponential">exponential</option>
+            <option value="sgm_uniform">sgm_uniform</option>
+            <option value="simple">simple</option>
+          </select>
         </div>
       </div>
 
-      <!-- LoRA -->
-      <div class="setting-section">
-        <div class="section-header" onclick="toggleSection('lora-body','lora-arrow')">
-          <div class="setting-label" style="margin:0">LoRA（最多 6 個）</div>
+      <div class="ss">
+        <div class="sec-label">PARAMETERS</div>
+        <div class="param-row">
+          <span class="param-name">STEPS</span>
+          <input type="range" class="slider" id="steps-slider" min="1" max="60" value="20"
+            oninput="syncParam('steps',this.value)">
+          <span class="param-val" id="steps-val">20</span>
+        </div>
+        <div class="param-row" style="margin-bottom:0">
+          <span class="param-name">CFG</span>
+          <input type="range" class="slider" id="cfg-slider" min="1" max="20" step="0.5" value="7"
+            oninput="syncParam('cfg',this.value)">
+          <span class="param-val" id="cfg-val">7</span>
+        </div>
+        <input type="hidden" id="steps-num" value="20">
+        <input type="hidden" id="cfg-num" value="7">
+      </div>
+
+      <div class="ss">
+        <div class="sec-label">SEED</div>
+        <div class="seed-row">
+          <input type="number" class="seed-input" id="seed-input" value="0" min="0" max="4294967295">
+          <div class="seed-icon-btn" id="seed-lock-btn" onclick="toggleSeedLock()" title="Lock seed">🎲</div>
+          <div class="seed-icon-btn" onclick="randomizeSeed()" title="Random seed">↻</div>
+        </div>
+        <div class="seed-status" id="seed-status">RANDOM SEED EACH RUN</div>
+      </div>
+
+      <div class="ss">
+        <div class="sec-label">SIZE</div>
+        <div class="size-grid">
+          <div class="size-btn" onclick="setSize(512,512,this)">512<br>sq</div>
+          <div class="size-btn" onclick="setSize(768,1344,this)">768×1344<br>port</div>
+          <div class="size-btn" onclick="setSize(1344,768,this)">1344×768<br>land</div>
+          <div class="size-btn active" onclick="setSize(1024,1024,this)">1024<br>sq</div>
+          <div class="size-btn" onclick="setSize(832,1216,this)">832×1216<br>port</div>
+          <div class="size-btn" onclick="setSize(1216,832,this)">1216×832<br>land</div>
+        </div>
+        <div class="size-custom">
+          <input type="number" class="size-input" id="size-w" value="1024" min="64" max="2048" step="64"
+            oninput="currentW=parseInt(this.value)||1024">
+          <span class="size-sep">×</span>
+          <input type="number" class="size-input" id="size-h" value="1024" min="64" max="2048" step="64"
+            oninput="currentH=parseInt(this.value)||1024">
+          <div class="flip-btn" onclick="flipSize()" title="Flip">⇄</div>
+        </div>
+      </div>
+
+      <div class="ss">
+        <div class="sec-label">BATCH</div>
+        <div class="batch-row">
+          <div class="batch-btn active" onclick="setBatch(1,this)">×1</div>
+          <div class="batch-btn" onclick="setBatch(2,this)">×2</div>
+          <div class="batch-btn" onclick="setBatch(4,this)">×4</div>
+          <div class="batch-btn" onclick="setBatch(8,this)">×8</div>
+        </div>
+      </div>
+
+      <div class="ss">
+        <div class="sec-label clickable" onclick="toggleCol('lora-body','lora-caret')">
+          LORA
           <div style="display:flex;gap:6px;align-items:center">
-            <button class="refresh-btn" onclick="event.stopPropagation();loadComfyLoras()" style="font-size:0.75rem;padding:3px 8px">↻</button>
-            <span id="lora-arrow" class="section-toggle open">▼</span>
+            <span style="cursor:pointer;color:var(--muted);font-size:14px" onclick="event.stopPropagation();loadComfyLoras()">↻</span>
+            <span class="caret open" id="lora-caret">▼</span>
           </div>
         </div>
-        <div id="lora-body" class="section-body" style="margin-top:6px">
+        <div class="collapsible-body" id="lora-body" style="margin-top:6px">
           <div id="lora-slots"></div>
         </div>
       </div>
 
-      <!-- Steps + CFG -->
-      <div class="setting-section">
-        <div class="sampler-grid">
-          <div>
-            <div class="setting-label">Steps <span id="steps-val" style="color:#a78bfa">20</span></div>
-            <input id="steps-slider" class="strength-slider" type="range" min="1" max="150" step="1" value="20"
-              oninput="syncNum('steps')" style="width:100%">
-            <input id="steps-num" class="strength-input" type="number" value="20" min="1" max="150" step="1"
-              style="width:100%;margin-top:4px" oninput="syncSlider('steps')">
+      <div class="ss">
+        <div class="sec-label clickable" onclick="toggleCol('refiner-body','refiner-caret')">
+          REFINER
+          <span class="caret" id="refiner-caret">▼</span>
+        </div>
+        <div class="collapsible-body" id="refiner-body" style="display:none;margin-top:8px">
+          <div style="display:flex;gap:6px;align-items:center">
+            <select id="refiner-select" class="sel" style="flex:1"
+              onchange="document.getElementById('refiner-switch-wrap').style.display=this.value?'block':'none'">
+              <option value="">NONE</option>
+            </select>
+            <span style="cursor:pointer;color:var(--muted);font-size:14px" onclick="loadRefinerModels()">↻</span>
           </div>
-          <div>
-            <div class="setting-label">CFG Scale <span id="cfg-val" style="color:#a78bfa">7</span></div>
-            <input id="cfg-slider" class="strength-slider" type="range" min="1" max="30" step="0.5" value="7"
-              oninput="syncNum('cfg')" style="width:100%">
-            <input id="cfg-num" class="strength-input" type="number" value="7" min="1" max="30" step="0.5"
-              style="width:100%;margin-top:4px" oninput="syncSlider('cfg')">
+          <div id="refiner-switch-wrap" style="display:none;margin-top:9px">
+            <div class="param-row" style="margin-bottom:0">
+              <span class="param-name">BASE %</span>
+              <input type="range" class="slider" id="switch-slider" min="10" max="90" step="5" value="80"
+                oninput="document.getElementById('switch-val').textContent=this.value">
+              <span class="param-val" id="switch-val">80</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Seed -->
-      <div class="setting-section">
-        <div class="setting-label">Seed</div>
-        <div class="setting-row">
-          <input id="seed-input" class="strength-input" type="number" value="0" min="0" max="4294967295" step="1" style="flex:1;width:auto">
-          <button id="seed-lock-btn" class="seed-lock-btn" onclick="toggleSeedLock()" title="鎖定/解鎖 Seed">🎲</button>
-          <button class="refresh-btn" onclick="randomizeSeed()" title="隨機新 Seed">↻</button>
+      <div class="ss">
+        <div class="sec-label clickable" onclick="toggleCol('vae-body','vae-caret')">
+          VAE
+          <span class="caret" id="vae-caret">▼</span>
         </div>
-        <div id="seed-status" style="font-size:0.7rem;color:#4b5563;margin-top:4px">每次生成隨機 Seed</div>
-      </div>
-
-      <!-- 採樣器 + 排程器 -->
-      <div class="setting-section">
-        <div class="setting-label">採樣器 / 排程器</div>
-        <div class="sampler-grid">
-          <select id="sampler-select" class="setting-select">
-            <option value="euler_ancestral">Euler a</option>
-            <option value="euler">Euler</option>
-            <option value="dpmpp_2m">DPM++ 2M</option>
-            <option value="dpmpp_2s_ancestral">DPM++ 2S a</option>
-            <option value="dpmpp_sde">DPM++ SDE</option>
-            <option value="ddim">DDIM</option>
-            <option value="uni_pc">UniPC</option>
-          </select>
-          <select id="scheduler-select" class="setting-select">
-            <option value="karras">Karras</option>
-            <option value="normal">Normal</option>
-            <option value="exponential">Exponential</option>
-            <option value="sgm_uniform">SGM Uniform</option>
-            <option value="simple">Simple</option>
-          </select>
+        <div class="collapsible-body" id="vae-body" style="display:none;margin-top:8px">
+          <div style="display:flex;gap:6px;align-items:center">
+            <select id="vae-select" class="sel" style="flex:1">
+              <option value="">BUILT-IN (CHECKPOINT)</option>
+            </select>
+            <span style="cursor:pointer;color:var(--muted);font-size:14px" onclick="loadComfyVAE()">↻</span>
+          </div>
         </div>
       </div>
 
-      <!-- VAE -->
-      <div class="setting-section">
-        <div class="setting-label">VAE 模型</div>
-        <div class="setting-row">
-          <select id="vae-select" class="setting-select">
-            <option value="">內建（Checkpoint 預設）</option>
-          </select>
-          <button class="refresh-btn" onclick="loadComfyVAE()">↻</button>
+      <div class="ss">
+        <div class="sec-label clickable" onclick="toggleCol('pipeline-body','pipeline-caret')">
+          PIPELINE
+          <span class="caret" id="pipeline-caret">▼</span>
         </div>
-      </div>
-
-      <!-- 尺寸 -->
-      <div class="setting-section">
-        <div class="setting-label">輸出尺寸</div>
-        <div class="setting-row" style="gap:6px;flex-wrap:wrap">
-          <input id="size-w" class="strength-input" type="number" value="1024" min="64" max="2048" step="64" style="width:72px" oninput="updateRatioLabel()">
-          <span style="color:#6b7280;font-size:1rem">×</span>
-          <input id="size-h" class="strength-input" type="number" value="1024" min="64" max="2048" step="64" style="width:72px" oninput="updateRatioLabel()">
-          <button class="refresh-btn" onclick="flipSize()" title="直橫切換" style="font-size:1rem;padding:5px 10px">⇄</button>
-          <span id="ratio-label" style="font-size:0.75rem;color:#6b7280;align-self:center">1:1</span>
-        </div>
-        <div class="setting-row" style="margin-top:8px;gap:6px;flex-wrap:wrap">
-          <button class="preset-btn" onclick="setSize(1024,1024)">1:1<br><span>1024</span></button>
-          <button class="preset-btn" onclick="setSize(768,1344)">9:16<br><span>768×1344</span></button>
-          <button class="preset-btn" onclick="setSize(1344,768)">16:9<br><span>1344×768</span></button>
-          <button class="preset-btn" onclick="setSize(832,1216)">3:5<br><span>832×1216</span></button>
-          <button class="preset-btn" onclick="setSize(1216,832)">5:3<br><span>1216×832</span></button>
-          <button class="preset-btn" onclick="setSize(896,1152)">3:4<br><span>896×1152</span></button>
-        </div>
-      </div>
-
-      <!-- 生成管線 -->
-      <div class="setting-section">
-        <div class="section-header" onclick="toggleSection('pipeline-body','pipeline-arrow')">
-          <div class="setting-label" style="margin:0">生成管線</div>
-          <span id="pipeline-arrow" class="section-toggle open">▼</span>
-        </div>
-        <div id="pipeline-body" class="section-body" style="margin-top:8px">
-
-        <!-- Hi-res Fix -->
-        <div class="pipeline-block">
-          <label class="pipeline-toggle">
-            <input type="checkbox" id="hires-enable" onchange="togglePipeline('hires')">
-            <span class="pipeline-name">Hi-res Fix</span>
-            <span class="pipeline-desc">潛空間放大 + 二次去噪，細節更清晰</span>
-          </label>
-          <div id="hires-settings" class="pipeline-inner" style="display:none">
-            <div class="sampler-grid" style="margin-bottom:8px">
-              <div>
-                <div class="setting-label">放大倍率</div>
-                <div style="display:flex;gap:4px;margin-top:4px">
-                  <button class="preset-btn" onclick="setHiresScale(1.25)">1.25×</button>
-                  <button class="preset-btn active" onclick="setHiresScale(1.5)">1.5×</button>
-                  <button class="preset-btn" onclick="setHiresScale(2.0)">2×</button>
+        <div class="collapsible-body" id="pipeline-body" style="display:none;margin-top:8px">
+          <div class="pipeline-block">
+            <label class="pipeline-toggle">
+              <input type="checkbox" id="hires-enable" onchange="togglePipeline('hires')">
+              <span class="pipeline-name">Hi-res Fix</span>
+              <span class="pipeline-desc">latent upscale + re-denoise</span>
+            </label>
+            <div id="hires-settings" class="pipeline-inner" style="display:none">
+              <div style="margin-bottom:8px">
+                <div style="font-size:9px;color:var(--muted);letter-spacing:.1em;margin-bottom:5px">SCALE</div>
+                <div style="display:flex;gap:4px">
+                  <div class="batch-btn" onclick="setHiresScale(1.25,this)">1.25×</div>
+                  <div class="batch-btn active" onclick="setHiresScale(1.5,this)">1.5×</div>
+                  <div class="batch-btn" onclick="setHiresScale(2.0,this)">2×</div>
                 </div>
                 <input type="hidden" id="hires-scale" value="1.5">
               </div>
-              <div>
-                <div class="setting-label">步數 <span id="hires-steps-val" style="color:#a78bfa">15</span></div>
-                <input id="hires-steps-slider" class="strength-slider" type="range" min="5" max="50" step="1" value="15"
-                  oninput="syncNum('hires-steps')" style="width:100%;margin-top:8px">
-                <input id="hires-steps-num" class="strength-input" type="number" value="15" min="5" max="50"
-                  style="width:100%;margin-top:4px" oninput="syncSlider('hires-steps')">
+              <div class="param-row">
+                <span class="param-name">STEPS</span>
+                <input type="range" class="slider" id="hires-steps-slider" min="5" max="50" value="15"
+                  oninput="document.getElementById('hires-steps-num').value=this.value;document.getElementById('hires-steps-val').textContent=this.value">
+                <span class="param-val" id="hires-steps-val">15</span>
               </div>
+              <input type="hidden" id="hires-steps-num" value="15">
+              <div class="param-row" style="margin-bottom:0">
+                <span class="param-name">DENOISE</span>
+                <input type="range" class="slider" id="hires-denoise-slider" min="0.1" max="0.9" step="0.05" value="0.5"
+                  oninput="document.getElementById('hires-denoise-num').value=this.value;document.getElementById('hires-denoise-val').textContent=this.value">
+                <span class="param-val" id="hires-denoise-val">0.5</span>
+              </div>
+              <input type="hidden" id="hires-denoise-num" value="0.5">
             </div>
-            <div class="setting-label">去噪強度 <span id="hires-denoise-val" style="color:#a78bfa">0.5</span></div>
-            <input id="hires-denoise-slider" class="strength-slider" type="range" min="0.1" max="0.9" step="0.05" value="0.5"
-              oninput="syncNum('hires-denoise')" style="width:100%;margin-top:6px">
-            <input id="hires-denoise-num" class="strength-input" type="number" value="0.5" min="0.1" max="0.9" step="0.05"
-              style="width:60px;margin-top:4px" oninput="syncSlider('hires-denoise')">
           </div>
-        </div>
-
-        <!-- Upscaler -->
-        <div class="pipeline-block" style="margin-top:8px">
-          <label class="pipeline-toggle">
-            <input type="checkbox" id="upscale-enable" onchange="togglePipeline('upscale')">
-            <span class="pipeline-name">Upscaler</span>
-            <span class="pipeline-desc">像素空間放大輸出尺寸</span>
-          </label>
-          <div id="upscale-settings" class="pipeline-inner" style="display:none">
-            <div class="setting-label" style="margin-bottom:6px">Upscale 模型</div>
-            <div class="setting-row">
-              <select id="upscale-model-select" class="setting-select">
-                <option value="">簡單插值（無模型）</option>
-              </select>
-              <button class="refresh-btn" onclick="loadUpscaleModels()">↻</button>
-            </div>
-            <div style="margin-top:8px">
-              <div class="setting-label">倍率</div>
-              <div style="display:flex;gap:4px;margin-top:4px">
-                <button class="preset-btn" onclick="setUpscaleFactor(2)">2×</button>
-                <button class="preset-btn active" onclick="setUpscaleFactor(4)">4×</button>
+          <div class="pipeline-block">
+            <label class="pipeline-toggle">
+              <input type="checkbox" id="upscale-enable" onchange="togglePipeline('upscale')">
+              <span class="pipeline-name">Upscaler</span>
+              <span class="pipeline-desc">pixel-space output upscale</span>
+            </label>
+            <div id="upscale-settings" class="pipeline-inner" style="display:none">
+              <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
+                <select id="upscale-model-select" class="sel" style="flex:1">
+                  <option value="">Simple interpolation</option>
+                </select>
+                <span style="cursor:pointer;color:var(--muted);font-size:14px" onclick="loadUpscaleModels()">↻</span>
+              </div>
+              <div style="display:flex;gap:4px">
+                <div class="batch-btn" onclick="setUpscaleFactor(2,this)">2×</div>
+                <div class="batch-btn active" onclick="setUpscaleFactor(4,this)">4×</div>
               </div>
               <input type="hidden" id="upscale-factor" value="4">
             </div>
           </div>
         </div>
-
-        </div><!-- /pipeline-body -->
       </div>
 
-    </div>
-    <div class="status-bar" id="status">等待中 — 請選擇後端並檢查連線</div>
+    </div><!-- /sidebar-scroll -->
 
-    <div id="progress-wrap" style="display:none;padding:8px 18px;background:#0f172a;border-bottom:1px solid #1f2937">
-      <div style="display:flex;align-items:center;gap:10px">
-        <img id="preview-img" alt="preview">
-        <div style="flex:1;display:flex;flex-direction:column;gap:4px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <div style="flex:1;background:#1f2937;border-radius:99px;height:7px;overflow:hidden">
-              <div id="progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:99px;transition:width .2s"></div>
-            </div>
-            <span id="progress-text" style="font-size:0.75rem;color:#a78bfa;min-width:36px;text-align:right;font-weight:600">0%</span>
-          </div>
+    <div class="gen-wrap">
+      <div class="progress-wrap" id="progress-wrap">
+        <div class="prog-bg"><div class="prog-fill" id="progress-fill"></div></div>
+        <div class="prog-label" id="progress-label">0%</div>
+      </div>
+      <button class="gen-btn" id="gen-btn" onclick="startGenerate()">
+        <div class="spinner"></div>
+        <span id="gen-label">GENERATE</span>
+      </button>
+      <button class="stop-btn" id="stop-btn" onclick="stopGenerate()">■ STOP</button>
+    </div>
+  </div><!-- /sidebar -->
+
+  <!-- CENTER -->
+  <div class="center">
+    <div class="center-tabs">
+      <div class="center-tab active" onclick="switchCenterTab('gallery',this)">GALLERY</div>
+      <div class="center-tab" onclick="switchCenterTab('queue',this)">QUEUE
+        <span id="queue-count" style="display:none;background:var(--bg3);border-radius:3px;padding:1px 5px;font-size:9px;margin-left:4px">0</span>
+      </div>
+    </div>
+    <div id="gallery-view">
+      <div class="empty-state" id="gallery-empty">
+        <div class="empty-icon">⬡</div>
+        <div class="empty-text">NO IMAGES YET</div>
+      </div>
+      <div class="gallery-grid" id="gallery-grid" style="display:none"></div>
+    </div>
+    <div id="queue-view">
+      <div class="empty-state" id="queue-empty">
+        <div class="empty-icon">◫</div>
+        <div class="empty-text">QUEUE EMPTY</div>
+      </div>
+      <div id="queue-list"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="rp-header">PREVIEW</div>
+    <div class="preview-wrap">
+      <div class="preview-box">
+        <div class="preview-ph" id="preview-ph">
+          <div class="preview-icon">◻</div>
+          <div>READY</div>
+        </div>
+        <img id="preview-img" style="display:none">
+        <div class="preview-loading" id="preview-loading">
+          <div class="spinner-lg"></div>
         </div>
       </div>
     </div>
-
-    <div class="tabs">
-      <div class="tab active" onclick="showTab('tasks')">任務列表</div>
-      <div class="tab"        onclick="showTab('gallery')">圖片結果</div>
+    <div class="meta-list">
+      <div class="meta-row"><span class="meta-key">MODEL</span><span class="meta-val" id="m-model">—</span></div>
+      <div class="meta-row"><span class="meta-key">SIZE</span><span class="meta-val" id="m-size">1024 × 1024</span></div>
+      <div class="meta-row"><span class="meta-key">STEPS</span><span class="meta-val" id="m-steps">20</span></div>
+      <div class="meta-row"><span class="meta-key">CFG</span><span class="meta-val" id="m-cfg">7</span></div>
+      <div class="meta-row"><span class="meta-key">SEED</span><span class="meta-val" id="m-seed">—</span></div>
+      <div class="meta-row"><span class="meta-key">SAMPLER</span><span class="meta-val" id="m-sampler">—</span></div>
+      <div class="meta-row"><span class="meta-key">TIME</span><span class="meta-val" id="m-time">—</span></div>
     </div>
+    <div class="action-row">
+      <div class="action-btn" onclick="saveLastImg()">SAVE</div>
+      <div class="action-btn" onclick="sendToImg2Img()">→ i2i</div>
+      <div class="action-btn" onclick="copyPrompt()">COPY</div>
+    </div>
+  </div>
 
-    <div id="tab-tasks"   class="task-list"><div class="empty-msg">解析 MD 後任務會顯示在這裡</div></div>
-    <div id="tab-gallery" class="task-list" style="display:none"><div id="gallery"></div></div>
+</div><!-- /main -->
+
+<div class="statusbar">
+  <div class="sb-item" id="sb-main">SD · PANEL</div>
+  <div class="sb-item" style="margin-left:auto" id="sb-backend">ComfyUI · 127.0.0.1:8188</div>
+</div>
+
+<div class="modal-bg" id="modal-bg" onclick="closeModal(event)">
+  <div class="modal">
+    <span class="modal-close" onclick="document.getElementById('modal-bg').classList.remove('open')">×</span>
+    <div class="modal-title" id="modal-title"></div>
+    <img class="modal-img" id="modal-img">
+    <div id="modal-meta" style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px"></div>
   </div>
 </div>
 
 <script>
-// ── 預設 MD ───────────────────────────────────────────────────
-const DEFAULT_MD = `# Stable Diffusion 圖片生成清單
+const COMFY_API = 'http://127.0.0.1:8188';
 
-## 圖片 1 — 山中日落
-- prompt: beautiful sunset over mountains, golden hour, photorealistic, high detail, 8k
-- negative: blurry, low quality, watermark
-- steps: 25
-- cfg: 7
-- size: 512x512
+let tasks = [], activeTask = -1;
+let currentMode = 'txt2img';
+let currentW = 1024, currentH = 1024, currentBatch = 1;
+let seedLocked = false, stopRequested = false, isGenerating = false;
+let img2imgBase64 = null, lastResult = null, loraList = [];
+let queueStatuses = {};
 
-## 圖片 2 — 動漫少女
-- prompt: anime girl with blue hair, school uniform, cherry blossom background, detailed eyes
-- negative: bad anatomy, extra fingers, low quality
-- steps: 30
-- cfg: 7.5
-- size: 512x768
-
-## 圖片 3 — 賽博龐克城市
-- prompt: cyberpunk city night, neon lights, rain, futuristic buildings, cinematic
-- negative: daytime, low quality, cartoon
-- steps: 25
-- cfg: 8
-- size: 768x512
-`;
-
-// ── API ───────────────────────────────────────────────────────
-const COMFY_API = "http://127.0.0.1:8188";
-
-// ── UI 工具 ───────────────────────────────────────────────────
-const editor = document.getElementById("editor");
-const _stored = localStorage.getItem("sd-md");
-editor.value = (_stored && _stored.includes("## ")) ? _stored : DEFAULT_MD;
-
-function showTab(name) {
-  document.getElementById("tab-tasks").style.display   = name === "tasks"   ? "" : "none";
-  document.getElementById("tab-gallery").style.display = name === "gallery" ? "" : "none";
-  document.querySelectorAll(".tab").forEach((t, i) => {
-    t.classList.toggle("active", (i === 0 && name === "tasks") || (i === 1 && name === "gallery"));
-  });
-}
-
-function setStatus(msg, type = "") {
-  const el = document.getElementById("status");
-  el.textContent = msg;
-  el.className = "status-bar" + (type ? " status-" + type : "");
-}
-
-function toggleSection(bodyId, arrowId) {
-  const body = document.getElementById(bodyId);
-  const arrow = document.getElementById(arrowId);
-  const open = body.style.display !== "none";
-  body.style.display = open ? "none" : "";
-  arrow.classList.toggle("open", !open);
-}
-
-function togglePipeline(id) {
-  const on = document.getElementById(id + "-enable").checked;
-  document.getElementById(id + "-settings").style.display = on ? "block" : "none";
-}
-function setHiresScale(v) {
-  document.getElementById("hires-scale").value = v;
-  document.querySelectorAll("#hires-settings .preset-btn").forEach(b =>
-    b.classList.toggle("active", b.textContent.trim().startsWith(v)));
-}
-function setUpscaleFactor(v) {
-  document.getElementById("upscale-factor").value = v;
-  document.querySelectorAll("#upscale-settings .preset-btn").forEach(b =>
-    b.classList.toggle("active", b.textContent.trim() === v + "×"));
-}
-async function loadUpscaleModels() {
-  const sel = document.getElementById("upscale-model-select");
-  sel.innerHTML = `<option value="">載入中…</option>`;
-  try {
-    // 優先用 /models/upscale_models（較快），fallback 用 object_info
-    let models = [];
-    const r1 = await fetch(`${COMFY_API}/models/upscale_models`, { signal: AbortSignal.timeout(8000) });
-    if (r1.ok) {
-      models = await r1.json();
-    } else {
-      const r2 = await fetch(`${COMFY_API}/object_info/UpscaleModelLoader`, { signal: AbortSignal.timeout(8000) });
-      const data = await r2.json();
-      models = data?.UpscaleModelLoader?.input?.required?.model_name?.[0] || [];
-    }
-    sel.innerHTML = `<option value="">簡單插值（無模型）</option>` +
-      (models.length ? models.map(m => `<option value="${m}">${m}</option>`).join("") : "");
-    if (!models.length) sel.options[0].text = "找不到模型 — 請重啟 ComfyUI";
-  } catch (e) {
-    sel.innerHTML = `<option value="">錯誤: ${e.message}</option>`;
-  }
-}
-
-function setSize(w, h) {
-  document.getElementById("size-w").value = w;
-  document.getElementById("size-h").value = h;
-  updateRatioLabel();
-  document.querySelectorAll(".preset-btn").forEach(b => {
-    b.classList.toggle("active", b.onclick?.toString().includes(`${w},${h}`));
-  });
-}
-function flipSize() {
-  const w = document.getElementById("size-w");
-  const h = document.getElementById("size-h");
-  [w.value, h.value] = [h.value, w.value];
-  updateRatioLabel();
-}
-function updateRatioLabel() {
-  const w = parseInt(document.getElementById("size-w").value) || 1;
-  const h = parseInt(document.getElementById("size-h").value) || 1;
-  const g = (a, b) => b === 0 ? a : g(b, a % b);
-  const d = g(w, h);
-  document.getElementById("ratio-label").textContent = `${w/d}:${h/d}`;
-}
-
-function syncNum(id) {
-  const v = document.getElementById(id + "-slider").value;
-  document.getElementById(id + "-num").value = v;
-  document.getElementById(id + "-val").textContent = v;
-}
-function syncSlider(id) {
-  const v = document.getElementById(id + "-num").value;
-  document.getElementById(id + "-slider").value = v;
-  document.getElementById(id + "-val").textContent = v;
-}
-
-function saveMd() {
-  localStorage.setItem("sd-tasks", JSON.stringify(tasks));
-  setStatus("✅ 已儲存", "ok");
-}
-
-function resetMd() {
-  localStorage.removeItem("sd-tasks");
-  tasks = [{ title: "圖片 1", prompt: "", negative: "low quality, blurry", batch: 1 }];
+// ── INIT ─────────────────────────────────────────────────────────
+(function(){
+  renderLoraSlots();
+  try { tasks = JSON.parse(localStorage.getItem('sd-tasks') || '[]'); } catch { tasks = []; }
+  if (!tasks.length) tasks = [{ title:'Image 1', prompt:'', negative:'low quality, blurry', batch:1 }];
   activeTask = 0;
-  renderTaskTabs();
-  renderTaskEditor();
-  renderTasks(tasks);
-  setStatus("↺ 已重置", "ok");
-}
+  renderTaskTabs(); renderTaskEditor(); renderQueue();
+  checkApi();
+  setInterval(checkApiSilent, 9000);
+})();
 
-// ── 任務編輯器 ────────────────────────────────────────────────
-let tasks = [];
-let activeTask = -1;
-
-function escHtml(s) {
-  return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
-
-function addTask() {
-  tasks.push({ title: `圖片 ${tasks.length + 1}`, prompt: "", negative: "low quality, blurry", batch: 1 });
-  activeTask = tasks.length - 1;
-  renderTaskTabs();
-  renderTaskEditor();
-  renderTasks(tasks);
-}
-
-function deleteTask(i) {
-  tasks.splice(i, 1);
-  if (activeTask >= tasks.length) activeTask = tasks.length - 1;
-  renderTaskTabs();
-  renderTaskEditor();
-  renderTasks(tasks);
-}
-
-function selectTask(i) {
-  activeTask = i;
-  renderTaskTabs();
-  renderTaskEditor();
-}
-
-function renderTaskTabs() {
-  const wrap = document.getElementById("task-tabs");
-  if (!tasks.length) { wrap.innerHTML = ""; return; }
-  wrap.innerHTML = tasks.map((t, i) => `
-    <div class="task-tab ${i === activeTask ? "active" : ""}" onclick="selectTask(${i})">
-      <span>${escHtml(t.title || "無標題")}</span>
-      <span class="task-tab-del" title="複製任務" onclick="event.stopPropagation();duplicateTask(${i})" style="opacity:.6">⎘</span>
-      <span class="task-tab-del" onclick="event.stopPropagation();deleteTask(${i})">×</span>
-    </div>
-  `).join("");
-}
-
-function renderTaskEditor() {
-  const wrap = document.getElementById("task-editor");
-  if (activeTask < 0 || !tasks.length) {
-    wrap.innerHTML = '<div class="empty-msg">點「＋ 新增任務」開始</div>';
-    return;
-  }
-  const t = tasks[activeTask];
-  const idx = activeTask;
-  wrap.innerHTML = `
-    <div>
-      <div class="field-label">任務名稱</div>
-      <input id="te-title" class="field-input" type="text" value="${escHtml(t.title)}"
-        placeholder="任務名稱…"
-        oninput="tasks[${idx}].title=this.value;renderTaskTabs()">
-    </div>
-    <div>
-      <div class="field-label">正向提示詞 Prompt</div>
-      <textarea id="te-prompt" class="field-input" rows="6"
-        placeholder="描述你想生成的圖片，例如：beautiful sunset, photorealistic, 8k…"
-        oninput="tasks[${idx}].prompt=this.value">${escHtml(t.prompt)}</textarea>
-      <div class="tag-section">${renderTagGroups()}</div>
-    </div>
-    <div>
-      <div class="field-label">負向提示詞 Negative</div>
-      <textarea id="te-neg" class="field-input" rows="3"
-        placeholder="不想要的元素，例如：low quality, blurry, watermark…"
-        oninput="tasks[${idx}].negative=this.value">${escHtml(t.negative)}</textarea>
-    </div>
-    <div style="display:flex;align-items:center;gap:12px">
-      <div>
-        <div class="field-label">批次數量</div>
-        <input id="te-batch" class="field-input" type="number" value="${t.batch || 1}" min="1" max="8" step="1"
-          style="width:72px" oninput="tasks[${idx}].batch=Math.max(1,parseInt(this.value)||1)">
-      </div>
-      <div style="font-size:0.7rem;color:#374151;align-self:flex-end;padding-bottom:4px">任務 ${idx + 1} / ${tasks.length}</div>
-    </div>
-  `;
-  bindTagChips(wrap);
-}
-
-// ── 連線檢查 ──────────────────────────────────────────────────
+// ── API ───────────────────────────────────────────────────────────
 async function checkApi() {
-  const dot = document.getElementById("api-dot");
   try {
     const r = await fetch(`${COMFY_API}/system_stats`, { signal: AbortSignal.timeout(4000) });
-    dot.style.color = r.ok ? "#34d399" : "#f87171";
-    setStatus(r.ok ? "✅ ComfyUI 連線正常" : "❌ 連線失敗", r.ok ? "ok" : "err");
-    if (r.ok) { loadComfyModels(); loadRefinerModels(); loadComfyLoras(); loadComfyVAE(); loadUpscaleModels(); }
-  } catch {
-    dot.style.color = "#f87171";
-    setStatus("❌ 無法連線 — 請確認 ComfyUI 已啟動", "err");
-  }
+    if (r.ok) {
+      setApiOnline(true);
+      loadComfyModels(); loadComfyLoras(); loadRefinerModels(); loadComfyVAE(); loadUpscaleModels();
+    } else throw 0;
+  } catch { setApiOnline(false); }
+}
+async function checkApiSilent() {
+  try {
+    const r = await fetch(`${COMFY_API}/system_stats`, { signal: AbortSignal.timeout(3000) });
+    setApiOnline(r.ok);
+  } catch { setApiOnline(false); }
+}
+function setApiOnline(ok) {
+  document.getElementById('api-dot').className = 'status-dot ' + (ok ? 'online' : 'error');
+  document.getElementById('api-text').textContent = ok ? 'ONLINE' : 'OFFLINE';
+  document.getElementById('sb-backend').className = 'sb-item ' + (ok ? 'ok' : 'error');
 }
 
-// ── ComfyUI 模型 / LoRA 列表 ─────────────────────────────────
+// ── MODELS ────────────────────────────────────────────────────────
 async function loadComfyModels() {
-  const sel = document.getElementById("model-select");
-  sel.innerHTML = "<option>載入中…</option>";
+  const sel = document.getElementById('model-select');
   try {
-    const r = await fetch(`${COMFY_API}/object_info/CheckpointLoaderSimple`, { signal: AbortSignal.timeout(6000) });
-    const data = await r.json();
-    const models = data?.CheckpointLoaderSimple?.input?.required?.ckpt_name?.[0] || [];
+    const d = await (await fetch(`${COMFY_API}/object_info/CheckpointLoaderSimple`, { signal: AbortSignal.timeout(6000) })).json();
+    const models = d?.CheckpointLoaderSimple?.input?.required?.ckpt_name?.[0] || [];
+    const prev = sel.value;
     sel.innerHTML = models.length
-      ? models.map(m => `<option value="${m}">${m}</option>`).join("")
-      : "<option value=''>找不到模型</option>";
-  } catch {
-    sel.innerHTML = "<option value=''>連線失敗</option>";
-  }
+      ? models.map(m => `<option value="${m}" ${m===prev?'selected':''}>${m}</option>`).join('')
+      : '<option value="">— no models found —</option>';
+    if (models.length) document.getElementById('m-model').textContent = sel.value.replace(/\.(safetensors|ckpt|pt)$/i,'').slice(0,16);
+  } catch { sel.innerHTML = '<option value="">— connection failed —</option>'; }
 }
-
 async function loadRefinerModels() {
-  const sel = document.getElementById("refiner-select");
+  const sel = document.getElementById('refiner-select');
   try {
-    const r = await fetch(`${COMFY_API}/object_info/CheckpointLoaderSimple`, { signal: AbortSignal.timeout(6000) });
-    const data = await r.json();
-    const models = data?.CheckpointLoaderSimple?.input?.required?.ckpt_name?.[0] || [];
-    sel.innerHTML = `<option value="">不使用</option>` +
-      models.map(m => `<option value="${m}">${m}</option>`).join("");
-  } catch {
-    sel.innerHTML = `<option value="">不使用</option>`;
-  }
+    const d = await (await fetch(`${COMFY_API}/object_info/CheckpointLoaderSimple`, { signal: AbortSignal.timeout(6000) })).json();
+    const models = d?.CheckpointLoaderSimple?.input?.required?.ckpt_name?.[0] || [];
+    sel.innerHTML = '<option value="">NONE</option>' + models.map(m => `<option value="${m}">${m}</option>`).join('');
+  } catch {}
 }
-
-function updateSwitch(v) {
-  document.getElementById("switch-pct").textContent  = v;
-  document.getElementById("switch-pct2").textContent = 100 - v;
-}
-
 async function loadComfyVAE() {
-  const sel = document.getElementById("vae-select");
+  const sel = document.getElementById('vae-select');
   try {
-    const r = await fetch(`${COMFY_API}/object_info/VAELoader`, { signal: AbortSignal.timeout(6000) });
-    const data = await r.json();
-    const vaes = data?.VAELoader?.input?.required?.vae_name?.[0] || [];
-    sel.innerHTML = `<option value="">內建（Checkpoint 預設）</option>` +
-      vaes.map(v => `<option value="${v}">${v}</option>`).join("");
-  } catch {
-    sel.innerHTML = `<option value="">內建（Checkpoint 預設）</option>`;
-  }
+    const d = await (await fetch(`${COMFY_API}/object_info/VAELoader`, { signal: AbortSignal.timeout(6000) })).json();
+    const vaes = d?.VAELoader?.input?.required?.vae_name?.[0] || [];
+    sel.innerHTML = '<option value="">BUILT-IN (CHECKPOINT)</option>' + vaes.map(v => `<option value="${v}">${v}</option>`).join('');
+  } catch {}
+}
+async function loadComfyLoras() {
+  try {
+    const d = await (await fetch(`${COMFY_API}/object_info/LoraLoader`, { signal: AbortSignal.timeout(6000) })).json();
+    loraList = d?.LoraLoader?.input?.required?.lora_name?.[0] || [];
+  } catch { loraList = []; }
+  renderLoraSlots();
+}
+async function loadUpscaleModels() {
+  const sel = document.getElementById('upscale-model-select');
+  try {
+    let models = [];
+    const r1 = await fetch(`${COMFY_API}/models/upscale_models`, { signal: AbortSignal.timeout(6000) });
+    if (r1.ok) { models = await r1.json(); }
+    else {
+      const d = await (await fetch(`${COMFY_API}/object_info/UpscaleModelLoader`, { signal: AbortSignal.timeout(6000) })).json();
+      models = d?.UpscaleModelLoader?.input?.required?.model_name?.[0] || [];
+    }
+    sel.innerHTML = '<option value="">Simple interpolation</option>' + models.map(m => `<option value="${m}">${m}</option>`).join('');
+  } catch {}
 }
 
-let loraList = [];
-let seedLocked = false;
-let stopRequested = false;
-
-function toggleSeedLock() {
-  seedLocked = !seedLocked;
-  const btn = document.getElementById("seed-lock-btn");
-  btn.textContent = seedLocked ? "🔒" : "🎲";
-  btn.classList.toggle("locked", seedLocked);
-  document.getElementById("seed-status").textContent = seedLocked ? "Seed 已鎖定（固定復現）" : "每次生成隨機 Seed";
+// ── TASKS ─────────────────────────────────────────────────────────
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
-function randomizeSeed() {
-  document.getElementById("seed-input").value = Math.floor(Math.random() * 2 ** 32);
+function addTask() {
+  tasks.push({ title:`Image ${tasks.length+1}`, prompt:'', negative:'low quality, blurry', batch:1 });
+  activeTask = tasks.length - 1;
+  renderTaskTabs(); renderTaskEditor(); renderQueue();
 }
-
-function getEffectiveSeed() {
-  if (seedLocked) return parseInt(document.getElementById("seed-input").value) || 0;
-  const s = Math.floor(Math.random() * 2 ** 32);
-  document.getElementById("seed-input").value = s;
-  return s;
+function deleteTask(i) {
+  tasks.splice(i,1);
+  if (activeTask >= tasks.length) activeTask = tasks.length - 1;
+  renderTaskTabs(); renderTaskEditor(); renderQueue();
 }
-
-function stopGenerate() {
-  stopRequested = true;
-  fetch(`${COMFY_API}/interrupt`, { method: "POST" }).catch(() => {});
-  setStatus("⏹ 停止中…", "run");
-}
-
-function showPreview(url) {
-  const img = document.getElementById("preview-img");
-  if (img._prevUrl) URL.revokeObjectURL(img._prevUrl);
-  img._prevUrl = url;
-  img.src = url;
-  img.style.display = "block";
-}
-function clearPreview() {
-  const img = document.getElementById("preview-img");
-  if (img._prevUrl) { URL.revokeObjectURL(img._prevUrl); img._prevUrl = null; }
-  img.style.display = "none";
-  img.src = "";
-}
-
 function duplicateTask(i) {
-  const copy = { ...tasks[i], title: tasks[i].title + " (複製)" };
-  tasks.splice(i + 1, 0, copy);
+  tasks.splice(i+1, 0, {...tasks[i], title: tasks[i].title+' (copy)'});
   activeTask = i + 1;
-  renderTaskTabs();
-  renderTaskEditor();
-  renderTasks(tasks);
+  renderTaskTabs(); renderTaskEditor(); renderQueue();
 }
-
+function selectTask(i) {
+  activeTask = i; renderTaskTabs(); renderTaskEditor();
+}
+function renderTaskTabs() {
+  const wrap = document.getElementById('task-tabs');
+  if (!tasks.length) { wrap.innerHTML = ''; return; }
+  wrap.innerHTML = tasks.map((t,i) => `
+    <div class="task-tab ${i===activeTask?'active':''}" onclick="selectTask(${i})">
+      <span>${escHtml(t.title||'Untitled')}</span>
+      <span class="ttdup" onclick="event.stopPropagation();duplicateTask(${i})" title="Duplicate">⎘</span>
+      <span class="ttd" onclick="event.stopPropagation();deleteTask(${i})">×</span>
+    </div>`).join('');
+}
+function renderTaskEditor() {
+  const wrap = document.getElementById('task-editor');
+  if (activeTask < 0 || !tasks.length) {
+    wrap.innerHTML = '<div class="empty-state" style="height:60px"><div class="empty-text">ADD A TASK TO BEGIN</div></div>';
+    return;
+  }
+  const t = tasks[activeTask], idx = activeTask;
+  wrap.innerHTML = `
+    <div class="sec-label" style="margin-bottom:6px">
+      PROMPT <span style="font-size:9px;color:var(--muted2)">${idx+1} / ${tasks.length}</span>
+    </div>
+    <input style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--line2);border-radius:5px;padding:5px 8px;font-size:10px;font-family:var(--mono);outline:none;margin-bottom:6px"
+      type="text" id="te-title" value="${escHtml(t.title)}" placeholder="Task name…"
+      oninput="tasks[${idx}].title=this.value;renderTaskTabs()">
+    <textarea class="prompt-area" id="te-prompt" rows="5" placeholder="describe your vision…"
+      oninput="tasks[${idx}].prompt=this.value">${escHtml(t.prompt)}</textarea>
+    <textarea class="prompt-area neg-area" id="te-neg" rows="2" placeholder="negative…"
+      oninput="tasks[${idx}].negative=this.value">${escHtml(t.negative)}</textarea>
+    <div class="tag-section">${renderTagGroups()}</div>`;
+  bindTagChips(wrap);
+}
 function renderTagGroups() {
   const groups = [
-    { label: "品質", tags: ["masterpiece", "best quality", "ultra-detailed", "8k", "photorealistic", "RAW photo"] },
-    { label: "風格", tags: ["anime style", "cinematic", "oil painting", "cyberpunk", "watercolor", "fantasy", "concept art"] },
-    { label: "光線", tags: ["golden hour", "studio lighting", "neon lights", "dramatic lighting", "soft light"] },
+    { label:'Quality', tags:['masterpiece','best quality','ultra-detailed','8k','photorealistic','RAW photo'] },
+    { label:'Style',   tags:['anime style','cinematic','oil painting','cyberpunk','watercolor','fantasy','concept art'] },
+    { label:'Light',   tags:['golden hour','studio lighting','neon lights','dramatic lighting','soft light'] },
   ];
   return groups.map(g =>
-    `<div class="tag-group">` +
-    `<div class="tag-group-label">${g.label}</div>` +
-    `<div class="tag-chips">` +
-    g.tags.map(tag => `<span class="tag-chip" data-tag="${escHtml(tag)}">${tag}</span>`).join("") +
-    `</div></div>`
-  ).join("");
+    `<div class="tag-group"><div class="tag-group-label">${g.label}</div><div class="tag-chips">`+
+    g.tags.map(tag=>`<span class="tag-chip" data-tag="${escHtml(tag)}">${tag}</span>`).join('')+
+    `</div></div>`).join('');
 }
-
 function bindTagChips(wrap) {
-  wrap.querySelectorAll(".tag-chip").forEach(chip => {
-    chip.addEventListener("click", () => {
-      const el = document.getElementById("te-prompt");
+  wrap.querySelectorAll('.tag-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const el = document.getElementById('te-prompt');
       if (!el) return;
-      const v = el.value.trim();
-      el.value = v ? v + ", " + chip.dataset.tag : chip.dataset.tag;
+      el.value = el.value.trim() ? el.value.trim()+', '+chip.dataset.tag : chip.dataset.tag;
       tasks[activeTask].prompt = el.value;
     });
   });
 }
 
+// ── LORA ──────────────────────────────────────────────────────────
 function renderLoraSlots() {
-  const wrap = document.getElementById("lora-slots");
-  wrap.innerHTML = [0, 1, 2, 3, 4, 5].map(i => `
-    <div style="margin-bottom:10px">
-      <div style="font-size:0.7rem;color:#4b5563;margin-bottom:4px">LoRA ${i + 1}</div>
-      <div class="lora-grid">
-        <select id="lora-sel-${i}" class="setting-select">
-          <option value="">(不套用)</option>
-          ${loraList.map(l => `<option value="${l}">${l}</option>`).join("")}
-        </select>
-        <input id="lora-num-${i}" class="strength-input" type="number" value="0.8" min="0" max="2" step="0.05"
-          oninput="document.getElementById('lora-sldr-${i}').value=this.value">
+  document.getElementById('lora-slots').innerHTML = [0,1,2,3,4,5].map(i => `
+    <div class="lora-item">
+      <select id="lora-sel-${i}" class="sel" style="font-size:10px;padding:5px 8px">
+        <option value="">(none)</option>
+        ${loraList.map(l=>`<option value="${l}">${l.replace(/\.(safetensors|ckpt|pt)$/i,'').slice(0,22)}</option>`).join('')}
+      </select>
+      <input type="range" class="slider" id="lora-sldr-${i}" min="0" max="2" step="0.05" value="0.8"
+        oninput="document.getElementById('lora-val-${i}').textContent=parseFloat(this.value).toFixed(2)">
+      <span class="lora-val" id="lora-val-${i}">0.80</span>
+    </div>`).join('');
+}
+
+// ── UI HELPERS ────────────────────────────────────────────────────
+function syncParam(id, v) {
+  document.getElementById(id+'-num').value = v;
+  document.getElementById(id+'-val').textContent = v;
+  if (id==='steps') document.getElementById('m-steps').textContent = v;
+  if (id==='cfg')   document.getElementById('m-cfg').textContent   = v;
+}
+function setMode(mode, el) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('img2img-section').style.display = mode==='img2img' ? 'block' : 'none';
+}
+function triggerUpload() { document.getElementById('file-input').click(); }
+function handleUpload(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    img2imgBase64 = e.target.result.split(',')[1];
+    const up = document.getElementById('img-upload');
+    up.classList.add('has-img');
+    up.innerHTML = `<img src="${e.target.result}"><span class="ul" style="color:var(--text)">✓ LOADED</span>`;
+  };
+  reader.readAsDataURL(file);
+}
+function setSize(w, h, el) {
+  currentW = w; currentH = h;
+  document.getElementById('size-w').value = w;
+  document.getElementById('size-h').value = h;
+  document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.getElementById('m-size').textContent = `${w} × ${h}`;
+}
+function flipSize() {
+  const w = document.getElementById('size-w'), h = document.getElementById('size-h');
+  [w.value, h.value] = [h.value, w.value];
+  currentW = parseInt(w.value); currentH = parseInt(h.value);
+  document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('m-size').textContent = `${currentW} × ${currentH}`;
+}
+function setBatch(n, el) {
+  currentBatch = n;
+  document.querySelectorAll('.batch-btn').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+}
+function toggleCol(bodyId, caretId) {
+  const body = document.getElementById(bodyId), caret = document.getElementById(caretId);
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : '';
+  caret.classList.toggle('open', !open);
+}
+function togglePipeline(id) {
+  document.getElementById(id+'-settings').style.display = document.getElementById(id+'-enable').checked ? 'block' : 'none';
+}
+function setHiresScale(v, el) {
+  document.getElementById('hires-scale').value = v;
+  el.parentElement.querySelectorAll('.batch-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+function setUpscaleFactor(v, el) {
+  document.getElementById('upscale-factor').value = v;
+  el.parentElement.querySelectorAll('.batch-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── SEED ──────────────────────────────────────────────────────────
+function toggleSeedLock() {
+  seedLocked = !seedLocked;
+  const btn = document.getElementById('seed-lock-btn');
+  btn.textContent = seedLocked ? '🔒' : '🎲';
+  btn.classList.toggle('locked', seedLocked);
+  document.getElementById('seed-status').textContent = seedLocked ? 'SEED LOCKED' : 'RANDOM SEED EACH RUN';
+}
+function randomizeSeed() {
+  document.getElementById('seed-input').value = Math.floor(Math.random() * 2**32);
+}
+function getEffectiveSeed() {
+  if (seedLocked) return parseInt(document.getElementById('seed-input').value) || 0;
+  const s = Math.floor(Math.random() * 2**32);
+  document.getElementById('seed-input').value = s;
+  return s;
+}
+
+// ── STATUS ────────────────────────────────────────────────────────
+function setStatus(msg, type='') {
+  const el = document.getElementById('sb-main');
+  el.textContent = msg;
+  el.className = 'sb-item' + (type ? ' '+type : '');
+}
+function saveTasks() {
+  localStorage.setItem('sd-tasks', JSON.stringify(tasks));
+  setStatus('SAVED', 'ok'); setTimeout(() => setStatus('SD · PANEL'), 1500);
+}
+function resetTasks() {
+  localStorage.removeItem('sd-tasks');
+  tasks = [{ title:'Image 1', prompt:'', negative:'low quality, blurry', batch:1 }];
+  activeTask = 0; renderTaskTabs(); renderTaskEditor(); renderQueue();
+  setStatus('RESET', 'ok'); setTimeout(() => setStatus('SD · PANEL'), 1500);
+}
+
+// ── QUEUE ─────────────────────────────────────────────────────────
+function renderQueue() {
+  const list = document.getElementById('queue-list');
+  const empty = document.getElementById('queue-empty');
+  const cnt = document.getElementById('queue-count');
+  if (!tasks.length) { empty.style.display='flex'; list.innerHTML=''; cnt.style.display='none'; return; }
+  empty.style.display = 'none';
+  list.innerHTML = tasks.map((t,i) => {
+    const st = queueStatuses[i] || 'pending';
+    return `<div class="queue-item">
+      <div class="q-status ${st}"></div>
+      <div class="q-info">
+        <div class="q-title">${escHtml(t.title||'Untitled')}</div>
+        <div class="q-meta">${escHtml((t.prompt||'(no prompt)').slice(0,50))}</div>
       </div>
-      <input id="lora-sldr-${i}" class="strength-slider" type="range" min="0" max="2" step="0.05" value="0.8"
-        style="width:100%;margin-top:6px"
-        oninput="document.getElementById('lora-num-${i}').value=this.value">
-    </div>
-  `).join("");
-}
-
-async function loadComfyLoras() {
-  try {
-    const r = await fetch(`${COMFY_API}/object_info/LoraLoader`, { signal: AbortSignal.timeout(6000) });
-    const data = await r.json();
-    loraList = data?.LoraLoader?.input?.required?.lora_name?.[0] || [];
-  } catch {
-    loraList = [];
-  }
-  renderLoraSlots();
-}
-
-// ── MD 解析 ───────────────────────────────────────────────────
-function parseMd(text) {
-  const tasks = [];
-  const blocks = text.split(/\n##\s+/);
-  for (const block of blocks.slice(1)) {
-    const lines = block.split(/\r?\n/);
-    const title = lines[0].trim();
-    const p = { title, steps: 20, cfg: 7.0, size: "512x512", negative: "low quality, blurry" };
-    for (const line of lines.slice(1)) {
-      const clean = line.trim().replace(/^-\s*/, "");
-      for (const key of ["prompt", "negative", "steps", "cfg", "size", "model", "lora", "lora_strength", "sampler"]) {
-        if (clean.toLowerCase().startsWith(key + ":")) {
-          const val = clean.slice(key.length + 1).trim();
-          p[key] = (key === "steps") ? parseInt(val)
-                 : (key === "cfg" || key === "lora_strength") ? parseFloat(val)
-                 : val;
-        }
-      }
-    }
-    if (p.prompt) tasks.push(p);
-  }
-  return tasks;
-}
-
-function renderTasks(taskList, statuses = {}) {
-  const el = document.getElementById("tab-tasks");
-  if (!taskList.length) { el.innerHTML = '<div class="empty-msg">還沒有任務</div>'; return; }
-  el.innerHTML = taskList.map((t, i) => {
-    const st = statuses[i] || "pending";
-    const label = { pending: "⏳ 等待", running: "⚙️ 生成中", done: "✅ 完成", error: "❌ 失敗" }[st];
-    const preview = (t.prompt || "(無提示詞)").slice(0, 60);
-    return `<div class="task-item ${st}">
-      <div class="task-title">${escHtml(t.title || "無標題")} <span class="task-status">${label}</span></div>
-      <div class="task-meta">${escHtml(preview)}…</div>
+      <div class="q-badge ${st}">${st.toUpperCase()}</div>
     </div>`;
-  }).join("");
+  }).join('');
+  const running = Object.values(queueStatuses).filter(s=>s==='running').length;
+  cnt.textContent = running || tasks.length;
+  cnt.style.display = 'inline';
 }
 
-function addToGallery(src, title, meta = {}) {
-  const gallery = document.getElementById("gallery");
-  const card = document.createElement("div");
-  card.className = "img-card";
-  const imgSrc = src.startsWith("data:") ? src : `data:image/png;base64,${src}`;
-  const metaHtml = meta.prompt ? `
-    <div class="img-meta">
-      <div class="img-meta-row"><b>Prompt</b>${escHtml((meta.prompt || "").slice(0, 150))}${meta.prompt.length > 150 ? "…" : ""}</div>
-      ${meta.negative ? `<div class="img-meta-row"><b>Negative</b>${escHtml(meta.negative.slice(0, 80))}</div>` : ""}
-      <div class="img-meta-row"><b>Seed</b>${meta.seed ?? "?"}</div>
-      <div class="img-meta-row"><b>Model</b>${escHtml((meta.model || "?").split(/[\\/]/).pop())}</div>
-    </div>` : "";
-  card.innerHTML = `<img src="${imgSrc}"><div class="img-label">${escHtml(title)}</div>${metaHtml}`;
-  card.querySelector("img").onclick = () => {
-    const a = document.createElement("a");
-    a.href = imgSrc;
-    a.download = title.replace(/\s+/g, "_") + ".png";
-    a.click();
-  };
-  gallery.prepend(card);
-  showTab("gallery");
+// ── GALLERY ───────────────────────────────────────────────────────
+function addToGallery(dataUrl, title, meta={}) {
+  document.getElementById('gallery-empty').style.display = 'none';
+  const grid = document.getElementById('gallery-grid');
+  grid.style.display = 'grid';
+  const card = document.createElement('div');
+  card.className = 'gallery-card';
+  const safeUrl = dataUrl.replace(/'/g,'%27');
+  card.innerHTML = `
+    <img src="${dataUrl}" loading="lazy">
+    <div class="card-overlay"><div class="card-prompt">${escHtml((meta.prompt||title).slice(0,80))}</div></div>
+    <div class="card-actions">
+      <div class="card-action-btn" title="Download" onclick="event.stopPropagation();downloadImg('${safeUrl}','${escHtml(title)}')">↓</div>
+      <div class="card-action-btn" title="Send to i2i" onclick="event.stopPropagation();sendToI2IFromGallery('${safeUrl}')">→</div>
+    </div>`;
+  card.querySelector('img').onclick = null;
+  card.onclick = () => openModal(dataUrl, title, meta);
+  grid.prepend(card);
 }
-
 function clearGallery() {
-  document.getElementById("gallery").innerHTML = "";
-  showTab("tasks");
+  const grid = document.getElementById('gallery-grid');
+  grid.innerHTML = ''; grid.style.display = 'none';
+  document.getElementById('gallery-empty').style.display = 'flex';
+  setStatus('GALLERY CLEARED','ok'); setTimeout(()=>setStatus('SD · PANEL'),1500);
+}
+function switchCenterTab(tab, el) {
+  document.querySelectorAll('.center-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const gv = document.getElementById('gallery-view');
+  const qv = document.getElementById('queue-view');
+  gv.style.display = tab==='gallery' ? 'block' : 'none';
+  gv.style.flex     = tab==='gallery' ? '1' : '';
+  qv.style.display = tab==='queue' ? 'block' : 'none';
+  qv.style.flex     = tab==='queue' ? '1' : '';
 }
 
-// ── ComfyUI 生成 ──────────────────────────────────────────────
-function buildWorkflow(task, modelName, seed) {
-  const sizeStr = task.size;
-  const w = sizeStr ? parseInt(sizeStr.split("x")[0]) : (parseInt(document.getElementById("size-w").value) || 1024);
-  const h = sizeStr ? parseInt(sizeStr.split("x")[1]) : (parseInt(document.getElementById("size-h").value) || 1024);
-  const vaeName  = task.vae  || document.getElementById("vae-select").value;
-  const loras = [0, 1, 2, 3, 4, 5].map(i => ({
-    name: document.getElementById(`lora-sel-${i}`)?.value || "",
-    strength: parseFloat(document.getElementById(`lora-num-${i}`)?.value || 0.8)
-  })).filter(l => l.name);
-  const sampler   = task.sampler   || document.getElementById("sampler-select").value   || "euler_ancestral";
-  const scheduler = task.scheduler || document.getElementById("scheduler-select").value || "karras";
-  const steps     = task.steps  || parseInt(document.getElementById("steps-num").value)  || 20;
-  const cfg       = task.cfg    || parseFloat(document.getElementById("cfg-num").value)  || 7;
-  const wf = {
-    "1": { class_type: "CheckpointLoaderSimple", inputs: { ckpt_name: modelName } },
-    "4": { class_type: "EmptyLatentImage", inputs: { width: w, height: h, batch_size: task.batch || 1 } },
-  };
+// ── PREVIEW ───────────────────────────────────────────────────────
+function showPreviewFinal(dataUrl, meta={}) {
+  lastResult = { dataUrl, meta };
+  const img = document.getElementById('preview-img');
+  img.src = dataUrl; img.style.display = 'block';
+  document.getElementById('preview-loading').style.display = 'none';
+  document.getElementById('preview-ph').style.display = 'none';
+  if (meta.model) document.getElementById('m-model').textContent = meta.model.replace(/\.(safetensors|ckpt|pt)$/i,'').slice(0,16);
+  if (meta.seed !== undefined) document.getElementById('m-seed').textContent = meta.seed;
+  if (meta.steps) document.getElementById('m-steps').textContent = meta.steps;
+  if (meta.cfg)   document.getElementById('m-cfg').textContent   = meta.cfg;
+  if (meta.sampler) document.getElementById('m-sampler').textContent = meta.sampler;
+  if (meta.time)  document.getElementById('m-time').textContent  = meta.time;
+  document.getElementById('m-size').textContent = `${currentW} × ${currentH}`;
+}
+function showLivePreview(url) {
+  const img = document.getElementById('preview-img');
+  if (img._purl) URL.revokeObjectURL(img._purl);
+  img._purl = url; img.src = url; img.style.display = 'block';
+  document.getElementById('preview-loading').style.display = 'none';
+  document.getElementById('preview-ph').style.display = 'none';
+}
+function clearLivePreview() {
+  const img = document.getElementById('preview-img');
+  if (img._purl) { URL.revokeObjectURL(img._purl); img._purl = null; }
+}
 
-  // 串接所有 LoRA（10, 11, 12...）
-  let modelRef = ["1", 0];
-  let clipRef  = ["1", 1];
+// ── MODAL ─────────────────────────────────────────────────────────
+function openModal(dataUrl, title, meta) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-img').src = dataUrl;
+  const metaEl = document.getElementById('modal-meta');
+  metaEl.innerHTML = meta ? Object.entries(meta)
+    .filter(([,v]) => v != null)
+    .map(([k,v]) =>
+      `<div style="font-size:10px;color:var(--muted)">${k.toUpperCase()}</div>`+
+      `<div style="font-size:10px;color:var(--accent2)">${escHtml(String(v))}</div>`
+    ).join('') : '';
+  document.getElementById('modal-bg').classList.add('open');
+}
+function closeModal(e) {
+  if (e.target === document.getElementById('modal-bg')) document.getElementById('modal-bg').classList.remove('open');
+}
+
+// ── ACTIONS ───────────────────────────────────────────────────────
+function saveLastImg() { if (lastResult) downloadImg(lastResult.dataUrl, 'sd-panel-'+Date.now()); }
+function downloadImg(dataUrl, name) {
+  const a = document.createElement('a'); a.href = dataUrl; a.download = (name||'sd-panel')+'.png'; a.click();
+}
+function sendToImg2Img() {
+  if (!lastResult) return;
+  img2imgBase64 = lastResult.dataUrl.split(',')[1];
+  setMode('img2img', document.querySelectorAll('.mode-btn')[1]);
+  const up = document.getElementById('img-upload');
+  up.classList.add('has-img','vis');
+  up.innerHTML = `<img src="${lastResult.dataUrl}"><span class="ul" style="color:var(--text)">✓ LOADED</span>`;
+}
+function sendToI2IFromGallery(dataUrl) {
+  img2imgBase64 = dataUrl.split(',')[1];
+  setMode('img2img', document.querySelectorAll('.mode-btn')[1]);
+  const up = document.getElementById('img-upload');
+  up.classList.add('has-img','vis');
+  up.innerHTML = `<img src="${dataUrl}"><span class="ul" style="color:var(--text)">✓ LOADED</span>`;
+}
+function copyPrompt() {
+  const p = tasks[activeTask]?.prompt || '';
+  if (p) navigator.clipboard.writeText(p).then(() => { setStatus('PROMPT COPIED','ok'); setTimeout(()=>setStatus('SD · PANEL'),1500); });
+}
+
+// ── WORKFLOW ──────────────────────────────────────────────────────
+function buildWorkflow(task, modelName, seed) {
+  currentW = parseInt(document.getElementById('size-w').value) || currentW;
+  currentH = parseInt(document.getElementById('size-h').value) || currentH;
+  const w = currentW, h = currentH;
+  const vaeName   = document.getElementById('vae-select').value;
+  const sampler   = document.getElementById('sampler-select').value   || 'euler_ancestral';
+  const scheduler = document.getElementById('scheduler-select').value || 'karras';
+  const steps     = parseInt(document.getElementById('steps-num').value) || 20;
+  const cfg       = parseFloat(document.getElementById('cfg-num').value) || 7;
+  const batchSize = task.batch || currentBatch || 1;
+  const loras = [0,1,2,3,4,5].map(i => ({
+    name: document.getElementById(`lora-sel-${i}`)?.value || '',
+    strength: parseFloat(document.getElementById(`lora-sldr-${i}`)?.value || 0.8)
+  })).filter(l => l.name);
+
+  const wf = { "1": { class_type:"CheckpointLoaderSimple", inputs:{ ckpt_name: modelName } } };
+
+  if (currentMode === 'img2img' && img2imgBase64) {
+    wf["8"] = { class_type:"ETN_LoadImageBase64", inputs:{ image: img2imgBase64 } };
+    wf["4"] = { class_type:"VAEEncode", inputs:{ pixels:["8",0], vae:["1",2] } };
+  } else {
+    wf["4"] = { class_type:"EmptyLatentImage", inputs:{ width:w, height:h, batch_size:batchSize } };
+  }
+
+  let modelRef = ["1",0], clipRef = ["1",1];
   loras.forEach((lora, i) => {
-    const nodeId = String(10 + i);
-    wf[nodeId] = { class_type: "LoraLoader", inputs: {
-      model: modelRef, clip: clipRef,
-      lora_name: lora.name,
-      strength_model: lora.strength,
-      strength_clip: lora.strength
-    }};
-    modelRef = [nodeId, 0];
-    clipRef  = [nodeId, 1];
+    const nid = String(10+i);
+    wf[nid] = { class_type:"LoraLoader", inputs:{ model:modelRef, clip:clipRef, lora_name:lora.name, strength_model:lora.strength, strength_clip:lora.strength } };
+    modelRef = [nid,0]; clipRef = [nid,1];
   });
 
-  wf["2"] = { class_type: "CLIPTextEncode", inputs: { text: task.prompt,                   clip: clipRef } };
-  wf["3"] = { class_type: "CLIPTextEncode", inputs: { text: task.negative || "low quality", clip: clipRef } };
+  wf["2"] = { class_type:"CLIPTextEncode", inputs:{ text: task.prompt||'', clip:clipRef } };
+  wf["3"] = { class_type:"CLIPTextEncode", inputs:{ text: task.negative||'low quality', clip:clipRef } };
 
-  const refinerName = document.getElementById("refiner-select")?.value;
-  const switchPct   = parseInt(document.getElementById("switch-slider")?.value || 80) / 100;
+  const refinerName = document.getElementById('refiner-select')?.value;
+  const switchPct   = parseInt(document.getElementById('switch-slider')?.value || 80) / 100;
   const switchStep  = Math.round(steps * switchPct);
+  const denoise     = currentMode==='img2img' ? parseFloat(document.getElementById('denoise-slider')?.value||0.75) : 1;
 
   if (refinerName) {
-    // Base：KSamplerAdvanced，跑 0 → switchStep
-    wf["5"] = { class_type: "KSamplerAdvanced", inputs: {
-      add_noise: "enable", noise_seed: seed, steps, cfg,
-      sampler_name: sampler, scheduler, start_at_step: 0, end_at_step: switchStep,
-      return_with_leftover_noise: "enable",
-      model: modelRef, positive: ["2", 0], negative: ["3", 0], latent_image: ["4", 0]
-    }};
-    // Refiner 模型
-    wf["30"] = { class_type: "CheckpointLoaderSimple", inputs: { ckpt_name: refinerName } };
-    wf["31"] = { class_type: "CLIPTextEncode", inputs: { text: task.prompt,                   clip: ["30", 1] } };
-    wf["32"] = { class_type: "CLIPTextEncode", inputs: { text: task.negative || "low quality", clip: ["30", 1] } };
-    // Refiner：KSamplerAdvanced，跑 switchStep → steps
-    wf["33"] = { class_type: "KSamplerAdvanced", inputs: {
-      add_noise: "disable", noise_seed: seed, steps, cfg,
-      sampler_name: sampler, scheduler, start_at_step: switchStep, end_at_step: steps,
-      return_with_leftover_noise: "disable",
-      model: ["30", 0], positive: ["31", 0], negative: ["32", 0], latent_image: ["5", 0]
-    }};
-    // 後續接 Refiner 的輸出
-    Object.keys(wf).filter(k => ["20","21","6"].includes(k)).forEach(k => {
-      const inp = wf[k].inputs;
-      if (inp.samples?.[0] === "5") inp.samples = ["33", 0];
-      if (inp.latent_image?.[0] === "5") inp.latent_image = ["33", 0];
-    });
-    if (!wf["20"] && !wf["21"]) {
-      const vaeRef2 = vaeName ? ["9", 0] : ["30", 2];
-      wf["6"] = { class_type: "VAEDecode", inputs: { samples: ["33", 0], vae: vaeRef2 } };
-    }
+    wf["5"] = { class_type:"KSamplerAdvanced", inputs:{ add_noise:"enable", noise_seed:seed, steps, cfg, sampler_name:sampler, scheduler, start_at_step:0, end_at_step:switchStep, return_with_leftover_noise:"enable", model:modelRef, positive:["2",0], negative:["3",0], latent_image:["4",0] } };
+    wf["30"] = { class_type:"CheckpointLoaderSimple", inputs:{ ckpt_name:refinerName } };
+    wf["31"] = { class_type:"CLIPTextEncode", inputs:{ text:task.prompt||'', clip:["30",1] } };
+    wf["32"] = { class_type:"CLIPTextEncode", inputs:{ text:task.negative||'low quality', clip:["30",1] } };
+    wf["33"] = { class_type:"KSamplerAdvanced", inputs:{ add_noise:"disable", noise_seed:seed, steps, cfg, sampler_name:sampler, scheduler, start_at_step:switchStep, end_at_step:steps, return_with_leftover_noise:"disable", model:["30",0], positive:["31",0], negative:["32",0], latent_image:["5",0] } };
   } else {
-    wf["5"] = { class_type: "KSampler", inputs: {
-      seed, steps, cfg,
-      sampler_name: sampler, scheduler, denoise: 1,
-      model: modelRef, positive: ["2", 0], negative: ["3", 0], latent_image: ["4", 0]
-    }};
+    wf["5"] = { class_type:"KSampler", inputs:{ seed, steps, cfg, sampler_name:sampler, scheduler, denoise, model:modelRef, positive:["2",0], negative:["3",0], latent_image:["4",0] } };
   }
 
-  const vaeRef = vaeName
-    ? (wf["9"] = { class_type: "VAELoader", inputs: { vae_name: vaeName } }, ["9", 0])
-    : ["1", 2];
-
-  const hiresOn   = document.getElementById("hires-enable")?.checked;
-  const upscaleOn = document.getElementById("upscale-enable")?.checked;
-
-  let latentRef = ["5", 0];
+  const vaeRef = vaeName ? (wf["9"] = { class_type:"VAELoader", inputs:{ vae_name:vaeName } }, ["9",0]) : ["1",2];
+  const hiresOn   = document.getElementById('hires-enable')?.checked;
+  const upscaleOn = document.getElementById('upscale-enable')?.checked;
+  let latentRef = refinerName ? ["33",0] : ["5",0];
 
   if (hiresOn) {
-    const hiresScale  = parseFloat(document.getElementById("hires-scale").value  || 1.5);
-    const hiresSteps  = parseInt(document.getElementById("hires-steps-num").value || 15);
-    const hiresDenoise= parseFloat(document.getElementById("hires-denoise-num").value || 0.5);
-    wf["20"] = { class_type: "LatentUpscale", inputs: {
-      samples: latentRef, upscale_method: "nearest-exact",
-      width: Math.round(w * hiresScale / 64) * 64,
-      height: Math.round(h * hiresScale / 64) * 64,
-      crop: "disabled"
-    }};
-    wf["21"] = { class_type: "KSampler", inputs: {
-      seed: seed + 1,
-      steps: hiresSteps, cfg, sampler_name: sampler, scheduler, denoise: hiresDenoise,
-      model: modelRef, positive: ["2", 0], negative: ["3", 0], latent_image: ["20", 0]
-    }};
-    latentRef = ["21", 0];
+    const hs = parseFloat(document.getElementById('hires-scale').value || 1.5);
+    const hsteps = parseInt(document.getElementById('hires-steps-num').value || 15);
+    const hdnoise = parseFloat(document.getElementById('hires-denoise-num').value || 0.5);
+    wf["20"] = { class_type:"LatentUpscale", inputs:{ samples:latentRef, upscale_method:"nearest-exact", width:Math.round(w*hs/64)*64, height:Math.round(h*hs/64)*64, crop:"disabled" } };
+    wf["21"] = { class_type:"KSampler", inputs:{ seed:seed+1, steps:hsteps, cfg, sampler_name:sampler, scheduler, denoise:hdnoise, model:modelRef, positive:["2",0], negative:["3",0], latent_image:["20",0] } };
+    latentRef = ["21",0];
   }
 
-  wf["6"] = { class_type: "VAEDecode", inputs: { samples: latentRef, vae: vaeRef } };
+  wf["6"] = { class_type:"VAEDecode", inputs:{ samples:latentRef, vae:vaeRef } };
 
   if (upscaleOn) {
-    const upscaleModel  = document.getElementById("upscale-model-select").value;
-    const upscaleFactor = parseInt(document.getElementById("upscale-factor").value || 4);
-    if (upscaleModel) {
-      wf["23"] = { class_type: "UpscaleModelLoader",    inputs: { model_name: upscaleModel } };
-      wf["24"] = { class_type: "ImageUpscaleWithModel", inputs: { upscale_model: ["23", 0], image: ["6", 0] } };
-      wf["7"]  = { class_type: "SaveImage", inputs: { filename_prefix: "dashboard", images: ["24", 0] } };
+    const um = document.getElementById('upscale-model-select').value;
+    const uf = parseInt(document.getElementById('upscale-factor').value || 4);
+    if (um) {
+      wf["23"] = { class_type:"UpscaleModelLoader", inputs:{ model_name:um } };
+      wf["24"] = { class_type:"ImageUpscaleWithModel", inputs:{ upscale_model:["23",0], image:["6",0] } };
+      wf["7"]  = { class_type:"SaveImage", inputs:{ filename_prefix:"sd-panel", images:["24",0] } };
     } else {
-      const fw = hiresOn
-        ? Math.round(w * parseFloat(document.getElementById("hires-scale").value||1.5) / 64)*64
-        : w;
-      const fh = hiresOn
-        ? Math.round(h * parseFloat(document.getElementById("hires-scale").value||1.5) / 64)*64
-        : h;
-      wf["24"] = { class_type: "ImageScale", inputs: {
-        image: ["6", 0], upscale_method: "lanczos",
-        width: fw * upscaleFactor, height: fh * upscaleFactor, crop: "disabled"
-      }};
-      wf["7"] = { class_type: "SaveImage", inputs: { filename_prefix: "dashboard", images: ["24", 0] } };
+      const fw = hiresOn ? Math.round(w*parseFloat(document.getElementById('hires-scale').value||1.5)/64)*64 : w;
+      const fh = hiresOn ? Math.round(h*parseFloat(document.getElementById('hires-scale').value||1.5)/64)*64 : h;
+      wf["24"] = { class_type:"ImageScale", inputs:{ image:["6",0], upscale_method:"lanczos", width:fw*uf, height:fh*uf, crop:"disabled" } };
+      wf["7"]  = { class_type:"SaveImage", inputs:{ filename_prefix:"sd-panel", images:["24",0] } };
     }
   } else {
-    wf["7"] = { class_type: "SaveImage", inputs: { filename_prefix: "dashboard", images: ["6", 0] } };
+    wf["7"] = { class_type:"SaveImage", inputs:{ filename_prefix:"sd-panel", images:["6",0] } };
   }
-
   return wf;
 }
 
-function setProgress(value, max) {
-  const pct = max > 0 ? Math.round(value / max * 100) : 0;
-  document.getElementById("progress-bar").style.width = pct + "%";
-  document.getElementById("progress-text").textContent = `${pct}%`;
-  document.getElementById("progress-wrap").style.display = "block";
-}
-function hideProgress() {
-  document.getElementById("progress-wrap").style.display = "none";
-  document.getElementById("progress-bar").style.width = "0%";
-  document.getElementById("progress-text").textContent = "0%";
-}
-
+// ── COMFY GENERATE ────────────────────────────────────────────────
 async function comfyuiGenerate(task) {
-  const modelName = task.model || document.getElementById("model-select").value;
-  if (!modelName) throw new Error("請先選擇模型");
-
+  const modelName = document.getElementById('model-select').value;
+  if (!modelName) throw new Error('Please select a model');
   const seed = getEffectiveSeed();
   const clientId = crypto.randomUUID();
   const ws = new WebSocket(`ws://127.0.0.1:8188/ws?clientId=${clientId}`);
-
-  await new Promise((res, rej) => {
+  await new Promise((res,rej) => {
     ws.onopen = res;
-    ws.onerror = () => rej(new Error("WebSocket 連線失敗"));
-    setTimeout(() => rej(new Error("WebSocket 連線超時")), 5000);
+    ws.onerror = () => rej(new Error('WebSocket connection failed'));
+    setTimeout(() => rej(new Error('WebSocket connection timeout')), 5000);
   });
-
   const r = await fetch(`${COMFY_API}/prompt`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ prompt: buildWorkflow(task, modelName, seed), client_id: clientId })
   });
   if (!r.ok) { ws.close(); throw new Error(`HTTP ${r.status}`); }
   const { prompt_id } = await r.json();
 
   return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      ws.close(); hideProgress(); clearPreview();
-      reject(new Error("生成超時（4 分鐘）"));
-    }, 4 * 60 * 1000);
-
+    const timeout = setTimeout(() => { ws.close(); clearLivePreview(); reject(new Error('Generation timeout (4 min)')); }, 4*60*1000);
     ws.onmessage = async (event) => {
       try {
-        // Binary = latent preview image from ComfyUI
         if (event.data instanceof Blob) {
           const buf = await event.data.arrayBuffer();
           const view = new DataView(buf);
-          if (view.getUint32(0) === 1) { // PREVIEW_IMAGE type
-            const previewBlob = new Blob([buf.slice(8)], { type: "image/jpeg" });
-            showPreview(URL.createObjectURL(previewBlob));
+          if (view.getUint32(0) === 1) {
+            showLivePreview(URL.createObjectURL(new Blob([buf.slice(8)], {type:'image/jpeg'})));
           }
           return;
         }
-
         const msg = JSON.parse(event.data);
-        if (msg.type === "progress" && msg.data.prompt_id === prompt_id) {
-          setProgress(msg.data.value, msg.data.max);
+        if (msg.type==='progress' && msg.data.prompt_id===prompt_id) {
+          const pct = Math.round(msg.data.value / msg.data.max * 100);
+          document.getElementById('progress-fill').style.width = pct+'%';
+          document.getElementById('progress-label').textContent = pct+'%';
+          document.getElementById('progress-wrap').style.display = 'block';
         }
-        if (msg.type === "executed" && msg.data.prompt_id === prompt_id) {
+        if (msg.type==='executed' && msg.data.prompt_id===prompt_id) {
           const images = msg.data.output?.images;
           if (images?.length) {
-            clearTimeout(timeout);
-            ws.close();
-            hideProgress(); clearPreview();
+            clearTimeout(timeout); ws.close(); clearLivePreview();
             const dataUrls = await Promise.all(images.map(async img => {
-              const imgUrl = `${COMFY_API}/view?filename=${encodeURIComponent(img.filename)}&subfolder=${encodeURIComponent(img.subfolder)}&type=${img.type}`;
-              const blob = await (await fetch(imgUrl)).blob();
-              return new Promise((res, rej) => {
-                const reader = new FileReader();
-                reader.onload = () => res(reader.result);
-                reader.onerror = rej;
-                reader.readAsDataURL(blob);
-              });
+              const url = `${COMFY_API}/view?filename=${encodeURIComponent(img.filename)}&subfolder=${encodeURIComponent(img.subfolder)}&type=${img.type}`;
+              const blob = await (await fetch(url)).blob();
+              return new Promise((res,rej) => { const rd=new FileReader(); rd.onload=()=>res(rd.result); rd.onerror=rej; rd.readAsDataURL(blob); });
             }));
             resolve({ dataUrls, seed, model: modelName });
           }
         }
-        if (msg.type === "execution_error" && msg.data.prompt_id === prompt_id) {
-          clearTimeout(timeout);
-          ws.close(); hideProgress(); clearPreview();
-          reject(new Error(msg.data.exception_message || "ComfyUI 執行錯誤"));
+        if (msg.type==='execution_error' && msg.data.prompt_id===prompt_id) {
+          clearTimeout(timeout); ws.close(); clearLivePreview();
+          reject(new Error(msg.data.exception_message || 'ComfyUI error'));
         }
-      } catch (e) { /* 忽略非 JSON 訊息 */ }
+      } catch {}
     };
-
-    ws.onerror = () => {
-      clearTimeout(timeout); hideProgress(); clearPreview();
-      reject(new Error("WebSocket 中斷"));
-    };
+    ws.onerror = () => { clearTimeout(timeout); clearLivePreview(); reject(new Error('WebSocket disconnected')); };
   });
 }
 
-async function generateOne(task) {
-  return await comfyuiGenerate(task);
+// ── GENERATE LOOP ─────────────────────────────────────────────────
+function stopGenerate() {
+  stopRequested = true;
+  fetch(`${COMFY_API}/interrupt`, {method:'POST'}).catch(()=>{});
+  setStatus('STOPPING…','warn');
 }
-
 async function startGenerate() {
-  if (!tasks.length) { setStatus("⚠️ 請先新增任務", "err"); return; }
-  const missing = tasks.filter(t => !t.prompt.trim());
-  if (missing.length) { setStatus(`⚠️ 有 ${missing.length} 個任務缺少提示詞`, "err"); return; }
+  if (isGenerating) return;
+  if (!tasks.length) { setStatus('ADD A TASK FIRST','warn'); return; }
+  if (!tasks.some(t => t.prompt.trim())) { setStatus('ADD A PROMPT','warn'); return; }
+  saveTasks();
+  isGenerating = true; stopRequested = false;
+  const btn = document.getElementById('gen-btn');
+  btn.classList.add('running');
+  document.getElementById('gen-label').textContent = 'GENERATING';
+  document.getElementById('stop-btn').style.display = 'block';
+  document.getElementById('preview-loading').style.display = 'flex';
+  document.getElementById('preview-ph').style.display = 'none';
+  queueStatuses = {};
+  tasks.forEach((_,i) => queueStatuses[i]='pending');
+  renderQueue();
+  switchCenterTab('queue', document.querySelectorAll('.center-tab')[1]);
 
-  saveMd();
-  stopRequested = false;
-  document.getElementById("stop-btn").style.display = "";
-  document.getElementById("generate-btn").disabled = true;
-
-  const statuses = {};
-  tasks.forEach((_, i) => statuses[i] = "pending");
-  renderTasks(tasks, statuses);
-  showTab("tasks");
-
-  let ok = 0, fail = 0;
+  const t0 = Date.now(); let ok = 0, fail = 0;
   for (let i = 0; i < tasks.length; i++) {
-    if (stopRequested) { setStatus(`⏹ 已停止（完成 ${ok} 張）`, "err"); break; }
-    statuses[i] = "running";
-    renderTasks(tasks, statuses);
-    setStatus(`⚙️ 生成中 [${i+1}/${tasks.length}]: ${tasks[i].title}`, "run");
+    if (stopRequested) { setStatus(`STOPPED · ${ok} done`,'warn'); break; }
+    if (!tasks[i].prompt.trim()) { queueStatuses[i]='error'; renderQueue(); continue; }
+    queueStatuses[i] = 'running'; renderQueue();
+    setStatus(`GENERATING ${i+1}/${tasks.length} · ${tasks[i].title}`);
     try {
-      const { dataUrls, seed, model } = await generateOne(tasks[i]);
+      const { dataUrls, seed, model } = await comfyuiGenerate(tasks[i]);
+      const elapsed = ((Date.now()-t0)/1000).toFixed(1)+'s';
       dataUrls.forEach((dataUrl, j) => {
-        addToGallery(dataUrl, tasks[i].title + (dataUrls.length > 1 ? ` #${j+1}` : ""), {
-          prompt: tasks[i].prompt, negative: tasks[i].negative, seed, model
-        });
+        const title = tasks[i].title + (dataUrls.length>1 ? ` #${j+1}` : '');
+        const meta = { prompt:tasks[i].prompt, negative:tasks[i].negative, seed, model,
+          steps:document.getElementById('steps-num').value, cfg:document.getElementById('cfg-num').value,
+          sampler:document.getElementById('sampler-select').value, time:elapsed };
+        addToGallery(dataUrl, title, meta);
+        showPreviewFinal(dataUrl, meta);
       });
-      statuses[i] = "done"; ok += dataUrls.length;
-    } catch (e) {
-      statuses[i] = "error"; fail++;
-      setStatus(`❌ 任務 ${i+1} 失敗: ${e.message}`, "err");
+      queueStatuses[i] = 'done'; ok += dataUrls.length;
+    } catch(e) {
+      queueStatuses[i] = 'error'; fail++;
+      setStatus(`ERROR · ${e.message}`, 'error');
     }
-    renderTasks(tasks, statuses);
+    renderQueue();
   }
-
-  document.getElementById("stop-btn").style.display = "none";
-  document.getElementById("generate-btn").disabled = false;
-  if (!stopRequested) setStatus(`🎉 完成！成功 ${ok} 張，失敗 ${fail} 張`, ok > 0 ? "ok" : "err");
+  isGenerating = false;
+  btn.classList.remove('running');
+  document.getElementById('gen-label').textContent = 'GENERATE';
+  document.getElementById('stop-btn').style.display = 'none';
+  document.getElementById('progress-wrap').style.display = 'none';
+  document.getElementById('preview-loading').style.display = 'none';
+  if (!stopRequested) {
+    setStatus(`DONE · ${ok} image${ok!==1?'s':''} · ${fail} failed`, ok>0?'ok':'error');
+    switchCenterTab('gallery', document.querySelectorAll('.center-tab')[0]);
+  }
 }
 
-// ── PWA Service Worker ────────────────────────────────────────
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("./sw.js").catch(() => {});
-}
+// ── PWA ───────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
-// ── 啟動 ──────────────────────────────────────────────────────
-renderLoraSlots();
+// ── KEYBOARD ─────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey||e.metaKey) && e.key==='Enter') startGenerate();
+  if (e.key==='Escape') document.getElementById('modal-bg').classList.remove('open');
+});
 
-// 從 localStorage 載入任務，否則建立預設第一個
-const _savedTasks = localStorage.getItem("sd-tasks");
-if (_savedTasks) {
-  try { tasks = JSON.parse(_savedTasks); } catch { tasks = []; }
-}
-if (!tasks.length) {
-  tasks = [{ title: "圖片 1", prompt: "", negative: "low quality, blurry", batch: 1 }];
-}
-activeTask = 0;
-renderTaskTabs();
-renderTaskEditor();
-renderTasks(tasks);
-checkApi();
+document.getElementById('sampler-select').addEventListener('change', () => {
+  document.getElementById('m-sampler').textContent = document.getElementById('sampler-select').value;
+});
 </script>
 </body>
 </html>
