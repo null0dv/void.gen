@@ -57,6 +57,37 @@ pause
 
 ---
 
+## 推薦設置（動漫 / 插畫風格）
+
+> 以下為測試過的穩定組合，適合動漫、插畫、二次元風格生成
+
+### 下載清單
+
+| 用途 | 模型檔案 | 下載 |
+|------|----------|------|
+| 主模型 (Checkpoint) | `novaAnimeXL_ilV180.safetensors` | [CivitAI](https://civitai.com/models/376130/nova-anime-xl) |
+| Refiner | `JANKUTrainedChenkinNoobai_v777.safetensors` | [CivitAI](https://civitai.com/models/1277670/janku-trained-chenkin-and-noobai-rouwei-illustrious-xl) |
+
+兩個檔案都放到：
+```
+C:\ComfyUI_portable\ComfyUI\models\checkpoints\
+```
+
+### 面板設定
+
+| 項目 | 設定值 |
+|------|--------|
+| MODEL | novaAnimeXL_ilV180 |
+| REFINER | JANKUTrainedChenkinNoobai_v777 |
+| BASE % | 75 |
+| Steps | 25–35 |
+| CFG | 6–7.5 |
+| Size | 1024 × 1024 或 832 × 1216（直式） |
+
+> **BASE % 75** 表示前 75% 步數由主模型生成構圖，後 25% 交給 Refiner 細化線條與細節
+
+---
+
 ## 模型安裝指南
 
 所有模型檔案都放到 ComfyUI 對應資料夾後，**重啟 ComfyUI**，再按面板右上角 **CHECK** 重新讀取清單。
@@ -72,6 +103,7 @@ C:\ComfyUI_portable\ComfyUI\models\checkpoints\
 
 | 模型 | 大小 | 適合 | 下載 |
 |------|------|------|------|
+| **novaAnimeXL ilV180** ⭐ | ~6GB | 動漫、插畫（推薦） | [CivitAI](https://civitai.com/models/376130/nova-anime-xl) |
 | Stable Diffusion XL Base 1.0 | 6.9GB | 高品質寫實、通用 | [HuggingFace](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors) |
 | DreamShaper XL | 2.1GB | 動漫、藝術風格 | [CivitAI](https://civitai.com/models/112902) |
 | RealVisXL V4 | 3.9GB | 超寫實人像 | [CivitAI](https://civitai.com/models/139562) |
@@ -94,6 +126,7 @@ C:\ComfyUI_portable\ComfyUI\models\checkpoints\
 
 | 模型 | 大小 | 說明 | 下載 |
 |------|------|------|------|
+| **JANKUTrainedChenkinNoobai v777** ⭐ | ~6GB | 動漫 Refiner（推薦，搭配 novaAnimeXL） | [CivitAI](https://civitai.com/models/1277670/janku-trained-chenkin-and-noobai-rouwei-illustrious-xl) |
 | SDXL Refiner 1.0 | 6.1GB | 官方 Refiner，搭配 SDXL Base 使用 | [HuggingFace](https://huggingface.co/stabilityai/stable-diffusion-xl-refiner-1.0/resolve/main/sd_xl_refiner_1.0.safetensors) |
 
 **使用方式：**
