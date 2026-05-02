@@ -678,14 +678,11 @@ async function loadComfyModels() {
   try {
     const d = await (await fetch(`${COMFY_API}/object_info/CheckpointLoaderSimple`, { signal: AbortSignal.timeout(6000) })).json();
     const models = d?.CheckpointLoaderSimple?.input?.required?.ckpt_name?.[0] || [];
-    const prev = sel.value;
     sel.innerHTML = models.length
-      ? models.map(m => `<option value="${m}" ${m===prev?'selected':''}>${m}</option>`).join('')
+      ? models.map(m => `<option value="${m}">${m}</option>`).join('')
       : '<option value="">— no models found —</option>';
-    if (!prev) {
-      const def = findOption(sel, DEFAULTS.model);
-      if (def) sel.value = def.value;
-    }
+    const def = findOption(sel, DEFAULTS.model);
+    if (def) sel.value = def.value;
     if (models.length) document.getElementById('m-model').textContent = sel.value.replace(/\.(safetensors|ckpt|pt)$/i,'').slice(0,16);
   } catch { sel.innerHTML = '<option value="">— connection failed —</option>'; }
 }
@@ -694,22 +691,16 @@ async function loadRefinerModels() {
   try {
     const d = await (await fetch(`${COMFY_API}/object_info/CheckpointLoaderSimple`, { signal: AbortSignal.timeout(6000) })).json();
     const models = d?.CheckpointLoaderSimple?.input?.required?.ckpt_name?.[0] || [];
-    const prev = sel.value;
     sel.innerHTML = '<option value="">NONE</option>' + models.map(m => `<option value="${m}">${m}</option>`).join('');
-    if (prev) {
-      sel.value = prev;
-    } else {
-      const def = findOption(sel, DEFAULTS.refiner);
-      if (def) {
-        sel.value = def.value;
-        document.getElementById('refiner-switch-wrap').style.display = 'block';
-        const sw = document.getElementById('switch-slider');
-        sw.value = DEFAULTS.baseSwitch;
-        document.getElementById('switch-val').textContent = DEFAULTS.baseSwitch;
-        const body = document.getElementById('refiner-body');
-        const caret = document.getElementById('refiner-caret');
-        if (body.style.display === 'none') { body.style.display = ''; caret.classList.add('open'); }
-      }
+    const def = findOption(sel, DEFAULTS.refiner);
+    if (def) {
+      sel.value = def.value;
+      document.getElementById('refiner-switch-wrap').style.display = 'block';
+      document.getElementById('switch-slider').value = DEFAULTS.baseSwitch;
+      document.getElementById('switch-val').textContent = DEFAULTS.baseSwitch;
+      const body = document.getElementById('refiner-body');
+      const caret = document.getElementById('refiner-caret');
+      if (body.style.display === 'none') { body.style.display = ''; caret.classList.add('open'); }
     }
   } catch {}
 }
