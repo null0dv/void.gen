@@ -212,6 +212,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13
 .action-btn{flex:1;padding:7px;text-align:center;cursor:pointer;border-radius:5px;font-size:10px;color:var(--muted);border:1px solid var(--line2);transition:all .15s;font-family:var(--mono);background:var(--bg2);letter-spacing:.04em}
 .action-btn:hover{color:var(--text);border-color:var(--muted)}
 
+/* RESIZE HANDLE */
+.resize-handle{width:5px;cursor:col-resize;flex-shrink:0;background:transparent;transition:background .15s;z-index:5}
+.resize-handle:hover,.resize-handle.active{background:var(--line2)}
+
+/* ICON BUTTONS (clear / copy) */
+.icon-btn{cursor:pointer;font-size:10px;color:var(--muted);padding:1px 5px;border:1px solid var(--line2);border-radius:3px;font-family:var(--mono);transition:all .15s;user-select:none}
+.icon-btn:hover{color:var(--text);border-color:var(--muted)}
+
 /* STATUS BAR */
 .statusbar{height:24px;border-top:1px solid var(--line);display:flex;align-items:center;padding:0 16px;gap:14px;flex-shrink:0}
 .sb-item{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:5px}
@@ -310,7 +318,13 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
           style="width:100%;padding:8px;background:var(--bg3);border:1px solid var(--line2);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:11px;letter-spacing:.08em;cursor:pointer">
           INTERROGATE
         </button>
-        <div id="tagger-output" style="display:none;margin-top:8px;background:var(--bg2);border:1px solid var(--line2);border-radius:5px;padding:8px;font-size:10px;color:var(--muted);line-height:1.6;font-family:var(--mono);word-break:break-word"></div>
+        <div id="tagger-output-wrap" style="display:none;margin-top:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+            <span style="font-size:8px;color:var(--muted2);letter-spacing:.1em">RESULT</span>
+            <span id="tagger-copy-btn" class="icon-btn" onclick="copyTaggerOutput()">COPY</span>
+          </div>
+          <div id="tagger-output" style="background:var(--bg2);border:1px solid var(--line2);border-radius:5px;padding:8px;font-size:10px;color:var(--muted);line-height:1.6;font-family:var(--mono);word-break:break-word"></div>
+        </div>
       </div>
 
       <div class="ss">
@@ -538,6 +552,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
       <button class="stop-btn" id="stop-btn" onclick="stopGenerate()">■ STOP</button>
     </div>
   </div><!-- /sidebar -->
+  <div class="resize-handle" id="rh-left" onmousedown="startResize(event,'left')"></div>
 
   <!-- CENTER -->
   <div class="center">
@@ -562,6 +577,8 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
       <div id="queue-list"></div>
     </div>
   </div>
+
+  <div class="resize-handle" id="rh-right" onmousedown="startResize(event,'right')"></div>
 
   <!-- RIGHT PANEL -->
   <div class="right-panel">
@@ -799,6 +816,7 @@ function renderTaskEditor() {
   wrap.innerHTML = `
     <div class="sec-label" style="margin-bottom:6px">
       PROMPT <span style="font-size:9px;color:var(--muted2)">${idx+1} / ${tasks.length}</span>
+      <span class="icon-btn" onclick="clearPrompt(${idx})">CLR</span>
     </div>
     <input style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--line2);border-radius:5px;padding:5px 8px;font-size:10px;font-family:var(--mono);outline:none;margin-bottom:6px"
       type="text" id="te-title" value="${escHtml(t.title)}" placeholder="Task name…"
@@ -881,7 +899,7 @@ function handleUpload2txt(input) {
     const up = document.getElementById('img2txt-upload');
     up.classList.add('has-img');
     up.innerHTML = `<img src="${e.target.result}"><span class="ul" style="color:var(--text)">✓ LOADED</span>`;
-    document.getElementById('tagger-output').style.display = 'none';
+    document.getElementById('tagger-output-wrap').style.display = 'none';
   };
   reader.readAsDataURL(file);
 }
@@ -889,8 +907,9 @@ async function runInterrogate() {
   if (!img2txtBase64) { setStatus('UPLOAD AN IMAGE FIRST','warn'); return; }
   const btn = document.getElementById('interrogate-btn');
   const outEl = document.getElementById('tagger-output');
+  const outWrap = document.getElementById('tagger-output-wrap');
   btn.textContent = 'ANALYZING…'; btn.disabled = true;
-  outEl.style.display = 'none';
+  outWrap.style.display = 'none';
   setStatus('SENDING TO PIXAI TAGGER…');
 
   try {
@@ -933,7 +952,7 @@ async function runInterrogate() {
     if (!tags) throw new Error('No tags returned — try lowering thresholds');
 
     outEl.textContent = tags;
-    outEl.style.display = 'block';
+    outWrap.style.display = 'block';
     if (activeTask >= 0) {
       const ta = document.getElementById('te-prompt');
       if (ta) { ta.value = tags; tasks[activeTask].prompt = tags; }
@@ -942,7 +961,7 @@ async function runInterrogate() {
     setTimeout(() => setStatus('Void.gen'), 2500);
   } catch(e) {
     outEl.innerHTML = `<span style="color:var(--red)">${escHtml(e.message)}</span>`;
-    outEl.style.display = 'block';
+    outWrap.style.display = 'block';
     setStatus(`TAGGER ERROR · ${e.message}`, 'error');
   } finally {
     btn.textContent = 'INTERROGATE'; btn.disabled = false;
@@ -1149,6 +1168,47 @@ function sendToI2IFromGallery(dataUrl) {
 function copyPrompt() {
   const p = tasks[activeTask]?.prompt || '';
   if (p) navigator.clipboard.writeText(p).then(() => { setStatus('PROMPT COPIED','ok'); setTimeout(()=>setStatus('Void.gen'),1500); });
+}
+
+// ── PROMPT CLEAR / TAGGER COPY ───────────────────────────────────
+function clearPrompt(idx) {
+  tasks[idx].prompt = '';
+  const ta = document.getElementById('te-prompt');
+  if (ta) ta.value = '';
+}
+function copyTaggerOutput() {
+  const text = document.getElementById('tagger-output').textContent;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('tagger-copy-btn');
+    btn.textContent = 'COPIED';
+    setTimeout(() => btn.textContent = 'COPY', 1500);
+  });
+}
+
+// ── PANEL RESIZE ──────────────────────────────────────────────────
+let _rs = null;
+function startResize(e, side) {
+  e.preventDefault();
+  const el = side === 'left' ? document.querySelector('.sidebar') : document.querySelector('.right-panel');
+  _rs = { side, startX: e.clientX, startW: el.offsetWidth, el };
+  document.getElementById('rh-' + side).classList.add('active');
+  document.addEventListener('mousemove', _doResize);
+  document.addEventListener('mouseup', _stopResize);
+}
+function _doResize(e) {
+  if (!_rs) return;
+  const dx = e.clientX - _rs.startX;
+  const newW = _rs.side === 'left'
+    ? Math.max(200, Math.min(500, _rs.startW + dx))
+    : Math.max(160, Math.min(420, _rs.startW - dx));
+  _rs.el.style.width = newW + 'px';
+}
+function _stopResize() {
+  if (_rs) document.getElementById('rh-' + _rs.side).classList.remove('active');
+  _rs = null;
+  document.removeEventListener('mousemove', _doResize);
+  document.removeEventListener('mouseup', _stopResize);
 }
 
 // ── WORKFLOW ──────────────────────────────────────────────────────
