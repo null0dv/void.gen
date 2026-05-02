@@ -285,17 +285,26 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
       </div>
 
       <div class="ss" id="img2txt-section" style="display:none">
-        <div class="sec-label">SOURCE IMAGE</div>
+        <div class="sec-label" style="margin-bottom:6px">
+          SOURCE IMAGE
+          <span style="font-size:8px;color:var(--muted2);letter-spacing:.06em">PixAI v0.9</span>
+        </div>
         <div class="img-upload vis" id="img2txt-upload" onclick="triggerUpload2txt()">
           <span>↑</span>
           <span class="ul">CLICK TO UPLOAD</span>
         </div>
         <input type="file" id="file-input-2txt" accept="image/*" style="display:none" onchange="handleUpload2txt(this)">
-        <div class="param-row" style="margin-top:10px;margin-bottom:6px">
-          <span class="param-name">THRESHOLD</span>
-          <input type="range" class="slider" id="tagger-threshold" min="0.1" max="0.9" step="0.05" value="0.35"
+        <div class="param-row" style="margin-top:10px;margin-bottom:4px">
+          <span class="param-name">GENERAL</span>
+          <input type="range" class="slider" id="tagger-threshold" min="0.05" max="0.9" step="0.05" value="0.30"
             oninput="document.getElementById('tagger-threshold-val').textContent=parseFloat(this.value).toFixed(2)">
-          <span class="param-val" id="tagger-threshold-val">0.35</span>
+          <span class="param-val" id="tagger-threshold-val">0.30</span>
+        </div>
+        <div class="param-row" style="margin-bottom:6px">
+          <span class="param-name">CHARACTER</span>
+          <input type="range" class="slider" id="tagger-char-threshold" min="0.05" max="0.95" step="0.05" value="0.75"
+            oninput="document.getElementById('tagger-char-threshold-val').textContent=parseFloat(this.value).toFixed(2)">
+          <span class="param-val" id="tagger-char-threshold-val">0.75</span>
         </div>
         <button id="interrogate-btn" onclick="runInterrogate()"
           style="width:100%;padding:8px;background:var(--bg3);border:1px solid var(--line2);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:11px;letter-spacing:.08em;cursor:pointer">
@@ -879,84 +888,62 @@ function handleUpload2txt(input) {
 async function runInterrogate() {
   if (!img2txtBase64) { setStatus('UPLOAD AN IMAGE FIRST','warn'); return; }
   const btn = document.getElementById('interrogate-btn');
-  const out = document.getElementById('tagger-output');
-  btn.textContent = 'CHECKING…'; btn.disabled = true;
+  const outEl = document.getElementById('tagger-output');
+  btn.textContent = 'ANALYZING…'; btn.disabled = true;
+  outEl.style.display = 'none';
+  setStatus('SENDING TO PIXAI TAGGER…');
 
-  // Check if WD14Tagger node exists
   try {
-    const chk = await fetch(`${COMFY_API}/object_info/WD14Tagger%7Cpysssss`, { signal: AbortSignal.timeout(4000) });
-    const info = await chk.json();
-    if (!info?.['WD14Tagger|pysssss']) throw new Error('not found');
-  } catch {
-    out.innerHTML =
-      '<b style="color:var(--yellow)">WD14Tagger 未安裝</b><br><br>' +
-      '請停止 ComfyUI，在 custom_nodes 資料夾執行：<br><br>' +
-      '<span style="color:var(--accent2)">git clone https://github.com/pythongosssss/ComfyUI-WD14-Tagger</span><br><br>' +
-      '然後重啟 ComfyUI。';
-    out.style.display = 'block';
-    btn.textContent = 'INTERROGATE'; btn.disabled = false;
-    setStatus('WD14TAGGER NOT INSTALLED', 'error');
-    return;
-  }
+    const genThreshold  = parseFloat(document.getElementById('tagger-threshold').value)      || 0.30;
+    const charThreshold = parseFloat(document.getElementById('tagger-char-threshold').value) || 0.75;
+    const dataUrl = 'data:image/png;base64,' + img2txtBase64;
 
-  btn.textContent = 'ANALYZING…';
-  setStatus('UPLOADING IMAGE…');
-  try {
-    const blob = await fetch('data:image/png;base64,'+img2txtBase64).then(r=>r.blob());
-    const fd = new FormData();
-    fd.append('image', blob, 'tagger_input.png');
-    const up = await fetch(`${COMFY_API}/upload/image`, { method:'POST', body:fd });
-    if (!up.ok) throw new Error('Image upload failed');
-    const { name } = await up.json();
-
-    const threshold = parseFloat(document.getElementById('tagger-threshold').value) || 0.35;
-    const clientId = crypto.randomUUID();
-    const workflow = {
-      "1": { class_type:"LoadImage", inputs:{ image:name, upload:"image" } },
-      "2": { class_type:"WD14Tagger|pysssss", inputs:{ image:["1",0], model:"wd-v1-4-moat-tagger-v2", threshold, character_threshold:0.85, replace_underscore:false, trailing_comma:false, exclude_tags:"" } }
-    };
-    const ws = new WebSocket(`ws://127.0.0.1:8188/ws?clientId=${clientId}`);
-    await new Promise((res,rej) => { ws.onopen=res; ws.onerror=()=>rej(new Error('WS failed')); setTimeout(()=>rej(new Error('timeout')),5000); });
-    const r = await fetch(`${COMFY_API}/prompt`, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ prompt:workflow, client_id:clientId })
+    // Step 1: submit job to PixAI Tagger Gradio API
+    const submitResp = await fetch('https://pixai-labs-pixai-tagger-demo.hf.space/call/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: [{ url: dataUrl }, genThreshold, charThreshold] }),
+      signal: AbortSignal.timeout(30000)
     });
-    if (!r.ok) { ws.close(); throw new Error(`HTTP ${r.status}`); }
-    const { prompt_id } = await r.json();
-    setStatus('INTERROGATING…');
+    if (!submitResp.ok) throw new Error(`API ${submitResp.status}`);
+    const { event_id } = await submitResp.json();
 
-    const tags = await new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => { ws.close(); reject(new Error('Timeout')); }, 90000);
-      ws.onmessage = async (event) => {
-        if (event.data instanceof Blob) return;
-        try {
-          const msg = JSON.parse(event.data);
-          if (msg.type==='executed' && msg.data.prompt_id===prompt_id) {
-            clearTimeout(timeout); ws.close();
-            const hist = await (await fetch(`${COMFY_API}/history/${prompt_id}`)).json();
-            const out = hist[prompt_id]?.outputs?.['2'];
-            resolve(out?.tags?.[0] || out?.text?.[0] || '');
-          }
-          if (msg.type==='execution_error' && msg.data.prompt_id===prompt_id) {
-            clearTimeout(timeout); ws.close();
-            reject(new Error(msg.data.exception_message || 'Tagger error'));
-          }
-        } catch {}
-      };
-      ws.onerror = () => { clearTimeout(timeout); reject(new Error('WS disconnected')); };
-    });
+    // Step 2: read SSE result stream
+    setStatus('ANALYZING WITH PIXAI v0.9…');
+    const sseResp = await fetch(
+      `https://pixai-labs-pixai-tagger-demo.hf.space/call/predict/${event_id}`,
+      { signal: AbortSignal.timeout(60000) }
+    );
+    if (!sseResp.ok) throw new Error(`SSE ${sseResp.status}`);
+    const sseText = await sseResp.text();
 
-    const out = document.getElementById('tagger-output');
-    out.textContent = tags || '(no tags)';
-    out.style.display = 'block';
-    if (tags && activeTask >= 0) {
+    // Parse SSE: find all "data: [...]" lines, take the last complete one
+    let tags = '';
+    for (const line of sseText.split('\n')) {
+      if (!line.startsWith('data:')) continue;
+      try {
+        const parsed = JSON.parse(line.slice(5).trim());
+        if (!Array.isArray(parsed)) continue;
+        // Combine all string outputs (general, character, copyright)
+        const parts = parsed.filter(v => typeof v === 'string' && v.trim());
+        if (parts.length) tags = parts.join(', ');
+      } catch {}
+    }
+
+    if (!tags) throw new Error('No tags returned — try lowering thresholds');
+
+    outEl.textContent = tags;
+    outEl.style.display = 'block';
+    if (activeTask >= 0) {
       const ta = document.getElementById('te-prompt');
       if (ta) { ta.value = tags; tasks[activeTask].prompt = tags; }
     }
-    setStatus('TAGS EXTRACTED — PROMPT FILLED','ok');
+    setStatus('TAGS EXTRACTED — PROMPT FILLED', 'ok');
     setTimeout(() => setStatus('Void.gen'), 2500);
   } catch(e) {
-    setStatus(`TAGGER ERROR · ${e.message}`,'error');
+    outEl.innerHTML = `<span style="color:var(--red)">${escHtml(e.message)}</span>`;
+    outEl.style.display = 'block';
+    setStatus(`TAGGER ERROR · ${e.message}`, 'error');
   } finally {
     btn.textContent = 'INTERROGATE'; btn.disabled = false;
   }
