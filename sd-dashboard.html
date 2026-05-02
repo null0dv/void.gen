@@ -313,7 +313,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
       <div class="ss" id="img2txt-section" style="display:none">
         <div class="sec-label" style="margin-bottom:6px">
           SOURCE IMAGE
-          <span style="font-size:8px;color:var(--muted2);letter-spacing:.06em">PixAI v0.9</span>
+          <span style="font-size:8px;color:var(--muted2);letter-spacing:.06em">WD Tagger v3</span>
         </div>
         <div class="img-upload vis" id="img2txt-upload" onclick="triggerUpload2txt()"
           ondragover="event.preventDefault();this.style.borderColor='var(--muted)'"
@@ -1155,42 +1155,52 @@ async function runInterrogate() {
   const outWrap = document.getElementById('tagger-output-wrap');
   btn.textContent = 'ANALYZING…'; btn.disabled = true;
   outWrap.style.display = 'none';
-  setStatus('SENDING TO PIXAI TAGGER…');
+  setStatus('SENDING TO WD TAGGER…');
 
   try {
     const genThreshold  = parseFloat(document.getElementById('tagger-threshold').value)      || 0.30;
     const charThreshold = parseFloat(document.getElementById('tagger-char-threshold').value) || 0.75;
     const dataUrl = 'data:image/png;base64,' + img2txtBase64;
 
-    // Step 1: submit job to PixAI Tagger Gradio API
-    const submitResp = await fetch('https://pixai-labs-pixai-tagger-demo.hf.space/call/predict', {
+    // Step 1: submit to SmilingWolf WD Tagger v3 (EVA02-large)
+    const submitResp = await fetch('https://smilingwolf-wd-tagger.hf.space/call/predict', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: [{ url: dataUrl }, genThreshold, charThreshold] }),
+      body: JSON.stringify({
+        data: [
+          { url: dataUrl },
+          'SmilingWolf/wd-eva02-large-tagger-v3',
+          genThreshold,
+          false,
+          charThreshold,
+          false
+        ]
+      }),
       signal: AbortSignal.timeout(30000)
     });
     if (!submitResp.ok) throw new Error(`API ${submitResp.status}`);
     const { event_id } = await submitResp.json();
 
     // Step 2: read SSE result stream
-    setStatus('ANALYZING WITH PIXAI v0.9…');
+    setStatus('ANALYZING WITH WD TAGGER v3…');
     const sseResp = await fetch(
-      `https://pixai-labs-pixai-tagger-demo.hf.space/call/predict/${event_id}`,
+      `https://smilingwolf-wd-tagger.hf.space/call/predict/${event_id}`,
       { signal: AbortSignal.timeout(60000) }
     );
     if (!sseResp.ok) throw new Error(`SSE ${sseResp.status}`);
     const sseText = await sseResp.text();
 
-    // Parse SSE: find all "data: [...]" lines, take the last complete one
+    // Parse SSE: pick the longest comma-separated string (= combined tag output)
     let tags = '';
     for (const line of sseText.split('\n')) {
       if (!line.startsWith('data:')) continue;
       try {
         const parsed = JSON.parse(line.slice(5).trim());
         if (!Array.isArray(parsed)) continue;
-        // Combine all string outputs (general, character, copyright)
-        const parts = parsed.filter(v => typeof v === 'string' && v.trim());
-        if (parts.length) tags = parts.join(', ');
+        for (const item of parsed) {
+          if (typeof item === 'string' && item.includes(',') && item.length > tags.length)
+            tags = item;
+        }
       } catch {}
     }
 
