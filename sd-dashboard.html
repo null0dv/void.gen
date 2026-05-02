@@ -382,7 +382,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
         </div>
         <div class="param-row" style="margin-bottom:0">
           <span class="param-name">CFG</span>
-          <input type="range" class="slider" id="cfg-slider" min="1" max="20" step="0.5" value="7"
+          <input type="range" class="slider" id="cfg-slider" min="1" max="20" step="0.1" value="7"
             oninput="syncParam('cfg',this.value)">
           <span class="param-val" id="cfg-val">7</span>
         </div>
@@ -1263,6 +1263,12 @@ async function comfyuiGenerate(task) {
   const modelName = document.getElementById('model-select').value;
   if (!modelName) throw new Error('Please select a model');
   const seed = getEffectiveSeed();
+  const workflow = buildWorkflow(task, modelName, seed);
+  const stagesInTask = Math.max(1, Object.values(workflow).filter(n =>
+    ['KSampler','KSamplerAdvanced'].includes(n.class_type)
+  ).length);
+  let currentStage = 0, lastStepVal = -1;
+
   const clientId = crypto.randomUUID();
   const ws = new WebSocket(`ws://127.0.0.1:8188/ws?clientId=${clientId}`);
   await new Promise((res,rej) => {
@@ -1272,7 +1278,7 @@ async function comfyuiGenerate(task) {
   });
   const r = await fetch(`${COMFY_API}/prompt`, {
     method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ prompt: buildWorkflow(task, modelName, seed), client_id: clientId })
+    body: JSON.stringify({ prompt: workflow, client_id: clientId })
   });
   if (!r.ok) { ws.close(); throw new Error(`HTTP ${r.status}`); }
   const { prompt_id } = await r.json();
@@ -1291,7 +1297,11 @@ async function comfyuiGenerate(task) {
         }
         const msg = JSON.parse(event.data);
         if (msg.type==='progress' && msg.data.prompt_id===prompt_id) {
-          const taskPct = msg.data.value / msg.data.max;
+          if (msg.data.value <= lastStepVal && lastStepVal > 0)
+            currentStage = Math.min(currentStage + 1, stagesInTask - 1);
+          lastStepVal = msg.data.value;
+          const stagePct = msg.data.value / msg.data.max;
+          const taskPct = (currentStage + stagePct) / stagesInTask;
           const globalPct = Math.round((_progressCompleted + taskPct) / _progressTotal * 100);
           document.getElementById('progress-fill').style.width = globalPct+'%';
           document.getElementById('progress-label').textContent = globalPct+'%';
