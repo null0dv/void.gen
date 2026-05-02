@@ -1,5 +1,5 @@
 // ── 版本號 ── 每次更新 sd-dashboard.html 就把這裡改一下（v1 → v2 → v3…）
-const CACHE = "sd-panel-v7";
+const CACHE = "sd-panel-v8";
 const PRECACHE = [
   "./sd-dashboard.html",
   "./manifest.json",
@@ -28,15 +28,25 @@ self.addEventListener("activate", e => {
 
 self.addEventListener("fetch", e => {
   const url = e.request.url;
-  // ComfyUI API 請求（127.0.0.1:8188）直接走網路，不快取
   if (url.includes("127.0.0.1") || url.includes("8188")) return;
+
+  // HTML 永遠從網路抓（確保更新立即生效），失敗才用快取
+  if (e.request.destination === "document") {
+    e.respondWith(
+      fetch(e.request).then(resp => {
+        if (resp.ok) caches.open(CACHE).then(c => c.put(e.request, resp.clone()));
+        return resp;
+      }).catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // 其他資源（圖片等）快取優先
   e.respondWith(
     caches.match(e.request).then(hit => {
       if (hit) return hit;
       return fetch(e.request).then(resp => {
-        if (resp.ok) {
-          caches.open(CACHE).then(c => c.put(e.request, resp.clone()));
-        }
+        if (resp.ok) caches.open(CACHE).then(c => c.put(e.request, resp.clone()));
         return resp;
       });
     })
