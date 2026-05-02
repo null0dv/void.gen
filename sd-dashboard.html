@@ -321,7 +321,10 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
         <div id="tagger-output-wrap" style="display:none;margin-top:8px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
             <span style="font-size:8px;color:var(--muted2);letter-spacing:.1em">RESULT</span>
-            <span id="tagger-copy-btn" class="icon-btn" onclick="copyTaggerOutput()">COPY</span>
+            <div style="display:flex;gap:5px">
+              <span id="tagger-send-btn" class="icon-btn" onclick="sendTaggerToPrompt()">SEND</span>
+              <span id="tagger-copy-btn" class="icon-btn" onclick="copyTaggerOutput()">COPY</span>
+            </div>
           </div>
           <div id="tagger-output" style="background:var(--bg2);border:1px solid var(--line2);border-radius:5px;padding:8px;font-size:10px;color:var(--muted);line-height:1.6;font-family:var(--mono);word-break:break-word"></div>
         </div>
@@ -644,6 +647,131 @@ let img2imgBase64 = null, img2txtBase64 = null, lastResult = null, loraList = []
 let queueStatuses = {};
 let _progressTotal = 1, _progressCompleted = 0;
 
+// ── GALLERY INDEXEDDB ─────────────────────────────────────────────
+const _DB_NAME = 'void-gen-db', _DB_STORE = 'gallery';
+let _idb = null;
+function _openDB() {
+  return new Promise((res, rej) => {
+    if (_idb) return res(_idb);
+    const req = indexedDB.open(_DB_NAME, 1);
+    req.onupgradeneeded = e => {
+      if (!e.target.result.objectStoreNames.contains(_DB_STORE))
+        e.target.result.createObjectStore(_DB_STORE, { keyPath: 'id', autoIncrement: true });
+    };
+    req.onsuccess = e => { _idb = e.target.result; res(_idb); };
+    req.onerror = () => rej(req.error);
+  });
+}
+async function dbSave(dataUrl, title, meta) {
+  const db = await _openDB();
+  return new Promise((res, rej) => {
+    const req = db.transaction(_DB_STORE,'readwrite').objectStore(_DB_STORE)
+      .add({ dataUrl, title, meta, ts: Date.now() });
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  });
+}
+async function dbDelete(id) {
+  const db = await _openDB();
+  return new Promise(res => db.transaction(_DB_STORE,'readwrite').objectStore(_DB_STORE).delete(id).onsuccess = res);
+}
+async function dbClear() {
+  const db = await _openDB();
+  return new Promise(res => db.transaction(_DB_STORE,'readwrite').objectStore(_DB_STORE).clear().onsuccess = res);
+}
+async function dbLoadAll() {
+  const db = await _openDB();
+  return new Promise((res, rej) => {
+    const req = db.transaction(_DB_STORE,'readonly').objectStore(_DB_STORE).getAll();
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  });
+}
+async function loadSavedGallery() {
+  try {
+    const imgs = await dbLoadAll();
+    imgs.sort((a,b) => a.ts - b.ts);
+    imgs.forEach(img => addToGallery(img.dataUrl, img.title, img.meta || {}, img.id));
+  } catch(e) { console.warn('Gallery restore failed', e); }
+}
+async function saveAndAddToGallery(dataUrl, title, meta) {
+  const dbId = await dbSave(dataUrl, title, meta).catch(() => null);
+  addToGallery(dataUrl, title, meta, dbId);
+}
+
+// ── SETTINGS PERSISTENCE ──────────────────────────────────────────
+const SETTINGS_KEY = 'void-gen-settings';
+function getSavedSettings() {
+  try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null'); } catch { return null; }
+}
+let _saveTimer = null;
+function saveSettings() {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => {
+    const s = {
+      steps:     document.getElementById('steps-slider').value,
+      cfg:       document.getElementById('cfg-slider').value,
+      w:         document.getElementById('size-w').value,
+      h:         document.getElementById('size-h').value,
+      batch:     currentBatch,
+      seedVal:   document.getElementById('seed-input').value,
+      seedLocked,
+      sampler:   document.getElementById('sampler-select').value,
+      scheduler: document.getElementById('scheduler-select').value,
+      denoise:   document.getElementById('denoise-slider').value,
+      hiresEn:   document.getElementById('hires-enable').checked,
+      hiresScale:document.getElementById('hires-scale').value,
+      hiresSteps:document.getElementById('hires-steps-slider').value,
+      hiresDen:  document.getElementById('hires-denoise-slider').value,
+      upscaleEn: document.getElementById('upscale-enable').checked,
+      upscaleFac:document.getElementById('upscale-factor').value,
+      model:     document.getElementById('model-select').value,
+      refiner:   document.getElementById('refiner-select').value,
+      baseSwitch:document.getElementById('switch-slider').value,
+      vae:       document.getElementById('vae-select').value,
+      loras: [0,1,2,3,4,5].map(i => ({
+        name:     document.getElementById(`lora-sel-${i}`)?.value || '',
+        strength: document.getElementById(`lora-sldr-${i}`)?.value || '0.8'
+      }))
+    };
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  }, 400);
+}
+function restoreImmediateSettings() {
+  const s = getSavedSettings();
+  if (!s) return;
+  if (s.steps !== undefined) { document.getElementById('steps-slider').value = s.steps; syncParam('steps', s.steps); }
+  if (s.cfg   !== undefined) { document.getElementById('cfg-slider').value   = s.cfg;   syncParam('cfg',   s.cfg);   }
+  if (s.w && s.h) {
+    currentW = parseInt(s.w); currentH = parseInt(s.h);
+    document.getElementById('size-w').value = s.w;
+    document.getElementById('size-h').value = s.h;
+    document.getElementById('m-size').textContent = `${s.w} × ${s.h}`;
+    document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+  }
+  if (s.batch) {
+    currentBatch = parseInt(s.batch);
+    document.querySelectorAll('.batch-btn').forEach(b =>
+      b.classList.toggle('active', parseInt(b.textContent.replace('×','')) === currentBatch));
+  }
+  if (s.seedVal !== undefined) document.getElementById('seed-input').value = s.seedVal;
+  if (s.seedLocked) {
+    seedLocked = true;
+    const btn = document.getElementById('seed-lock-btn');
+    btn.textContent = '🔒'; btn.classList.add('locked');
+    document.getElementById('seed-status').textContent = 'SEED LOCKED';
+  }
+  if (s.sampler)   document.getElementById('sampler-select').value   = s.sampler;
+  if (s.scheduler) document.getElementById('scheduler-select').value = s.scheduler;
+  if (s.denoise) { document.getElementById('denoise-slider').value = s.denoise; document.getElementById('denoise-val').textContent = parseFloat(s.denoise).toFixed(2); }
+  if (s.hiresEn)  { document.getElementById('hires-enable').checked = true;  document.getElementById('hires-settings').style.display = 'block'; }
+  if (s.hiresScale) document.getElementById('hires-scale').value = s.hiresScale;
+  if (s.hiresSteps) { const v = s.hiresSteps; document.getElementById('hires-steps-slider').value = v; document.getElementById('hires-steps-num').value = v; document.getElementById('hires-steps-val').textContent = v; }
+  if (s.hiresDen)   { const v = s.hiresDen;   document.getElementById('hires-denoise-slider').value = v; document.getElementById('hires-denoise-num').value = v; document.getElementById('hires-denoise-val').textContent = v; }
+  if (s.upscaleEn)  { document.getElementById('upscale-enable').checked = true; document.getElementById('upscale-settings').style.display = 'block'; }
+  if (s.upscaleFac) document.getElementById('upscale-factor').value = s.upscaleFac;
+}
+
 // ── INIT ─────────────────────────────────────────────────────────
 (function(){
   renderLoraSlots();
@@ -651,6 +779,8 @@ let _progressTotal = 1, _progressCompleted = 0;
   if (!tasks.length) tasks = [{ title:'Image 1', prompt:'', negative:'low quality, blurry', batch:1 }];
   activeTask = 0;
   renderTaskTabs(); renderTaskEditor(); renderQueue();
+  restoreImmediateSettings();
+  loadSavedGallery();
   checkApi();
   setInterval(checkApiSilent, 9000);
 })();
@@ -707,9 +837,15 @@ async function loadComfyModels() {
     sel.innerHTML = models.length
       ? models.map(m => `<option value="${m}">${m}</option>`).join('')
       : '<option value="">— no models found —</option>';
-    const def = findOption(sel, DEFAULTS.model);
-    if (def) sel.value = def.value;
+    const saved = getSavedSettings();
+    if (saved?.model && [...sel.options].some(o => o.value === saved.model)) {
+      sel.value = saved.model;
+    } else {
+      const def = findOption(sel, DEFAULTS.model);
+      if (def) sel.value = def.value;
+    }
     if (models.length) document.getElementById('m-model').textContent = sel.value.replace(/\.(safetensors|ckpt|pt)$/i,'').slice(0,16);
+    saveSettings();
   } catch { sel.innerHTML = '<option value="">— connection failed —</option>'; }
 }
 async function loadRefinerModels() {
@@ -718,16 +854,23 @@ async function loadRefinerModels() {
     const d = await (await fetch(`${COMFY_API}/object_info/CheckpointLoaderSimple`, { signal: AbortSignal.timeout(6000) })).json();
     const models = d?.CheckpointLoaderSimple?.input?.required?.ckpt_name?.[0] || [];
     sel.innerHTML = '<option value="">NONE</option>' + models.map(m => `<option value="${m}">${m}</option>`).join('');
-    const def = findOption(sel, DEFAULTS.refiner);
-    if (def) {
-      sel.value = def.value;
+    const saved = getSavedSettings();
+    if (saved?.refiner !== undefined) {
+      if ([...sel.options].some(o => o.value === saved.refiner)) sel.value = saved.refiner;
+    } else {
+      const def = findOption(sel, DEFAULTS.refiner);
+      if (def) sel.value = def.value;
+    }
+    if (sel.value) {
       document.getElementById('refiner-switch-wrap').style.display = 'block';
-      document.getElementById('switch-slider').value = DEFAULTS.baseSwitch;
-      document.getElementById('switch-val').textContent = DEFAULTS.baseSwitch;
+      const sw = saved?.baseSwitch ?? DEFAULTS.baseSwitch;
+      document.getElementById('switch-slider').value = sw;
+      document.getElementById('switch-val').textContent = sw;
       const body = document.getElementById('refiner-body');
       const caret = document.getElementById('refiner-caret');
       if (body.style.display === 'none') { body.style.display = ''; caret.classList.add('open'); }
     }
+    saveSettings();
   } catch {}
 }
 async function loadComfyVAE() {
@@ -736,6 +879,9 @@ async function loadComfyVAE() {
     const d = await (await fetch(`${COMFY_API}/object_info/VAELoader`, { signal: AbortSignal.timeout(6000) })).json();
     const vaes = d?.VAELoader?.input?.required?.vae_name?.[0] || [];
     sel.innerHTML = '<option value="">BUILT-IN (CHECKPOINT)</option>' + vaes.map(v => `<option value="${v}">${v}</option>`).join('');
+    const saved = getSavedSettings();
+    if (saved?.vae && [...sel.options].some(o => o.value === saved.vae)) sel.value = saved.vae;
+    saveSettings();
   } catch {}
 }
 async function loadComfyLoras() {
@@ -747,11 +893,23 @@ async function loadComfyLoras() {
   applyLoraDefaults();
 }
 function applyLoraDefaults() {
-  DEFAULTS.loras.forEach((def, i) => {
-    const sel  = document.getElementById(`lora-sel-${i}`);
-    const sldr = document.getElementById(`lora-sldr-${i}`);
+  const saved = getSavedSettings();
+  [0,1,2,3,4,5].forEach(i => {
+    const sel   = document.getElementById(`lora-sel-${i}`);
+    const sldr  = document.getElementById(`lora-sldr-${i}`);
     const valEl = document.getElementById(`lora-val-${i}`);
-    if (!sel || sel.value) return;
+    if (!sel) return;
+    const sv = saved?.loras?.[i];
+    if (sv !== undefined) {
+      if ([...sel.options].some(o => o.value === sv.name)) {
+        sel.value = sv.name;
+        if (sldr)  { sldr.value = sv.strength; if (valEl) valEl.textContent = parseFloat(sv.strength).toFixed(2); }
+        return;
+      }
+    }
+    if (sel.value) return;
+    const def = DEFAULTS.loras[i];
+    if (!def) return;
     const match = findOption(sel, def.name);
     if (match) {
       sel.value = match.value;
@@ -759,6 +917,7 @@ function applyLoraDefaults() {
       if (valEl) valEl.textContent = def.strength.toFixed(2);
     }
   });
+  saveSettings();
 }
 async function loadUpscaleModels() {
   const sel = document.getElementById('upscale-model-select');
@@ -953,12 +1112,8 @@ async function runInterrogate() {
 
     outEl.textContent = tags;
     outWrap.style.display = 'block';
-    if (activeTask >= 0) {
-      const ta = document.getElementById('te-prompt');
-      if (ta) { ta.value = tags; tasks[activeTask].prompt = tags; }
-    }
-    setStatus('TAGS EXTRACTED — PROMPT FILLED', 'ok');
-    setTimeout(() => setStatus('Void.gen'), 2500);
+    setStatus('TAGS EXTRACTED — PRESS SEND TO FILL PROMPT', 'ok');
+    setTimeout(() => setStatus('Void.gen'), 3000);
   } catch(e) {
     outEl.innerHTML = `<span style="color:var(--red)">${escHtml(e.message)}</span>`;
     outWrap.style.display = 'block';
@@ -986,6 +1141,7 @@ function setBatch(n, el) {
   currentBatch = n;
   document.querySelectorAll('.batch-btn').forEach(b => b.classList.remove('active'));
   if (el) el.classList.add('active');
+  saveSettings();
 }
 function toggleCol(bodyId, caretId) {
   const body = document.getElementById(bodyId), caret = document.getElementById(caretId);
@@ -1014,6 +1170,7 @@ function toggleSeedLock() {
   btn.textContent = seedLocked ? '🔒' : '🎲';
   btn.classList.toggle('locked', seedLocked);
   document.getElementById('seed-status').textContent = seedLocked ? 'SEED LOCKED' : 'RANDOM SEED EACH RUN';
+  saveSettings();
 }
 function randomizeSeed() {
   document.getElementById('seed-input').value = Math.floor(Math.random() * 2**32);
@@ -1066,12 +1223,13 @@ function renderQueue() {
 }
 
 // ── GALLERY ───────────────────────────────────────────────────────
-function addToGallery(dataUrl, title, meta={}) {
+function addToGallery(dataUrl, title, meta={}, dbId=null) {
   document.getElementById('gallery-empty').style.display = 'none';
   const grid = document.getElementById('gallery-grid');
   grid.style.display = 'grid';
   const card = document.createElement('div');
   card.className = 'gallery-card';
+  if (dbId !== null) card.dataset.dbId = dbId;
   const safeUrl = dataUrl.replace(/'/g,'%27');
   card.innerHTML = `
     <img src="${dataUrl}" loading="lazy">
@@ -1079,15 +1237,24 @@ function addToGallery(dataUrl, title, meta={}) {
     <div class="card-actions">
       <div class="card-action-btn" title="Download" onclick="event.stopPropagation();downloadImg('${safeUrl}','${escHtml(title)}')">↓</div>
       <div class="card-action-btn" title="Send to i2i" onclick="event.stopPropagation();sendToI2IFromGallery('${safeUrl}')">→</div>
+      <div class="card-action-btn" title="Delete" onclick="event.stopPropagation();deleteFromGallery(this.closest('.gallery-card'))">×</div>
     </div>`;
   card.querySelector('img').onclick = null;
   card.onclick = () => openModal(dataUrl, title, meta);
   grid.prepend(card);
 }
+function deleteFromGallery(card) {
+  const id = parseInt(card.dataset.dbId);
+  if (id) dbDelete(id).catch(()=>{});
+  card.remove();
+  const grid = document.getElementById('gallery-grid');
+  if (!grid.children.length) { grid.style.display='none'; document.getElementById('gallery-empty').style.display='flex'; }
+}
 function clearGallery() {
   const grid = document.getElementById('gallery-grid');
   grid.innerHTML = ''; grid.style.display = 'none';
   document.getElementById('gallery-empty').style.display = 'flex';
+  dbClear().catch(()=>{});
   setStatus('GALLERY CLEARED','ok'); setTimeout(()=>setStatus('Void.gen'),1500);
 }
 function switchCenterTab(tab, el) {
@@ -1170,11 +1337,22 @@ function copyPrompt() {
   if (p) navigator.clipboard.writeText(p).then(() => { setStatus('PROMPT COPIED','ok'); setTimeout(()=>setStatus('Void.gen'),1500); });
 }
 
-// ── PROMPT CLEAR / TAGGER COPY ───────────────────────────────────
+// ── PROMPT CLEAR / TAGGER ACTIONS ────────────────────────────────
 function clearPrompt(idx) {
   tasks[idx].prompt = '';
   const ta = document.getElementById('te-prompt');
   if (ta) ta.value = '';
+}
+function sendTaggerToPrompt() {
+  const text = document.getElementById('tagger-output').textContent;
+  if (!text || activeTask < 0) return;
+  const ta = document.getElementById('te-prompt');
+  if (ta) { ta.value = text; tasks[activeTask].prompt = text; }
+  const btn = document.getElementById('tagger-send-btn');
+  btn.textContent = 'SENT!';
+  setTimeout(() => btn.textContent = 'SEND', 1500);
+  setStatus('TAGS SENT TO PROMPT', 'ok');
+  setTimeout(() => setStatus('Void.gen'), 2000);
 }
 function copyTaggerOutput() {
   const text = document.getElementById('tagger-output').textContent;
@@ -1415,7 +1593,7 @@ async function startGenerate() {
         const meta = { prompt:tasks[i].prompt, negative:tasks[i].negative, seed, model,
           steps:document.getElementById('steps-num').value, cfg:document.getElementById('cfg-num').value,
           sampler:document.getElementById('sampler-select').value, time:elapsed };
-        addToGallery(dataUrl, title, meta);
+        saveAndAddToGallery(dataUrl, title, meta);
         showPreviewFinal(dataUrl, meta);
       });
       queueStatuses[i] = 'done'; ok += dataUrls.length;
@@ -1456,6 +1634,9 @@ document.addEventListener('keydown', e => {
 document.getElementById('sampler-select').addEventListener('change', () => {
   document.getElementById('m-sampler').textContent = document.getElementById('sampler-select').value;
 });
+
+document.addEventListener('input',  saveSettings, { passive: true });
+document.addEventListener('change', saveSettings, { passive: true });
 </script>
 </body>
 </html>
