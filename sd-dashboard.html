@@ -1719,6 +1719,8 @@ async function runInterrogate() {
 
     // Step 2: call the WD14-Tagger REST endpoint (uses installed wd-v1-4-moat-tagger-v2)
     setStatus('ANALYZING WITH WD14 TAGGER…');
+    const genThreshold  = parseFloat(document.getElementById('tagger-threshold').value)      || 0.30;
+    const charThreshold = parseFloat(document.getElementById('tagger-char-threshold').value) || 0.75;
     const tagResp = await _fetchWithTimeout(
       `${COMFY_API}/pysssss/wd14tagger/tag?filename=${encodeURIComponent(name)}&type=input&threshold=${genThreshold}&character_threshold=${charThreshold}`,
       120000
