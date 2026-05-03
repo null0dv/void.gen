@@ -306,6 +306,71 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 
 /* CONTENT VISIBILITY for large galleries */
 .gallery-card{content-visibility:auto;contain-intrinsic-size:0 185px}
+
+/* DATE GROUP HEADERS */
+.date-group-hdr{grid-column:1/-1;font-size:9px;letter-spacing:.14em;color:var(--muted2);text-transform:uppercase;padding:8px 2px 4px;border-bottom:1px solid var(--line);margin-bottom:2px;pointer-events:none}
+
+/* SIDEBAR TOGGLE */
+.sidebar-toggle-btn{width:16px;background:transparent;border:none;border-right:1px solid var(--line);cursor:pointer;color:var(--muted2);font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;writing-mode:vertical-rl;letter-spacing:.1em;padding:8px 0}
+.sidebar-toggle-btn:hover{color:var(--text);background:var(--bg2)}
+.sidebar.collapsed{width:0!important;overflow:hidden;border-right:none;min-width:0}
+
+/* VRAM BADGE */
+#vram-badge{font-size:9px;color:var(--muted2);font-family:var(--mono);letter-spacing:.06em;background:var(--bg2);border:1px solid var(--line2);border-radius:3px;padding:1px 6px;display:none;cursor:default}
+#vram-badge.warn{color:var(--yellow);border-color:rgba(255,209,102,.3)}
+#vram-badge.crit{color:var(--red);border-color:rgba(255,68,68,.3)}
+
+/* MODEL COLOR BADGE */
+.model-badge-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block;margin-right:4px;vertical-align:middle;transition:background .4s}
+
+/* CARD HOVER TOOLTIP */
+#card-tooltip{position:fixed;z-index:500;background:var(--bg1);border:1px solid var(--line2);border-radius:6px;padding:10px 12px;min-width:190px;pointer-events:none;display:none;box-shadow:0 4px 20px rgba(0,0,0,.85)}
+.ct-row{display:flex;justify-content:space-between;gap:12px;margin-bottom:4px;align-items:center}
+.ct-row:last-child{margin-bottom:0}
+.ct-key{font-size:9px;color:var(--muted);letter-spacing:.08em;flex-shrink:0}
+.ct-val{font-size:9px;color:var(--accent2);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+
+/* SLIDESHOW OVERLAY */
+#slideshow-overlay{position:fixed;inset:0;background:rgba(0,0,0,.97);display:none;align-items:center;justify-content:center;z-index:600;flex-direction:column}
+#slideshow-overlay.open{display:flex}
+#ss-img{max-width:90vw;max-height:84vh;object-fit:contain;border-radius:4px;user-select:none}
+#ss-controls{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);display:flex;gap:10px;align-items:center}
+.ss-ctrl-btn{width:34px;height:34px;background:rgba(255,255,255,.07);border:1px solid var(--line2);border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;color:var(--muted);transition:all .15s}
+.ss-ctrl-btn:hover{color:var(--text);background:rgba(255,255,255,.14)}
+.ss-ctrl-btn.active{color:var(--text);border-color:var(--muted)}
+#ss-counter{font-size:9px;color:var(--muted);letter-spacing:.1em;min-width:52px;text-align:center;font-family:var(--mono)}
+#ss-close{position:absolute;top:16px;right:20px;font-size:22px;color:var(--muted);cursor:pointer;transition:color .15s;line-height:1}
+#ss-close:hover{color:var(--text)}
+
+/* PRESETS PANEL */
+#presets-panel{position:fixed;top:56px;right:8px;z-index:400;background:var(--bg1);border:1px solid var(--line2);border-radius:8px;padding:14px;width:252px;display:none;box-shadow:0 6px 24px rgba(0,0,0,.85)}
+#presets-panel.open{display:block}
+.preset-item{display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--line)}
+.preset-item:last-child{border-bottom:none}
+.preset-name-btn{flex:1;font-size:10px;color:var(--muted);cursor:pointer;transition:color .15s;background:none;border:none;font-family:var(--mono);text-align:left;padding:0}
+.preset-name-btn:hover{color:var(--text)}
+.preset-del-btn{font-size:11px;color:var(--muted2);cursor:pointer;padding:0 4px;transition:color .15s;background:none;border:none;font-family:var(--mono)}
+.preset-del-btn:hover{color:var(--red)}
+.preset-save-row{display:flex;gap:5px;margin-top:10px}
+.preset-save-input{flex:1;background:var(--bg2);color:var(--text);border:1px solid var(--line2);border-radius:5px;padding:5px 8px;font-size:10px;font-family:var(--mono);outline:none}
+.preset-save-input:focus{border-color:var(--muted)}
+.preset-save-btn{padding:5px 10px;background:var(--bg3);border:1px solid var(--line2);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:10px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.preset-save-btn:hover{border-color:var(--muted)}
+
+/* SNIPPETS */
+.snippet-chip{background:var(--bg2);border:1px solid var(--line2);border-radius:99px;padding:2px 8px;font-size:9px;color:var(--muted);cursor:pointer;transition:all .15s;user-select:none;font-family:var(--mono)}
+.snippet-chip:hover{background:var(--bg3);border-color:var(--muted);color:var(--text)}
+.snippet-chip.add-chip{border-style:dashed;color:var(--muted2)}
+.snippet-chip.add-chip:hover{color:var(--text)}
+
+/* LORA DRAG */
+.lora-item{cursor:grab}
+.lora-item.drag-over{outline:1px solid var(--muted);border-radius:4px;background:var(--bg3)}
+
+/* PREVIEW EXPAND */
+.rp-expand-btn{cursor:pointer;color:var(--muted2);font-size:11px;transition:all .15s;padding:1px 5px;border-radius:3px;user-select:none}
+.rp-expand-btn:hover{color:var(--text);background:var(--bg2)}
+.right-panel.expanded{width:480px!important}
 </style>
 </head>
 <body>
@@ -317,6 +382,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
     <button class="tb-btn" onclick="checkApi()">CHECK</button>
     <button class="tb-btn" onclick="clearGallery()">CLEAR</button>
     <button class="tb-btn" onclick="resetTasks()">RESET</button>
+    <button class="tb-btn" onclick="togglePresets()" id="presets-btn" title="Settings presets">PRESETS</button>
     <button class="tb-btn" onclick="showShortcuts()" title="Keyboard shortcuts">?</button>
     <span class="status-dot" id="api-dot"></span>
     <span class="status-text" id="api-text">CONNECTING</span>
@@ -413,7 +479,10 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
           MODEL
           <span style="cursor:pointer;color:var(--muted);font-size:14px" onclick="loadComfyModels()" title="Refresh">↻</span>
         </div>
-        <select class="sel" id="model-select"><option value="">— no models loaded —</option></select>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="model-badge-dot" id="model-badge-dot"></span>
+          <select class="sel" id="model-select" style="flex:1" onchange="updateModelBadge();saveSettings()"><option value="">— no models loaded —</option></select>
+        </div>
       </div>
 
       <div class="ss">
@@ -621,6 +690,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
       <button class="stop-btn" id="stop-btn" onclick="stopGenerate()">■ STOP</button>
     </div>
   </div><!-- /sidebar -->
+  <button class="sidebar-toggle-btn" id="sidebar-toggle-btn" onclick="toggleSidebar()" title="Hide/show sidebar">◀</button>
   <div class="resize-handle" id="rh-left" onmousedown="startResize(event,'left')"></div>
 
   <!-- CENTER -->
@@ -638,6 +708,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
         <button class="tb-btn" onclick="sortGallery('model')" title="Sort by model">MODEL</button>
         <button class="tb-btn" id="select-mode-btn" onclick="toggleSelectMode()">SELECT</button>
         <button class="tb-btn" id="zip-btn" onclick="downloadZip()" style="display:none;color:var(--text);border-color:var(--muted)">ZIP</button>
+        <button class="tb-btn" onclick="startSlideshow()" title="Slideshow">SLIDE</button>
       </div>
     </div>
     <div id="gallery-search-wrap">
@@ -651,6 +722,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
         <div class="empty-text">NO IMAGES YET</div>
       </div>
       <div class="gallery-grid" id="gallery-grid" style="display:none"></div>
+      <div id="gallery-sentinel" style="height:1px;width:100%"></div>
     </div>
     <div id="queue-view">
       <div class="empty-state" id="queue-empty">
@@ -665,7 +737,10 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 
   <!-- RIGHT PANEL -->
   <div class="right-panel">
-    <div class="rp-header">PREVIEW</div>
+    <div class="rp-header" style="display:flex;align-items:center;justify-content:space-between">
+      <span>PREVIEW</span>
+      <span class="rp-expand-btn" id="rp-expand-btn" onclick="togglePanelExpand()" title="Expand/shrink preview">⤢</span>
+    </div>
     <div class="preview-wrap">
       <div class="preview-box" id="preview-box">
         <div class="preview-ph" id="preview-ph">
@@ -699,6 +774,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 
 <div class="statusbar">
   <div class="sb-item" id="sb-main">Void.gen</div>
+  <span id="vram-badge" title="GPU VRAM usage">VRAM —</span>
   <div class="sb-item" style="margin-left:auto" id="sb-backend">ComfyUI · 127.0.0.1:8188</div>
 </div>
 
@@ -734,6 +810,34 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
     <div class="sc-row"><span class="sc-desc">LoRA strength scroll</span><span class="sc-key">Wheel on slider</span></div>
     <div class="sc-row"><span class="sc-desc">Gallery search focus</span><span class="sc-key">Alt + F</span></div>
     <div class="sc-row"><span class="sc-desc">Show this panel</span><span class="sc-key">?</span></div>
+    <div class="sc-row"><span class="sc-desc">Slideshow prev / next</span><span class="sc-key">← / →</span></div>
+    <div class="sc-row"><span class="sc-desc">Slideshow play / pause</span><span class="sc-key">Space</span></div>
+    <div class="sc-row"><span class="sc-desc">LoRA reorder</span><span class="sc-key">Drag slots</span></div>
+  </div>
+</div>
+
+<!-- SLIDESHOW OVERLAY -->
+<div id="slideshow-overlay" onclick="ssHandleClick(event)">
+  <span id="ss-close" onclick="stopSlideshow()">×</span>
+  <img id="ss-img" src="" alt="">
+  <div id="ss-controls" onclick="event.stopPropagation()">
+    <div class="ss-ctrl-btn" onclick="ssPrev()" title="Prev (←)">←</div>
+    <span id="ss-counter">1 / 1</span>
+    <div class="ss-ctrl-btn" onclick="ssNext()" title="Next (→)">→</div>
+    <div class="ss-ctrl-btn" id="ss-play-btn" onclick="ssTogglePlay()" title="Play/Pause (Space)">▶</div>
+  </div>
+</div>
+
+<!-- PRESETS PANEL -->
+<div id="presets-panel">
+  <div style="font-size:9px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+    SETTINGS PRESETS
+    <span style="cursor:pointer;color:var(--muted2);font-size:14px" onclick="document.getElementById('presets-panel').classList.remove('open')">×</span>
+  </div>
+  <div id="presets-list"></div>
+  <div class="preset-save-row">
+    <input class="preset-save-input" id="preset-name-input" type="text" placeholder="Preset name…" onkeydown="if(event.key==='Enter')savePreset()">
+    <button class="preset-save-btn" onclick="savePreset()">SAVE</button>
   </div>
 </div>
 
@@ -798,13 +902,19 @@ async function loadSavedGallery() {
   try {
     const imgs = await dbLoadAll();
     imgs.sort((a,b) => a.ts - b.ts);
-    imgs.forEach(img => addToGallery(img.dataUrl, img.title, {...(img.meta||{}), ts: img.ts}, img.id));
+    const first = imgs.splice(0, GALLERY_PAGE);
+    _galleryBuffer = imgs.map(img => ({ dataUrl: img.dataUrl, title: img.title, meta: {...(img.meta||{}), ts: img.ts}, id: img.id }));
+    first.forEach(img => _addToGalleryInternal(img.dataUrl, img.title, {...(img.meta||{}), ts: img.ts}, img.id, true));
+    setupGalleryObserver();
   } catch(e) { console.warn('Gallery restore failed', e); }
 }
 async function saveAndAddToGallery(dataUrl, title, meta) {
   const ts = Date.now();
   const dbId = await dbSave(dataUrl, title, meta).catch(() => null);
-  addToGallery(dataUrl, title, {...meta, ts}, dbId);
+  _addToGalleryInternal(dataUrl, title, {...meta, ts}, dbId, false);
+}
+function addToGallery(dataUrl, title, meta={}, dbId=null) {
+  _addToGalleryInternal(dataUrl, title, meta, dbId, false);
 }
 
 // ── SETTINGS PERSISTENCE ──────────────────────────────────────────
@@ -895,6 +1005,8 @@ function restoreImmediateSettings() {
   loadSavedGallery();
   checkApi();
   setInterval(checkApiSilent, 9000);
+  setInterval(pollVRAM, 20000);
+  updateModelBadge();
 })();
 
 // ── API ───────────────────────────────────────────────────────────
@@ -958,6 +1070,8 @@ async function loadComfyModels() {
     }
     if (models.length) document.getElementById('m-model').textContent = sel.value.replace(/\.(safetensors|ckpt|pt)$/i,'').slice(0,16);
     saveSettings();
+    updateModelBadge();
+    pollVRAM();
   } catch { sel.innerHTML = '<option value="">— connection failed —</option>'; }
 }
 async function loadRefinerModels() {
@@ -1116,7 +1230,11 @@ function renderTaskEditor() {
       </div>
       <span id="neg-token-bar-label">0t</span>
     </div>
-    <div class="tag-section">${renderTagGroups()}</div>`;
+    <div class="tag-section">${renderTagGroups()}</div>
+    <div class="snippets-section">
+      <div class="sec-label" style="margin-bottom:5px">SNIPPETS</div>
+      <div style="display:flex;flex-wrap:wrap;gap:3px">${renderSnippets()}</div>
+    </div>`;
   bindTagChips(wrap);
   updateTokenCount();
   updateNegTokenCount();
@@ -1188,7 +1306,11 @@ function updateNegTokenCount() {
 // ── LORA ──────────────────────────────────────────────────────────
 function renderLoraSlots() {
   document.getElementById('lora-slots').innerHTML = [0,1,2,3,4,5].map(i => `
-    <div class="lora-item">
+    <div class="lora-item" draggable="true"
+      ondragstart="_loraStartDrag(event,${i})"
+      ondragover="_loraDragOver(event,${i})"
+      ondrop="_loraDrop(event,${i})"
+      ondragend="_loraDragEnd()">
       <select id="lora-sel-${i}" class="sel" style="font-size:10px;padding:5px 8px">
         <option value="">(none)</option>
         ${loraList.map(l=>`<option value="${l}">${l.replace(/\.(safetensors|ckpt|pt)$/i,'').slice(0,22)}</option>`).join('')}
@@ -1411,7 +1533,7 @@ function renderQueue() {
 }
 
 // ── GALLERY ───────────────────────────────────────────────────────
-function addToGallery(dataUrl, title, meta={}, dbId=null) {
+function _addToGalleryInternal(dataUrl, title, meta={}, dbId=null, appendMode=false) {
   document.getElementById('gallery-empty').style.display = 'none';
   const grid = document.getElementById('gallery-grid');
   grid.style.display = 'grid';
@@ -1424,6 +1546,7 @@ function addToGallery(dataUrl, title, meta={}, dbId=null) {
   const favKey = dbId ? `db_${dbId}` : `ts_${card.dataset.ts}`;
   card.dataset.favKey = favKey;
   if (_favorites.has(favKey)) card.classList.add('fav');
+  card.dataset.metaJson = JSON.stringify(meta);
   card.innerHTML = `
     <div class="card-star" onclick="event.stopPropagation();toggleFav(this.closest('.gallery-card'))">${_favorites.has(favKey)?'★':'☆'}</div>
     <div class="card-check">✓</div>
@@ -1447,7 +1570,15 @@ function addToGallery(dataUrl, title, meta={}, dbId=null) {
     }
   };
   card.oncontextmenu = e => showCtxMenu(e, dataUrl, title, meta);
-  grid.prepend(card);
+  // Date group + insert position
+  const dateLabel = getDateLabel(meta.ts || Date.now());
+  if (appendMode) {
+    ensureDateGroup(dateLabel, grid, true);
+    grid.appendChild(card);
+  } else {
+    const todayHdr = ensureDateGroup('TODAY', grid, false);
+    todayHdr.after ? todayHdr.after(card) : grid.prepend(card);
+  }
   // Update model filter dropdown
   const modelVal = card.dataset.model;
   if (modelVal) {
@@ -1470,6 +1601,7 @@ function clearGallery() {
   const grid = document.getElementById('gallery-grid');
   grid.innerHTML = ''; grid.style.display = 'none';
   document.getElementById('gallery-empty').style.display = 'flex';
+  _dateGroups.clear(); _galleryBuffer = [];
   dbClear().catch(()=>{});
   setStatus('GALLERY CLEARED','ok'); setTimeout(()=>setStatus('Void.gen'),1500);
 }
@@ -1965,13 +2097,21 @@ let gallerySelectMode = false;
 
 function sortGallery(by) {
   const grid = document.getElementById('gallery-grid');
-  const cards = [...grid.children];
+  // Remove date headers temporarily
+  grid.querySelectorAll('.date-group-hdr').forEach(h => h.remove());
+  _dateGroups.clear();
+  const cards = [...grid.children].filter(c => c.classList.contains('gallery-card'));
   cards.sort((a, b) => {
     if (by === 'time')  return parseInt(b.dataset.ts||0) - parseInt(a.dataset.ts||0);
     if (by === 'model') return (a.dataset.model||'').localeCompare(b.dataset.model||'');
     return 0;
   });
-  cards.forEach(c => grid.appendChild(c));
+  grid.innerHTML = '';
+  cards.forEach(card => {
+    const label = getDateLabel(parseInt(card.dataset.ts||0));
+    ensureDateGroup(label, grid, true);
+    grid.appendChild(card);
+  });
 }
 
 function toggleSelectMode() {
@@ -2060,6 +2200,15 @@ function filterGallery() {
   });
   const grid = document.getElementById('gallery-grid');
   const empty = document.getElementById('gallery-empty');
+  // Hide date headers if no visible cards follow them
+  grid.querySelectorAll('.date-group-hdr').forEach(hdr => {
+    let sib = hdr.nextElementSibling, hasVisible = false;
+    while (sib && !sib.classList.contains('date-group-hdr')) {
+      if (sib.style.display !== 'none') { hasVisible = true; break; }
+      sib = sib.nextElementSibling;
+    }
+    hdr.style.display = hasVisible ? '' : 'none';
+  });
   if (grid.children.length > 0) {
     grid.style.display = visible ? 'grid' : 'none';
     empty.style.display = visible ? 'none' : 'flex';
@@ -2096,6 +2245,323 @@ function togglePreviewFullscreen() {
   }
 }
 
+// ── VRAM DISPLAY ──────────────────────────────────────────────────
+async function pollVRAM() {
+  try {
+    const d = await (await fetch(`${COMFY_API}/system_stats`, { signal: AbortSignal.timeout(3000) })).json();
+    const gpu = d?.devices?.[0];
+    if (!gpu) return;
+    const used = gpu.vram_used / (1024**3), total = gpu.vram_total / (1024**3);
+    if (!total) return;
+    const badge = document.getElementById('vram-badge');
+    badge.style.display = 'inline';
+    badge.textContent = `VRAM ${used.toFixed(1)}/${total.toFixed(1)}G`;
+    const pct = used / total;
+    badge.className = pct > .9 ? 'crit' : pct > .75 ? 'warn' : '';
+  } catch {}
+}
+
+// ── MODEL COLOR BADGE ─────────────────────────────────────────────
+function modelNameToHsl(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffff;
+  return `hsl(${(h % 360)},55%,55%)`;
+}
+function updateModelBadge() {
+  const sel = document.getElementById('model-select');
+  const dot = document.getElementById('model-badge-dot');
+  if (!dot) return;
+  dot.style.background = sel?.value ? modelNameToHsl(sel.value) : 'transparent';
+}
+
+// ── SIDEBAR TOGGLE ────────────────────────────────────────────────
+let _sidebarCollapsed = false;
+function toggleSidebar() {
+  _sidebarCollapsed = !_sidebarCollapsed;
+  const sb = document.querySelector('.sidebar');
+  const btn = document.getElementById('sidebar-toggle-btn');
+  const rh = document.getElementById('rh-left');
+  sb.style.transition = 'width .2s';
+  sb.classList.toggle('collapsed', _sidebarCollapsed);
+  btn.textContent = _sidebarCollapsed ? '▶' : '◀';
+  if (rh) rh.style.display = _sidebarCollapsed ? 'none' : '';
+  setTimeout(() => { sb.style.transition = ''; }, 220);
+}
+
+// ── PREVIEW PANEL EXPAND ──────────────────────────────────────────
+let _panelExpanded = false;
+function togglePanelExpand() {
+  _panelExpanded = !_panelExpanded;
+  const rp = document.querySelector('.right-panel');
+  const btn = document.getElementById('rp-expand-btn');
+  rp.classList.toggle('expanded', _panelExpanded);
+  btn.textContent = _panelExpanded ? '⤡' : '⤢';
+}
+
+// ── DRAG-AND-DROP ANYWHERE ────────────────────────────────────────
+document.body.addEventListener('dragover', e => {
+  if (e.target.closest('.img-upload')) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'copy';
+});
+document.body.addEventListener('drop', e => {
+  if (e.target.closest('.img-upload')) return;
+  e.preventDefault();
+  const file = e.dataTransfer.files[0];
+  if (!file || !file.type.startsWith('image/')) return;
+  if (currentMode === 'img2txt') {
+    _load2txtFile(file);
+  } else {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      img2imgBase64 = ev.target.result.split(',')[1];
+      setMode('img2img', document.querySelectorAll('.mode-btn')[1]);
+      const up = document.getElementById('img-upload');
+      up.classList.add('has-img','vis');
+      up.innerHTML = `<img src="${ev.target.result}"><span class="ul" style="color:var(--text)">✓ LOADED</span>`;
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+// ── PROMPT SNIPPETS ───────────────────────────────────────────────
+const SNIPPETS_KEY = 'void-gen-snippets';
+function getSnippets() {
+  try { return JSON.parse(localStorage.getItem(SNIPPETS_KEY) || '[]'); } catch { return []; }
+}
+function saveSnippets(arr) { localStorage.setItem(SNIPPETS_KEY, JSON.stringify(arr)); }
+function insertSnippet(text) {
+  if (activeTask < 0) return;
+  const ta = document.getElementById('te-prompt');
+  if (!ta) return;
+  ta.value = ta.value.trim() ? ta.value.trim() + ', ' + text : text;
+  tasks[activeTask].prompt = ta.value;
+  updateTokenCount();
+}
+function addSnippet() {
+  const raw = prompt('Enter snippet text:');
+  if (!raw?.trim()) return;
+  const arr = getSnippets();
+  arr.push(raw.trim());
+  saveSnippets(arr);
+  renderTaskEditor();
+}
+function deleteSnippet(i) {
+  const arr = getSnippets();
+  arr.splice(i, 1);
+  saveSnippets(arr);
+  renderTaskEditor();
+}
+function renderSnippets() {
+  const arr = getSnippets();
+  if (!arr.length) return `<span class="snippet-chip add-chip" onclick="addSnippet()">+ snippet</span>`;
+  return arr.map((s, i) =>
+    `<span class="snippet-chip" onclick="insertSnippet(${JSON.stringify(s)})" title="Right-click to delete" oncontextmenu="event.preventDefault();deleteSnippet(${i})">${escHtml(s.slice(0,20))}</span>`
+  ).join('') + `<span class="snippet-chip add-chip" onclick="addSnippet()">+</span>`;
+}
+
+// ── SETTINGS PRESETS ──────────────────────────────────────────────
+const PRESETS_KEY = 'void-gen-presets';
+function getPresets() {
+  try { return JSON.parse(localStorage.getItem(PRESETS_KEY) || '[]'); } catch { return []; }
+}
+function togglePresets() {
+  const panel = document.getElementById('presets-panel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) renderPresetsList();
+}
+function renderPresetsList() {
+  const list = document.getElementById('presets-list');
+  const presets = getPresets();
+  if (!presets.length) {
+    list.innerHTML = '<div style="font-size:9px;color:var(--muted2);padding:4px 0">No presets saved yet.</div>';
+    return;
+  }
+  list.innerHTML = presets.map((p, i) =>
+    `<div class="preset-item">
+      <button class="preset-name-btn" onclick="loadPreset(${i})">${escHtml(p.name)}</button>
+      <button class="preset-del-btn" onclick="deletePreset(${i})" title="Delete">×</button>
+    </div>`
+  ).join('');
+}
+function savePreset() {
+  const nameEl = document.getElementById('preset-name-input');
+  const name = nameEl?.value.trim();
+  if (!name) return;
+  const settings = getSavedSettings();
+  if (!settings) return;
+  const presets = getPresets().filter(p => p.name !== name);
+  presets.push({ name, settings });
+  localStorage.setItem(PRESETS_KEY, JSON.stringify(presets));
+  if (nameEl) nameEl.value = '';
+  renderPresetsList();
+  setStatus('PRESET SAVED', 'ok'); setTimeout(() => setStatus('Void.gen'), 1500);
+}
+function loadPreset(i) {
+  const presets = getPresets();
+  if (!presets[i]) return;
+  const s = presets[i].settings;
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  restoreImmediateSettings();
+  document.getElementById('presets-panel').classList.remove('open');
+  setStatus(`PRESET "${escHtml(presets[i].name)}" LOADED`, 'ok');
+  setTimeout(() => setStatus('Void.gen'), 2000);
+}
+function deletePreset(i) {
+  const presets = getPresets();
+  presets.splice(i, 1);
+  localStorage.setItem(PRESETS_KEY, JSON.stringify(presets));
+  renderPresetsList();
+}
+
+// ── GALLERY DATE GROUPS ───────────────────────────────────────────
+const _dateGroups = new Set();
+function getDateLabel(ts) {
+  const d = new Date(ts);
+  const today = new Date();
+  const yest = new Date(today); yest.setDate(today.getDate() - 1);
+  if (d.toDateString() === today.toDateString()) return 'TODAY';
+  if (d.toDateString() === yest.toDateString()) return 'YESTERDAY';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+function ensureDateGroup(label, grid, append) {
+  const existing = [...grid.querySelectorAll('.date-group-hdr')].find(h => h.textContent === label);
+  if (existing) return existing;
+  const hdr = document.createElement('div');
+  hdr.className = 'date-group-hdr';
+  hdr.textContent = label;
+  if (append) grid.appendChild(hdr);
+  else grid.prepend(hdr);
+  _dateGroups.add(label);
+  return hdr;
+}
+
+// ── GALLERY INFINITE SCROLL ───────────────────────────────────────
+let _galleryBuffer = [];
+let _galleryObserver = null;
+const GALLERY_PAGE = 40;
+
+function setupGalleryObserver() {
+  const sentinel = document.getElementById('gallery-sentinel');
+  if (!sentinel) return;
+  if (_galleryObserver) _galleryObserver.disconnect();
+  _galleryObserver = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting && _galleryBuffer.length) {
+      const batch = _galleryBuffer.splice(0, GALLERY_PAGE);
+      batch.forEach(item => _addToGalleryInternal(item.dataUrl, item.title, item.meta, item.id, true));
+    }
+  }, { root: document.getElementById('gallery-view'), threshold: 0.1 });
+  _galleryObserver.observe(sentinel);
+}
+
+// ── GALLERY CARD HOVER TOOLTIP ────────────────────────────────────
+const _tooltip = document.createElement('div');
+_tooltip.id = 'card-tooltip';
+document.body.appendChild(_tooltip);
+
+let _tooltipTimer = null;
+document.getElementById('gallery-view').addEventListener('mouseover', e => {
+  const card = e.target.closest('.gallery-card');
+  if (!card) return;
+  clearTimeout(_tooltipTimer);
+  _tooltipTimer = setTimeout(() => {
+    let meta = {};
+    try { meta = JSON.parse(card.dataset.metaJson || '{}'); } catch {}
+    const rows = [
+      meta.model && { k:'MODEL', v: meta.model.replace(/\.(safetensors|ckpt|pt)$/i,'') },
+      meta.seed !== undefined && { k:'SEED', v: meta.seed },
+      meta.steps && { k:'STEPS', v: meta.steps },
+      meta.cfg   && { k:'CFG',   v: meta.cfg   },
+      meta.sampler && { k:'SAMPLER', v: meta.sampler },
+      meta.time   && { k:'TIME',    v: meta.time  },
+    ].filter(Boolean);
+    if (!rows.length) return;
+    _tooltip.innerHTML = rows.map(r =>
+      `<div class="ct-row"><span class="ct-key">${r.k}</span><span class="ct-val" title="${escHtml(String(r.v))}">${escHtml(String(r.v))}</span></div>`
+    ).join('');
+    _tooltip.style.display = 'block';
+    const rect = card.getBoundingClientRect();
+    let x = rect.right + 8, y = rect.top;
+    if (x + 210 > window.innerWidth)  x = rect.left - 210;
+    if (y + 160 > window.innerHeight) y = window.innerHeight - 160;
+    _tooltip.style.left = x + 'px';
+    _tooltip.style.top  = y + 'px';
+  }, 400);
+});
+document.getElementById('gallery-view').addEventListener('mouseout', e => {
+  if (e.target.closest('.gallery-card')) { clearTimeout(_tooltipTimer); _tooltip.style.display = 'none'; }
+});
+
+// ── GALLERY SLIDESHOW ─────────────────────────────────────────────
+let _ssCards = [], _ssIdx = 0, _ssPlaying = false, _ssTimer = null;
+function startSlideshow() {
+  const grid = document.getElementById('gallery-grid');
+  _ssCards = [...grid.querySelectorAll('.gallery-card img')].map(img => img.src).filter(s => s.startsWith('data:'));
+  if (!_ssCards.length) { setStatus('NO IMAGES IN GALLERY','warn'); return; }
+  _ssIdx = 0;
+  document.getElementById('slideshow-overlay').classList.add('open');
+  ssShow(_ssIdx);
+}
+function stopSlideshow() {
+  clearInterval(_ssTimer); _ssPlaying = false;
+  document.getElementById('ss-play-btn').textContent = '▶';
+  document.getElementById('ss-play-btn').classList.remove('active');
+  document.getElementById('slideshow-overlay').classList.remove('open');
+}
+function ssShow(i) {
+  _ssIdx = ((i % _ssCards.length) + _ssCards.length) % _ssCards.length;
+  document.getElementById('ss-img').src = _ssCards[_ssIdx];
+  document.getElementById('ss-counter').textContent = `${_ssIdx+1} / ${_ssCards.length}`;
+}
+function ssNext() { ssShow(_ssIdx + 1); }
+function ssPrev() { ssShow(_ssIdx - 1); }
+function ssTogglePlay() {
+  _ssPlaying = !_ssPlaying;
+  const btn = document.getElementById('ss-play-btn');
+  btn.textContent = _ssPlaying ? '⏸' : '▶';
+  btn.classList.toggle('active', _ssPlaying);
+  if (_ssPlaying) _ssTimer = setInterval(ssNext, 3000);
+  else clearInterval(_ssTimer);
+}
+function ssHandleClick(e) {
+  if (e.target === document.getElementById('slideshow-overlay')) stopSlideshow();
+}
+
+// ── LORA DRAG-AND-DROP REORDER ─────────────────────────────────────
+let _loraDragSrc = null;
+function _loraStartDrag(e, i) {
+  _loraDragSrc = i;
+  e.dataTransfer.effectAllowed = 'move';
+}
+function _loraDragOver(e, i) {
+  e.preventDefault();
+  document.querySelectorAll('.lora-item').forEach((el, idx) => el.classList.toggle('drag-over', idx === i));
+}
+function _loraDrop(e, i) {
+  e.preventDefault();
+  document.querySelectorAll('.lora-item').forEach(el => el.classList.remove('drag-over'));
+  if (_loraDragSrc === null || _loraDragSrc === i) return;
+  const getSlot = idx => ({
+    name:     document.getElementById(`lora-sel-${idx}`)?.value  || '',
+    strength: document.getElementById(`lora-sldr-${idx}`)?.value || '0.8'
+  });
+  const setSlot = (idx, d) => {
+    const sel  = document.getElementById(`lora-sel-${idx}`);
+    const sldr = document.getElementById(`lora-sldr-${idx}`);
+    const val  = document.getElementById(`lora-val-${idx}`);
+    if (sel)  sel.value  = d.name;
+    if (sldr) sldr.value = d.strength;
+    if (val)  val.textContent = parseFloat(d.strength).toFixed(1);
+  };
+  const src = getSlot(_loraDragSrc), dst = getSlot(i);
+  setSlot(_loraDragSrc, dst); setSlot(i, src);
+  _loraDragSrc = null;
+  saveSettings();
+}
+function _loraDragEnd() {
+  document.querySelectorAll('.lora-item').forEach(el => el.classList.remove('drag-over'));
+}
+
 // ── PWA ───────────────────────────────────────────────────────────
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
@@ -2108,6 +2574,13 @@ document.addEventListener('keydown', e => {
   if (e.key==='Escape') {
     document.getElementById('modal-bg').classList.remove('open');
     document.getElementById('shortcuts-overlay').classList.remove('open');
+    document.getElementById('presets-panel').classList.remove('open');
+    if (document.getElementById('slideshow-overlay').classList.contains('open')) stopSlideshow();
+  }
+  if (document.getElementById('slideshow-overlay').classList.contains('open')) {
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); ssPrev(); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); ssNext(); }
+    if (e.key === ' ')          { e.preventDefault(); ssTogglePlay(); }
   }
   if ((e.ctrlKey||e.metaKey) && e.key==='z' && _promptUndoStack.length) {
     const ta = document.getElementById('te-prompt');
