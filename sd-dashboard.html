@@ -1356,51 +1356,52 @@ function findOption(sel, name) {
 
 // ── MODELS ────────────────────────────────────────────────────────
 async function loadComfyModels() {
-  const sel = document.getElementById('model-select');
+  const selM = document.getElementById('model-select');
+  const selR = document.getElementById('refiner-select');
   try {
-    const d = await (await _fetchWithTimeout(`${COMFY_API}/object_info/CheckpointLoaderSimple`, 6000)).json();
+    const d = await (await _fetchWithTimeout(`${COMFY_API}/object_info/CheckpointLoaderSimple`, 8000)).json();
     const models = d?.CheckpointLoaderSimple?.input?.required?.ckpt_name?.[0] || [];
-    sel.innerHTML = models.length
-      ? models.map(m => `<option value="${m}">${m}</option>`).join('')
-      : '<option value="">— no models found —</option>';
+    if (!models.length) { selM.innerHTML = '<option value="">— no models found —</option>'; return; }
+
+    // populate MODEL
+    selM.innerHTML = models.map(m => `<option value="${m}">${m}</option>`).join('');
     const saved = getSavedSettings();
-    if (saved?.model && [...sel.options].some(o => o.value === saved.model)) {
-      sel.value = saved.model;
+    if (saved?.model && [...selM.options].some(o => o.value === saved.model)) {
+      selM.value = saved.model;
     } else {
-      const def = findOption(sel, DEFAULTS.model);
-      if (def) sel.value = def.value;
+      const def = findOption(selM, DEFAULTS.model);
+      if (def) selM.value = def.value;
     }
-    if (models.length) document.getElementById('m-model').textContent = sel.value.replace(/\.(safetensors|ckpt|pt)$/i,'').slice(0,16);
-    saveSettings();
+    const mModel = document.getElementById('m-model');
+    if (mModel) mModel.textContent = selM.value.replace(/\.(safetensors|ckpt|pt)$/i,'').slice(0,16);
     updateModelBadge();
-    pollVRAM();
-  } catch(e) { sel.innerHTML = `<option value="">— ${e?.message||'failed'} —</option>`; console.error('loadComfyModels',e); }
-}
-async function loadRefinerModels() {
-  const sel = document.getElementById('refiner-select');
-  try {
-    const d = await (await _fetchWithTimeout(`${COMFY_API}/object_info/CheckpointLoaderSimple`, 6000)).json();
-    const models = d?.CheckpointLoaderSimple?.input?.required?.ckpt_name?.[0] || [];
-    sel.innerHTML = '<option value="">NONE</option>' + models.map(m => `<option value="${m}">${m}</option>`).join('');
-    const saved = getSavedSettings();
+
+    // populate REFINER with same list
+    selR.innerHTML = '<option value="">NONE</option>' + models.map(m => `<option value="${m}">${m}</option>`).join('');
     if (saved?.refiner !== undefined) {
-      if ([...sel.options].some(o => o.value === saved.refiner)) sel.value = saved.refiner;
+      if ([...selR.options].some(o => o.value === saved.refiner)) selR.value = saved.refiner;
     } else {
-      const def = findOption(sel, DEFAULTS.refiner);
-      if (def) sel.value = def.value;
+      const def = findOption(selR, DEFAULTS.refiner);
+      if (def) selR.value = def.value;
     }
-    if (sel.value) {
+    if (selR.value) {
       document.getElementById('refiner-switch-wrap').style.display = 'block';
       const sw = saved?.baseSwitch ?? DEFAULTS.baseSwitch;
       document.getElementById('switch-slider').value = sw;
       document.getElementById('switch-val').textContent = sw;
       const body = document.getElementById('refiner-body');
       const caret = document.getElementById('refiner-caret');
-      if (body.style.display === 'none') { body.style.display = ''; caret.classList.add('open'); }
+      if (body && body.style.display === 'none') { body.style.display = ''; caret?.classList.add('open'); }
     }
+
     saveSettings();
-  } catch {}
+    pollVRAM();
+  } catch(e) {
+    selM.innerHTML = '<option value="">— connection failed —</option>';
+    console.error('loadComfyModels', e);
+  }
 }
+function loadRefinerModels() { /* merged into loadComfyModels */ }
 async function loadComfyVAE() {
   const sel = document.getElementById('vae-select');
   try {
