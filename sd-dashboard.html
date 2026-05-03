@@ -272,12 +272,40 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 #neg-token-bar-fill{position:absolute;top:0;left:0;bottom:0;width:0%;border-radius:2px;transition:width .15s,background .2s}
 #neg-token-bar-label{font-size:9px;color:var(--muted2);white-space:nowrap;min-width:40px;text-align:right;font-family:var(--mono);letter-spacing:.04em}
 
-/* GALLERY SELECT MODE */
+/* GALLERY SELECT / STAR */
 .gallery-card.selected{border-color:var(--text)!important;box-shadow:0 0 0 1px var(--text)}
-.card-check{position:absolute;top:6px;left:7px;width:18px;height:18px;background:var(--text);color:var(--bg);border-radius:50%;font-size:11px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;pointer-events:none;font-family:var(--mono);line-height:1;z-index:2}
+.card-check{position:absolute;top:6px;left:32px;width:18px;height:18px;background:var(--text);color:var(--bg);border-radius:50%;font-size:11px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;pointer-events:none;font-family:var(--mono);line-height:1;z-index:3}
 .gallery-card.selected .card-check{opacity:1}
 .gallery-select-mode .gallery-card{cursor:pointer}
 .gallery-select-mode .gallery-card:not(.selected):hover{border-color:var(--muted2)}
+.card-star{position:absolute;top:5px;left:7px;font-size:14px;opacity:0;transition:all .15s;cursor:pointer;z-index:2;line-height:1;color:var(--muted);text-shadow:0 1px 3px rgba(0,0,0,.9)}
+.gallery-card:hover .card-star,.gallery-card.fav .card-star{opacity:1}
+.gallery-card.fav .card-star{color:var(--yellow)}
+
+/* GALLERY SEARCH BAR */
+#gallery-search-wrap{display:flex;gap:6px;align-items:center;padding:7px 12px;border-bottom:1px solid var(--line);flex-shrink:0}
+.gallery-search-input{flex:1;background:var(--bg2);color:var(--text);border:1px solid var(--line2);border-radius:5px;padding:5px 8px;font-size:10px;font-family:var(--mono);outline:none;transition:border-color .15s}
+.gallery-search-input:focus{border-color:var(--muted)}
+.gallery-search-input::placeholder{color:var(--muted2)}
+#gallery-model-filter{background:var(--bg2);color:var(--muted);border:1px solid var(--line2);border-radius:5px;padding:4px 6px;font-size:9px;font-family:var(--mono);outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;width:100px}
+
+/* SHORTCUTS OVERLAY */
+#shortcuts-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:200}
+#shortcuts-overlay.open{display:flex}
+.shortcuts-box{background:var(--bg1);border:1px solid var(--line2);border-radius:8px;padding:20px 24px;width:400px;max-width:94vw;max-height:90vh;overflow-y:auto}
+.sc-title{font-family:var(--sans);font-weight:700;font-size:14px;margin-bottom:14px;letter-spacing:.04em;display:flex;justify-content:space-between;align-items:center}
+.sc-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--line);font-size:11px}
+.sc-row:last-child{border-bottom:none}
+.sc-key{background:var(--bg3);border:1px solid var(--line2);border-radius:4px;padding:2px 7px;font-family:var(--mono);font-size:9px;color:var(--accent2);white-space:nowrap}
+.sc-desc{color:var(--muted)}
+
+/* FULLSCREEN PREVIEW BTN */
+.preview-fs-btn{position:absolute;top:5px;right:5px;width:22px;height:22px;background:rgba(0,0,0,.6);border:1px solid var(--line2);border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;color:var(--muted);opacity:0;transition:opacity .15s;z-index:2}
+.preview-box:hover .preview-fs-btn{opacity:1}
+.preview-fs-btn:hover{color:var(--text);border-color:var(--muted)}
+
+/* CONTENT VISIBILITY for large galleries */
+.gallery-card{content-visibility:auto;contain-intrinsic-size:0 185px}
 </style>
 </head>
 <body>
@@ -289,6 +317,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
     <button class="tb-btn" onclick="checkApi()">CHECK</button>
     <button class="tb-btn" onclick="clearGallery()">CLEAR</button>
     <button class="tb-btn" onclick="resetTasks()">RESET</button>
+    <button class="tb-btn" onclick="showShortcuts()" title="Keyboard shortcuts">?</button>
     <span class="status-dot" id="api-dot"></span>
     <span class="status-text" id="api-text">CONNECTING</span>
   </div>
@@ -455,6 +484,8 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
         <div class="sec-label">SEED</div>
         <div class="seed-row">
           <input type="number" class="seed-input" id="seed-input" value="0" min="0" max="4294967295">
+          <div class="seed-icon-btn" onclick="stepSeed(-1)" title="Seed −1">−</div>
+          <div class="seed-icon-btn" onclick="stepSeed(1)" title="Seed +1">+</div>
           <div class="seed-icon-btn" id="seed-lock-btn" onclick="toggleSeedLock()" title="Lock seed">🎲</div>
           <div class="seed-icon-btn" onclick="randomizeSeed()" title="Random seed">↻</div>
         </div>
@@ -609,6 +640,11 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
         <button class="tb-btn" id="zip-btn" onclick="downloadZip()" style="display:none;color:var(--text);border-color:var(--muted)">ZIP</button>
       </div>
     </div>
+    <div id="gallery-search-wrap">
+      <input class="gallery-search-input" id="gallery-search" type="text" placeholder="Search prompts…" oninput="filterGallery()">
+      <select id="gallery-model-filter" onchange="filterGallery()"><option value="">ALL MODELS</option></select>
+      <button class="tb-btn" id="fav-filter-btn" onclick="toggleFavFilter()" title="Show favorites">⭐</button>
+    </div>
     <div id="gallery-view">
       <div class="empty-state" id="gallery-empty">
         <div class="empty-icon">⬡</div>
@@ -631,7 +667,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
   <div class="right-panel">
     <div class="rp-header">PREVIEW</div>
     <div class="preview-wrap">
-      <div class="preview-box">
+      <div class="preview-box" id="preview-box">
         <div class="preview-ph" id="preview-ph">
           <div class="preview-icon">◻</div>
           <div>READY</div>
@@ -640,6 +676,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
         <div class="preview-loading" id="preview-loading">
           <div class="spinner-lg"></div>
         </div>
+        <div class="preview-fs-btn" onclick="togglePreviewFullscreen()" title="Fullscreen">⤢</div>
       </div>
     </div>
     <div class="meta-list">
@@ -678,8 +715,26 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 <div id="ctx-menu">
   <div class="ctx-item" onclick="ctxSendToI2I()">→ IMG → IMG</div>
   <div class="ctx-item" onclick="ctxRestoreSettings()">↺ Restore Settings</div>
+  <div class="ctx-item" onclick="ctxCopyPrompt()">⎘ Copy Prompt</div>
   <div class="ctx-sep"></div>
   <div class="ctx-item" onclick="ctxDownload()">↓ Download</div>
+</div>
+
+<!-- SHORTCUTS OVERLAY -->
+<div id="shortcuts-overlay" onclick="hideShortcuts(event)">
+  <div class="shortcuts-box" onclick="event.stopPropagation()">
+    <div class="sc-title">KEYBOARD SHORTCUTS <span style="cursor:pointer;color:var(--muted);font-size:18px" onclick="document.getElementById('shortcuts-overlay').classList.remove('open')">×</span></div>
+    <div class="sc-row"><span class="sc-desc">Generate</span><span class="sc-key">Ctrl + Enter</span></div>
+    <div class="sc-row"><span class="sc-desc">Stop generation</span><span class="sc-key">Esc</span></div>
+    <div class="sc-row"><span class="sc-desc">Undo CLR (when prompt empty)</span><span class="sc-key">Ctrl + Z</span></div>
+    <div class="sc-row"><span class="sc-desc">Seed −1</span><span class="sc-key">Alt + ←</span></div>
+    <div class="sc-row"><span class="sc-desc">Seed +1</span><span class="sc-key">Alt + →</span></div>
+    <div class="sc-row"><span class="sc-desc">Random seed</span><span class="sc-key">Alt + R</span></div>
+    <div class="sc-row"><span class="sc-desc">Toggle seed lock</span><span class="sc-key">Alt + L</span></div>
+    <div class="sc-row"><span class="sc-desc">LoRA strength scroll</span><span class="sc-key">Wheel on slider</span></div>
+    <div class="sc-row"><span class="sc-desc">Gallery search focus</span><span class="sc-key">Alt + F</span></div>
+    <div class="sc-row"><span class="sc-desc">Show this panel</span><span class="sc-key">?</span></div>
+  </div>
 </div>
 
 <!-- FULL-WIDTH PROGRESS BAR -->
@@ -1142,6 +1197,18 @@ function renderLoraSlots() {
         oninput="document.getElementById('lora-val-${i}').textContent=parseFloat(this.value).toFixed(1)">
       <span class="lora-val" id="lora-val-${i}">0.7</span>
     </div>`).join('');
+  [0,1,2,3,4,5].forEach(i => {
+    const sldr = document.getElementById(`lora-sldr-${i}`);
+    if (!sldr) return;
+    sldr.addEventListener('wheel', e => {
+      e.preventDefault();
+      const cur = parseFloat(sldr.value) || 0;
+      const next = Math.round(Math.max(0, Math.min(2, cur + (e.deltaY < 0 ? 0.1 : -0.1))) * 10) / 10;
+      sldr.value = next;
+      document.getElementById(`lora-val-${i}`).textContent = next.toFixed(1);
+      saveSettings();
+    }, { passive: false });
+  });
 }
 
 // ── UI HELPERS ────────────────────────────────────────────────────
@@ -1224,7 +1291,7 @@ async function runInterrogate() {
     // Step 2: call the WD14-Tagger REST endpoint (uses installed wd-v1-4-moat-tagger-v2)
     setStatus('ANALYZING WITH WD14 TAGGER…');
     const tagResp = await fetch(
-      `${COMFY_API}/pysssss/wd14tagger/tag?filename=${encodeURIComponent(name)}&type=input`,
+      `${COMFY_API}/pysssss/wd14tagger/tag?filename=${encodeURIComponent(name)}&type=input&threshold=${genThreshold}&character_threshold=${charThreshold}`,
       { signal: AbortSignal.timeout(120000) }
     );
     if (!tagResp.ok) throw new Error(`Tagger HTTP ${tagResp.status}`);
@@ -1354,7 +1421,11 @@ function addToGallery(dataUrl, title, meta={}, dbId=null) {
   card.dataset.ts    = meta.ts    || Date.now();
   card.dataset.model = (meta.model || '').replace(/\.(safetensors|ckpt|pt)$/i,'');
   const safeUrl = dataUrl.replace(/'/g,'%27');
+  const favKey = dbId ? `db_${dbId}` : `ts_${card.dataset.ts}`;
+  card.dataset.favKey = favKey;
+  if (_favorites.has(favKey)) card.classList.add('fav');
   card.innerHTML = `
+    <div class="card-star" onclick="event.stopPropagation();toggleFav(this.closest('.gallery-card'))">${_favorites.has(favKey)?'★':'☆'}</div>
     <div class="card-check">✓</div>
     <img src="${dataUrl}" loading="lazy">
     <div class="card-overlay"><div class="card-prompt">${escHtml((meta.prompt||title).slice(0,80))}</div></div>
@@ -1377,6 +1448,16 @@ function addToGallery(dataUrl, title, meta={}, dbId=null) {
   };
   card.oncontextmenu = e => showCtxMenu(e, dataUrl, title, meta);
   grid.prepend(card);
+  // Update model filter dropdown
+  const modelVal = card.dataset.model;
+  if (modelVal) {
+    const mf = document.getElementById('gallery-model-filter');
+    if (mf && ![...mf.options].some(o => o.value === modelVal)) {
+      const opt = document.createElement('option');
+      opt.value = opt.textContent = modelVal;
+      mf.appendChild(opt);
+    }
+  }
 }
 function deleteFromGallery(card) {
   const id = parseInt(card.dataset.dbId);
@@ -1397,10 +1478,14 @@ function switchCenterTab(tab, el) {
   if (el) el.classList.add('active');
   const gv = document.getElementById('gallery-view');
   const qv = document.getElementById('queue-view');
+  const sw = document.getElementById('gallery-search-wrap');
+  const tb = document.getElementById('gallery-toolbar');
   gv.style.display = tab==='gallery' ? 'block' : 'none';
   gv.style.flex     = tab==='gallery' ? '1' : '';
   qv.style.display = tab==='queue' ? 'block' : 'none';
   qv.style.flex     = tab==='queue' ? '1' : '';
+  if (sw) sw.style.display = tab==='gallery' ? '' : 'none';
+  if (tb) tb.style.display = tab==='gallery' ? '' : 'none';
 }
 
 // ── PREVIEW ───────────────────────────────────────────────────────
@@ -1861,6 +1946,20 @@ async function startGenerate() {
   }
 }
 
+// ── SEED ±1 ───────────────────────────────────────────────────────
+function stepSeed(delta) {
+  const input = document.getElementById('seed-input');
+  const next = Math.max(0, Math.min(4294967295, (parseInt(input.value)||0) + delta));
+  input.value = next;
+  if (!seedLocked) {
+    seedLocked = true;
+    const btn = document.getElementById('seed-lock-btn');
+    btn.textContent = '🔒'; btn.classList.add('locked');
+    document.getElementById('seed-status').textContent = 'SEED LOCKED';
+  }
+  saveSettings();
+}
+
 // ── GALLERY SORT / SELECT / ZIP ───────────────────────────────────
 let gallerySelectMode = false;
 
@@ -1913,13 +2012,103 @@ async function downloadZip() {
   setTimeout(() => setStatus('Void.gen'), 2000);
 }
 
+// ── FAVORITES ────────────────────────────────────────────────────
+let _favorites = new Set(JSON.parse(localStorage.getItem('void-gen-favs') || '[]'));
+let _favFilterOn = false;
+function saveFavorites() {
+  localStorage.setItem('void-gen-favs', JSON.stringify([..._favorites]));
+}
+function toggleFav(card) {
+  const key = card.dataset.favKey;
+  if (!key) return;
+  const star = card.querySelector('.card-star');
+  if (_favorites.has(key)) {
+    _favorites.delete(key);
+    card.classList.remove('fav');
+    if (star) star.textContent = '☆';
+  } else {
+    _favorites.add(key);
+    card.classList.add('fav');
+    if (star) star.textContent = '★';
+  }
+  saveFavorites();
+  if (_favFilterOn) filterGallery();
+}
+function toggleFavFilter() {
+  _favFilterOn = !_favFilterOn;
+  const btn = document.getElementById('fav-filter-btn');
+  btn.style.color       = _favFilterOn ? 'var(--yellow)' : '';
+  btn.style.borderColor = _favFilterOn ? 'var(--yellow)' : '';
+  filterGallery();
+}
+
+// ── GALLERY SEARCH / FILTER ───────────────────────────────────────
+function filterGallery() {
+  const q     = (document.getElementById('gallery-search')?.value || '').toLowerCase();
+  const model = (document.getElementById('gallery-model-filter')?.value || '').toLowerCase();
+  let visible = 0;
+  document.querySelectorAll('.gallery-card').forEach(card => {
+    const prompt     = card.querySelector('.card-prompt')?.textContent.toLowerCase() || '';
+    const cardModel  = (card.dataset.model || '').toLowerCase();
+    const isFav      = card.classList.contains('fav');
+    const matchQ     = !q     || prompt.includes(q);
+    const matchModel = !model || cardModel.includes(model);
+    const matchFav   = !_favFilterOn || isFav;
+    const show = matchQ && matchModel && matchFav;
+    card.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  const grid = document.getElementById('gallery-grid');
+  const empty = document.getElementById('gallery-empty');
+  if (grid.children.length > 0) {
+    grid.style.display = visible ? 'grid' : 'none';
+    empty.style.display = visible ? 'none' : 'flex';
+    if (!visible) document.querySelector('#gallery-empty .empty-text').textContent = 'NO RESULTS';
+  }
+}
+
+// ── CTX COPY PROMPT ───────────────────────────────────────────────
+function ctxCopyPrompt() {
+  if (!_ctxData?.meta?.prompt) return;
+  navigator.clipboard.writeText(_ctxData.meta.prompt).then(() => {
+    setStatus('PROMPT COPIED', 'ok');
+    setTimeout(() => setStatus('Void.gen'), 1500);
+  });
+  hideCtxMenu();
+}
+
+// ── SHORTCUTS ─────────────────────────────────────────────────────
+function showShortcuts() {
+  document.getElementById('shortcuts-overlay').classList.add('open');
+}
+function hideShortcuts(e) {
+  if (!e || e.target === document.getElementById('shortcuts-overlay'))
+    document.getElementById('shortcuts-overlay').classList.remove('open');
+}
+
+// ── FULLSCREEN PREVIEW ────────────────────────────────────────────
+function togglePreviewFullscreen() {
+  const box = document.getElementById('preview-box');
+  if (!document.fullscreenElement) {
+    box.requestFullscreen().catch(() => {});
+  } else {
+    document.exitFullscreen();
+  }
+}
+
 // ── PWA ───────────────────────────────────────────────────────────
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
 // ── KEYBOARD ─────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
+  const tag = document.activeElement?.tagName;
+  const inInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+
   if ((e.ctrlKey||e.metaKey) && e.key==='Enter') startGenerate();
-  if (e.key==='Escape') document.getElementById('modal-bg').classList.remove('open');
+  if (e.key==='Escape') {
+    document.getElementById('modal-bg').classList.remove('open');
+    document.getElementById('shortcuts-overlay').classList.remove('open');
+  }
   if ((e.ctrlKey||e.metaKey) && e.key==='z' && _promptUndoStack.length) {
     const ta = document.getElementById('te-prompt');
     if (document.activeElement === ta || !ta) {
@@ -1929,6 +2118,20 @@ document.addEventListener('keydown', e => {
         tasks[idx].prompt = text;
         if (activeTask === idx) { ta.value = text; updateTokenCount(); }
       }
+    }
+  }
+  if (!inInput) {
+    if (e.key === '?') { e.preventDefault(); showShortcuts(); }
+  }
+  if (e.altKey) {
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); stepSeed(-1); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); stepSeed(1); }
+    if (e.key === 'r' || e.key === 'R') { e.preventDefault(); randomizeSeed(); }
+    if (e.key === 'l' || e.key === 'L') { e.preventDefault(); toggleSeedLock(); }
+    if (e.key === 'f' || e.key === 'F') {
+      e.preventDefault();
+      const s = document.getElementById('gallery-search');
+      if (s) s.focus();
     }
   }
 });
