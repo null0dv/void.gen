@@ -37,10 +37,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13
 .status-text{font-size:10px;color:var(--muted);letter-spacing:.06em}
 
 /* LAYOUT */
-.main{flex:1;display:flex;overflow:hidden}
+.main{flex:1;display:flex;overflow:hidden;align-items:stretch}
 
 /* SIDEBAR */
-.sidebar{width:300px;border-right:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;position:relative}
+.sidebar{width:300px;border-right:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;position:relative;height:100%}
 .sidebar-scroll{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line2) transparent;padding-bottom:78px}
 .ss{border-bottom:1px solid var(--line);padding:11px 15px}
 .sec-label{font-size:9px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
