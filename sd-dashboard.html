@@ -130,7 +130,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13
 .batch-btn.active{color:var(--text);border-color:var(--line2);background:var(--bg3)}
 
 /* LORA */
-.lora-item{display:grid;grid-template-columns:1fr 72px 34px;align-items:center;gap:7px;margin-bottom:7px}
+.lora-item{display:grid;grid-template-columns:22px 1fr 72px 34px;align-items:center;gap:7px;margin-bottom:7px}
 .lora-val{font-size:10px;color:var(--muted);text-align:right}
 
 /* PIPELINE */
@@ -473,6 +473,89 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 .rp-expand-btn{cursor:pointer;color:var(--muted2);font-size:11px;transition:all .15s;padding:1px 5px;border-radius:3px;user-select:none}
 .rp-expand-btn:hover{color:var(--text);background:var(--bg2)}
 .right-panel.expanded{width:480px!important}
+
+/* STORAGE BAR */
+#storage-bar-wrap{padding:2px 10px 4px;flex-shrink:0;display:flex;align-items:center;gap:6px;min-height:18px}
+#storage-bar-track{flex:1;height:3px;background:var(--line2);border-radius:2px;position:relative;overflow:hidden;cursor:default}
+#storage-bar-fill{position:absolute;top:0;left:0;bottom:0;width:0%;border-radius:2px;background:var(--muted2);transition:width .4s,background .3s}
+#storage-bar-label{font-size:8px;color:var(--muted2);letter-spacing:.06em;white-space:nowrap;min-width:56px;text-align:right}
+
+/* THEME PANEL */
+#theme-panel{position:fixed;top:56px;right:8px;z-index:400;background:var(--bg1);border:1px solid var(--line2);border-radius:8px;padding:12px 14px;display:none;box-shadow:0 6px 24px rgba(0,0,0,.85);min-width:220px}
+#theme-panel.open{display:block}
+.theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.theme-swatch{padding:6px 4px;text-align:center;cursor:pointer;border-radius:5px;border:1px solid var(--line2);font-size:9px;letter-spacing:.07em;color:var(--muted);transition:all .15s;font-family:var(--mono)}
+.theme-swatch:hover{border-color:var(--muted);color:var(--text)}
+.theme-swatch.active{border-color:var(--accent2);color:var(--text);background:var(--bg3)}
+.theme-dot{width:10px;height:10px;border-radius:50%;margin:0 auto 4px}
+
+/* MASONRY */
+.gallery-grid.masonry{display:block!important;column-count:3;column-gap:9px}
+.gallery-grid.masonry .gallery-card{break-inside:avoid;margin-bottom:9px;display:block}
+.gallery-grid.masonry .gallery-card img{aspect-ratio:unset!important;height:auto!important}
+.gallery-grid.masonry .date-group-hdr{column-span:all}
+@media (max-width:900px){.gallery-grid.masonry{column-count:2}}
+
+/* ENHANCE PANEL */
+#enhance-panel{position:fixed;z-index:60;background:var(--bg1);border:1px solid var(--line2);border-radius:8px;padding:12px 14px;display:none;width:290px;max-height:65vh;overflow-y:auto;box-shadow:0 6px 24px rgba(0,0,0,.85)}
+.enhance-group{margin-bottom:8px}
+.enhance-group-label{font-size:8px;color:var(--muted2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.enhance-chips{display:flex;flex-wrap:wrap;gap:3px}
+.enhance-chip{background:var(--bg2);border:1px solid var(--line2);border-radius:99px;padding:2px 8px;font-size:9px;color:var(--muted);cursor:pointer;transition:all .15s;font-family:var(--mono)}
+.enhance-chip:hover{background:var(--bg3);border-color:var(--accent2);color:var(--text)}
+
+/* WORKFLOW TEMPLATES */
+.presets-section-label{font-size:8px;letter-spacing:.12em;color:var(--muted2);text-transform:uppercase;margin:10px 0 5px;border-top:1px solid var(--line);padding-top:8px}
+.wft-item{display:flex;align-items:center;gap:5px;padding:4px 0;border-bottom:1px solid var(--line)}
+.wft-item:last-child{border-bottom:none}
+.wft-name-btn{flex:1;font-size:10px;color:var(--muted);cursor:pointer;background:none;border:none;font-family:var(--mono);text-align:left;padding:0;transition:color .15s}
+.wft-name-btn:hover{color:var(--text)}
+.wft-del-btn{font-size:11px;color:var(--muted2);cursor:pointer;padding:0 4px;background:none;border:none;font-family:var(--mono);transition:color .15s}
+.wft-del-btn:hover{color:var(--red)}
+
+/* ALBUM CHIPS */
+#album-chips-row{display:flex;align-items:center;gap:4px;padding:4px 10px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;flex-shrink:0;min-height:30px}
+#album-chips-row::-webkit-scrollbar{display:none}
+.album-chip{background:var(--bg2);border:1px solid var(--line2);border-radius:99px;padding:2px 9px;font-size:9px;color:var(--muted);cursor:pointer;transition:all .15s;font-family:var(--mono);white-space:nowrap;flex-shrink:0}
+.album-chip:hover{border-color:var(--muted);color:var(--text)}
+.album-chip.active{background:var(--bg3);border-color:var(--accent2);color:var(--text)}
+.album-chip.add-album{border-style:dashed;color:var(--muted2)}
+.album-chip.add-album:hover{color:var(--text)}
+
+/* GALLERY CARD TAGS */
+.card-tags{position:absolute;bottom:34px;left:6px;right:6px;display:flex;flex-wrap:wrap;gap:2px;opacity:0;transition:opacity .15s;z-index:2}
+.gallery-card:hover .card-tags{opacity:1}
+.card-tag-badge{background:rgba(0,0,0,.75);border:1px solid var(--line2);border-radius:99px;padding:1px 5px;font-size:8px;color:var(--accent2);white-space:nowrap;font-family:var(--mono);letter-spacing:.04em}
+
+/* TAG FILTER ROW */
+#gallery-tag-row{display:none;flex-wrap:wrap;gap:3px;padding:4px 10px;border-bottom:1px solid var(--line);flex-shrink:0}
+#gallery-tag-row.has-tags{display:flex}
+.gallery-tag-filter{background:var(--bg2);border:1px solid var(--line2);border-radius:99px;padding:2px 7px;font-size:9px;color:var(--muted);cursor:pointer;transition:all .15s;font-family:var(--mono)}
+.gallery-tag-filter.active{background:var(--bg3);border-color:var(--accent2);color:var(--text)}
+
+/* STAR RATING */
+.card-rating{position:absolute;bottom:6px;left:6px;display:flex;gap:1px;opacity:0;transition:opacity .15s;z-index:2}
+.gallery-card:hover .card-rating,.gallery-card.rated .card-rating{opacity:1}
+.rating-star{font-size:11px;cursor:pointer;color:var(--muted2);transition:color .1s;line-height:1;text-shadow:0 1px 3px rgba(0,0,0,.9)}
+.rating-star.on{color:var(--yellow)}
+.rating-star:hover{color:var(--yellow)}
+
+/* LORA THUMB */
+.lora-thumb{width:22px;height:22px;border-radius:3px;background:var(--bg3);border:1px solid var(--line2);cursor:pointer;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:7px;color:var(--muted2);transition:border-color .15s;flex-shrink:0}
+.lora-thumb:hover{border-color:var(--muted)}
+.lora-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* DEL BUTTON (SELECT mode) */
+#del-btn{display:none;color:var(--red)!important;border-color:rgba(255,68,68,.4)!important}
+#del-btn:hover{background:rgba(255,68,68,.1)!important;border-color:var(--red)!important}
+
+/* CTX STAR RATING ROW */
+.ctx-stars{display:flex;align-items:center;gap:3px;padding:5px 8px}
+.ctx-stars-label{font-size:9px;color:var(--muted);letter-spacing:.06em;margin-right:2px}
+.ctx-star{font-size:14px;cursor:pointer;color:var(--muted2);transition:color .1s;line-height:1}
+.ctx-star:hover,.ctx-star.on{color:var(--yellow)}
+.ctx-star.clear{font-size:10px;color:var(--muted2)}
+.ctx-star.clear:hover{color:var(--red)}
 </style>
 </head>
 <body>
@@ -485,6 +568,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
     <button class="tb-btn" onclick="clearGallery()">CLEAR</button>
     <button class="tb-btn" onclick="resetTasks()">RESET</button>
     <button class="tb-btn" onclick="togglePresets()" id="presets-btn" title="Settings presets">PRESETS</button>
+    <button class="tb-btn" onclick="toggleThemePanel()" id="theme-btn" title="Color theme">●</button>
     <button class="tb-btn" onclick="showShortcuts()" title="Keyboard shortcuts">?</button>
     <span class="status-dot" id="api-dot"></span>
     <span class="status-text" id="api-text">CONNECTING</span>
@@ -809,9 +893,12 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
         <span style="font-size:8px;color:var(--muted2);letter-spacing:.1em">SORT</span>
         <button class="tb-btn" onclick="sortGallery('time')" title="Sort by time">TIME</button>
         <button class="tb-btn" onclick="sortGallery('model')" title="Sort by model">MODEL</button>
+        <button class="tb-btn" onclick="sortGallery('rating')" title="Sort by rating">RATE</button>
         <button class="tb-btn" id="select-mode-btn" onclick="toggleSelectMode()">SELECT</button>
+        <button class="tb-btn" id="del-btn" onclick="deleteSelected()" title="Delete selected">DEL</button>
         <button class="tb-btn" id="zip-btn" onclick="downloadZip()" style="display:none;color:var(--text);border-color:var(--muted)">ZIP</button>
         <button class="tb-btn" onclick="startSlideshow()" title="Slideshow">SLIDE</button>
+        <button class="tb-btn" id="mason-btn" onclick="toggleMasonry()" title="Toggle masonry layout">GRID</button>
       </div>
     </div>
     <div id="gallery-search-wrap">
@@ -819,6 +906,9 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
       <select id="gallery-model-filter" onchange="filterGallery()"><option value="">ALL MODELS</option></select>
       <button class="tb-btn" id="fav-filter-btn" onclick="toggleFavFilter()" title="Show favorites">⭐</button>
     </div>
+    <div id="album-chips-row"><span class="album-chip active" onclick="filterByAlbum('')">ALL</span><span class="album-chip add-album" onclick="createAlbum()">+ ALBUM</span></div>
+    <div id="gallery-tag-row"></div>
+    <div id="storage-bar-wrap"><div id="storage-bar-track"><div id="storage-bar-fill"></div></div><span id="storage-bar-label">—</span></div>
     <div id="gallery-view">
       <div class="empty-state" id="gallery-empty">
         <div class="empty-icon">⬡</div>
@@ -897,6 +987,18 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
   <div class="ctx-item" onclick="ctxRestoreSettings()">↺ Restore Settings</div>
   <div class="ctx-item" onclick="ctxCopyPrompt()">⎘ Copy Prompt</div>
   <div class="ctx-sep"></div>
+  <div class="ctx-stars">
+    <span class="ctx-stars-label">RATE</span>
+    <span class="ctx-star" onclick="ctxSetRating(1)">★</span>
+    <span class="ctx-star" onclick="ctxSetRating(2)">★</span>
+    <span class="ctx-star" onclick="ctxSetRating(3)">★</span>
+    <span class="ctx-star" onclick="ctxSetRating(4)">★</span>
+    <span class="ctx-star" onclick="ctxSetRating(5)">★</span>
+    <span class="ctx-star clear" onclick="ctxSetRating(0)" title="Clear rating">✕</span>
+  </div>
+  <div class="ctx-item" onclick="ctxAddTag()">🏷 Add Tag</div>
+  <div class="ctx-item" onclick="ctxAddToAlbum()">+ Add to Album</div>
+  <div class="ctx-sep"></div>
   <div class="ctx-item" onclick="ctxDownload()">↓ Download</div>
 </div>
 
@@ -956,14 +1058,40 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 <!-- PRESETS PANEL -->
 <div id="presets-panel">
   <div style="font-size:9px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
-    SETTINGS PRESETS
+    PRESETS &amp; TEMPLATES
     <span style="cursor:pointer;color:var(--muted2);font-size:14px" onclick="document.getElementById('presets-panel').classList.remove('open')">×</span>
   </div>
+  <div class="presets-section-label" style="margin-top:0;border-top:none;padding-top:0">WORKFLOW TEMPLATES</div>
+  <div id="workflow-templates-list"></div>
+  <div class="preset-save-row">
+    <input class="preset-save-input" id="wft-name-input" type="text" placeholder="Template name…" onkeydown="if(event.key==='Enter')saveWorkflowTemplate()">
+    <button class="preset-save-btn" onclick="saveWorkflowTemplate()">SAVE</button>
+  </div>
+  <div class="presets-section-label">SETTINGS PRESETS</div>
   <div id="presets-list"></div>
   <div class="preset-save-row">
     <input class="preset-save-input" id="preset-name-input" type="text" placeholder="Preset name…" onkeydown="if(event.key==='Enter')savePreset()">
     <button class="preset-save-btn" onclick="savePreset()">SAVE</button>
   </div>
+</div>
+
+<!-- THEME PANEL -->
+<div id="theme-panel">
+  <div style="font-size:9px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+    COLOR THEME
+    <span style="cursor:pointer;color:var(--muted2);font-size:14px" onclick="toggleThemePanel()">×</span>
+  </div>
+  <div class="theme-grid" id="theme-grid"></div>
+</div>
+
+<!-- ENHANCE PANEL OVERLAY -->
+<div id="enhance-overlay" style="position:fixed;inset:0;display:none;z-index:59" onclick="closeEnhancePanel()"></div>
+<div id="enhance-panel">
+  <div style="font-size:9px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+    ✨ ENHANCE PROMPT
+    <span style="cursor:pointer;color:var(--muted2)" onclick="closeEnhancePanel()">×</span>
+  </div>
+  <div id="enhance-inner"></div>
 </div>
 
 <!-- FULL-WIDTH PROGRESS BAR -->
@@ -973,12 +1101,10 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 </div>
 
 <script>
-function _defaultComfyApi() {
-  const h = window.location.hostname;
-  if (!h || h === '127.0.0.1' || h === 'localhost') return 'http://127.0.0.1:8188';
-  return `http://${h}:8188`;
-}
-let COMFY_API = localStorage.getItem('void-comfy-api') || _defaultComfyApi();
+const _LOCAL_API = 'http://127.0.0.1:8188';
+// Clear any stale LAN IP saved from phone testing
+(function(){ const s = localStorage.getItem('void-comfy-api'); if (s && s !== _LOCAL_API && !s.includes('localhost')) { localStorage.removeItem('void-comfy-api'); } })();
+let COMFY_API = _LOCAL_API;
 function changeApiUrl() {
   const newUrl = prompt('ComfyUI server URL:', COMFY_API);
   if (!newUrl || newUrl.trim() === COMFY_API) return;
@@ -999,19 +1125,24 @@ let queueStatuses = {};
 let _progressTotal = 1, _progressCompleted = 0;
 
 // ── GALLERY INDEXEDDB ─────────────────────────────────────────────
-const _DB_NAME = 'void-gen-db', _DB_STORE = 'gallery';
-let _idb = null;
+const _DB_NAME = 'void-gen-db', _DB_STORE = 'gallery', _LORA_THUMB_STORE = 'lora-thumbs';
+let _idb = null, _idbPromise = null;
 function _openDB() {
-  return new Promise((res, rej) => {
-    if (_idb) return res(_idb);
-    const req = indexedDB.open(_DB_NAME, 1);
+  if (_idb) return Promise.resolve(_idb);
+  if (_idbPromise) return _idbPromise;
+  _idbPromise = new Promise((res, rej) => {
+    const req = indexedDB.open(_DB_NAME, 2);
     req.onupgradeneeded = e => {
-      if (!e.target.result.objectStoreNames.contains(_DB_STORE))
-        e.target.result.createObjectStore(_DB_STORE, { keyPath: 'id', autoIncrement: true });
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(_DB_STORE))
+        db.createObjectStore(_DB_STORE, { keyPath: 'id', autoIncrement: true });
+      if (!db.objectStoreNames.contains(_LORA_THUMB_STORE))
+        db.createObjectStore(_LORA_THUMB_STORE, { keyPath: 'name' });
     };
     req.onsuccess = e => { _idb = e.target.result; res(_idb); };
-    req.onerror = () => rej(req.error);
+    req.onerror = () => { _idbPromise = null; rej(req.error); };
   });
+  return _idbPromise;
 }
 async function dbSave(dataUrl, title, meta) {
   const db = await _openDB();
@@ -1147,6 +1278,12 @@ function restoreImmediateSettings() {
   document.getElementById('sb-api-url').textContent = _apiDisp;
   document.getElementById('sb-backend').textContent = 'ComfyUI · ' + _apiDisp;
   loadSavedGallery();
+  initTheme();
+  renderAlbumChips();
+  refreshTagFilterRow();
+  renderWorkflowTemplatesList();
+  // defer non-critical startup tasks
+  setTimeout(renderStorageBar, 2000);
   checkApi();
   setInterval(checkApiSilent, 9000);
   setInterval(pollVRAM, 20000);
@@ -1154,18 +1291,39 @@ function restoreImmediateSettings() {
 })();
 
 // ── API ───────────────────────────────────────────────────────────
+function _fetchWithTimeout(url, ms) {
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), ms);
+  return fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(tid));
+}
 async function checkApi() {
-  try {
-    const r = await fetch(`${COMFY_API}/system_stats`, { signal: AbortSignal.timeout(4000) });
-    if (r.ok) {
-      setApiOnline(true);
-      loadComfyModels(); loadComfyLoras(); loadRefinerModels(); loadComfyVAE(); loadUpscaleModels();
-    } else throw 0;
-  } catch { setApiOnline(false); }
+  // Try current COMFY_API first; if it fails, auto-try localhost fallbacks
+  const urlsToTry = [COMFY_API];
+  const fb1 = 'http://127.0.0.1:8188', fb2 = 'http://localhost:8188';
+  if (COMFY_API !== fb1) urlsToTry.push(fb1);
+  if (COMFY_API !== fb2) urlsToTry.push(fb2);
+  for (const url of urlsToTry) {
+    try {
+      const r = await _fetchWithTimeout(`${url}/system_stats`, 4000);
+      if (r.ok) {
+        if (url !== COMFY_API) {
+          COMFY_API = url;
+          localStorage.setItem('void-comfy-api', COMFY_API);
+          const disp = COMFY_API.replace(/^https?:\/\//, '');
+          document.getElementById('sb-api-url').textContent = disp;
+          document.getElementById('sb-backend').textContent = 'ComfyUI · ' + disp;
+        }
+        setApiOnline(true);
+        loadComfyModels(); loadComfyLoras(); loadRefinerModels(); loadComfyVAE(); loadUpscaleModels();
+        return;
+      }
+    } catch {}
+  }
+  setApiOnline(false);
 }
 async function checkApiSilent() {
   try {
-    const r = await fetch(`${COMFY_API}/system_stats`, { signal: AbortSignal.timeout(3000) });
+    const r = await _fetchWithTimeout(`${COMFY_API}/system_stats`, 3000);
     setApiOnline(r.ok);
   } catch { setApiOnline(false); }
 }
@@ -1200,7 +1358,7 @@ function findOption(sel, name) {
 async function loadComfyModels() {
   const sel = document.getElementById('model-select');
   try {
-    const d = await (await fetch(`${COMFY_API}/object_info/CheckpointLoaderSimple`, { signal: AbortSignal.timeout(6000) })).json();
+    const d = await (await _fetchWithTimeout(`${COMFY_API}/object_info/CheckpointLoaderSimple`, 6000)).json();
     const models = d?.CheckpointLoaderSimple?.input?.required?.ckpt_name?.[0] || [];
     sel.innerHTML = models.length
       ? models.map(m => `<option value="${m}">${m}</option>`).join('')
@@ -1221,7 +1379,7 @@ async function loadComfyModels() {
 async function loadRefinerModels() {
   const sel = document.getElementById('refiner-select');
   try {
-    const d = await (await fetch(`${COMFY_API}/object_info/CheckpointLoaderSimple`, { signal: AbortSignal.timeout(6000) })).json();
+    const d = await (await _fetchWithTimeout(`${COMFY_API}/object_info/CheckpointLoaderSimple`, 6000)).json();
     const models = d?.CheckpointLoaderSimple?.input?.required?.ckpt_name?.[0] || [];
     sel.innerHTML = '<option value="">NONE</option>' + models.map(m => `<option value="${m}">${m}</option>`).join('');
     const saved = getSavedSettings();
@@ -1246,7 +1404,7 @@ async function loadRefinerModels() {
 async function loadComfyVAE() {
   const sel = document.getElementById('vae-select');
   try {
-    const d = await (await fetch(`${COMFY_API}/object_info/VAELoader`, { signal: AbortSignal.timeout(6000) })).json();
+    const d = await (await _fetchWithTimeout(`${COMFY_API}/object_info/VAELoader`, 6000)).json();
     const vaes = d?.VAELoader?.input?.required?.vae_name?.[0] || [];
     sel.innerHTML = '<option value="">BUILT-IN (CHECKPOINT)</option>' + vaes.map(v => `<option value="${v}">${v}</option>`).join('');
     const saved = getSavedSettings();
@@ -1256,7 +1414,7 @@ async function loadComfyVAE() {
 }
 async function loadComfyLoras() {
   try {
-    const d = await (await fetch(`${COMFY_API}/object_info/LoraLoader`, { signal: AbortSignal.timeout(6000) })).json();
+    const d = await (await _fetchWithTimeout(`${COMFY_API}/object_info/LoraLoader`, 6000)).json();
     loraList = d?.LoraLoader?.input?.required?.lora_name?.[0] || [];
   } catch { loraList = []; }
   renderLoraSlots();
@@ -1264,6 +1422,7 @@ async function loadComfyLoras() {
 }
 function applyLoraDefaults() {
   const saved = getSavedSettings();
+  setTimeout(() => loadLoraThumbsForSlots(), 300);
   [0,1,2,3,4,5].forEach(i => {
     const sel   = document.getElementById(`lora-sel-${i}`);
     const sldr  = document.getElementById(`lora-sldr-${i}`);
@@ -1293,10 +1452,10 @@ async function loadUpscaleModels() {
   const sel = document.getElementById('upscale-model-select');
   try {
     let models = [];
-    const r1 = await fetch(`${COMFY_API}/models/upscale_models`, { signal: AbortSignal.timeout(6000) });
+    const r1 = await _fetchWithTimeout(`${COMFY_API}/models/upscale_models`, 6000);
     if (r1.ok) { models = await r1.json(); }
     else {
-      const d = await (await fetch(`${COMFY_API}/object_info/UpscaleModelLoader`, { signal: AbortSignal.timeout(6000) })).json();
+      const d = await (await _fetchWithTimeout(`${COMFY_API}/object_info/UpscaleModelLoader`, 6000)).json();
       models = d?.UpscaleModelLoader?.input?.required?.model_name?.[0] || [];
     }
     sel.innerHTML = '<option value="">Simple interpolation</option>' + models.map(m => `<option value="${m}">${m}</option>`).join('');
@@ -1348,6 +1507,7 @@ function renderTaskEditor() {
         PROMPT <span style="font-size:9px;color:var(--muted2)">${idx+1} / ${tasks.length}</span>
         <div style="display:flex;gap:4px;align-items:center">
           <span class="icon-btn" id="hist-btn" onclick="togglePromptHistory()">▾</span>
+          <span class="icon-btn" onclick="openEnhancePanel()" title="Enhance prompt">✨</span>
           <span class="icon-btn" onclick="clearPrompt(${idx})">CLR</span>
         </div>
       </div>
@@ -1455,7 +1615,8 @@ function renderLoraSlots() {
       ondragover="_loraDragOver(event,${i})"
       ondrop="_loraDrop(event,${i})"
       ondragend="_loraDragEnd()">
-      <select id="lora-sel-${i}" class="sel" style="font-size:10px;padding:5px 8px">
+      <div class="lora-thumb" id="lora-thumb-${i}" onclick="loraThumbUpload(${i})" title="Click to upload thumbnail"></div>
+      <select id="lora-sel-${i}" class="sel" style="font-size:10px;padding:5px 8px" onchange="loraThumbRefreshSlot(${i})">
         <option value="">(none)</option>
         ${loraList.map(l=>`<option value="${l}">${l.replace(/\.(safetensors|ckpt|pt)$/i,'').slice(0,22)}</option>`).join('')}
       </select>
@@ -1548,17 +1709,19 @@ async function runInterrogate() {
     form.append('type', 'input');
     form.append('overwrite', 'true');
 
+    const upCtrl = new AbortController();
+    const upTid = setTimeout(() => upCtrl.abort(), 15000);
     const upResp = await fetch(`${COMFY_API}/upload/image`, {
-      method: 'POST', body: form, signal: AbortSignal.timeout(15000)
-    });
+      method: 'POST', body: form, signal: upCtrl.signal
+    }).finally(() => clearTimeout(upTid));
     if (!upResp.ok) throw new Error(`Upload failed: HTTP ${upResp.status}`);
     const { name } = await upResp.json();
 
     // Step 2: call the WD14-Tagger REST endpoint (uses installed wd-v1-4-moat-tagger-v2)
     setStatus('ANALYZING WITH WD14 TAGGER…');
-    const tagResp = await fetch(
+    const tagResp = await _fetchWithTimeout(
       `${COMFY_API}/pysssss/wd14tagger/tag?filename=${encodeURIComponent(name)}&type=input&threshold=${genThreshold}&character_threshold=${charThreshold}`,
-      { signal: AbortSignal.timeout(120000) }
+      120000
     );
     if (!tagResp.ok) throw new Error(`Tagger HTTP ${tagResp.status}`);
     const tags = await tagResp.json();
@@ -1691,11 +1854,16 @@ function _addToGalleryInternal(dataUrl, title, meta={}, dbId=null, appendMode=fa
   card.dataset.favKey = favKey;
   if (_favorites.has(favKey)) card.classList.add('fav');
   card.dataset.metaJson = JSON.stringify(meta);
+  const _initRating = getCardRatings()[favKey] || 0;
+  if (_initRating > 0) card.classList.add('rated');
+  const _initTags = getCardTags()[favKey] || [];
   card.innerHTML = `
     <div class="card-star" onclick="event.stopPropagation();toggleFav(this.closest('.gallery-card'))">${_favorites.has(favKey)?'★':'☆'}</div>
     <div class="card-check">✓</div>
     <img src="${dataUrl}" loading="lazy">
     <div class="card-overlay"><div class="card-prompt">${escHtml((meta.prompt||title).slice(0,80))}</div></div>
+    <div class="card-tags">${_initTags.map(t=>`<span class="card-tag-badge">${escHtml(t)}</span>`).join('')}</div>
+    <div class="card-rating">${[1,2,3,4,5].map(i=>`<span class="rating-star ${i<=_initRating?'on':''}" onclick="event.stopPropagation();setCardRating('${favKey}',${i})">${i<=_initRating?'★':'☆'}</span>`).join('')}</div>
     <div class="card-actions">
       <div class="card-action-btn" title="Download" onclick="event.stopPropagation();downloadImg('${safeUrl}','${escHtml(title)}')">↓</div>
       <div class="card-action-btn" title="Send to i2i" onclick="event.stopPropagation();sendToI2IFromGallery('${safeUrl}')">→</div>
@@ -1740,6 +1908,7 @@ function deleteFromGallery(card) {
   card.remove();
   const grid = document.getElementById('gallery-grid');
   if (!grid.children.length) { grid.style.display='none'; document.getElementById('gallery-empty').style.display='flex'; }
+  renderStorageBar();
 }
 function clearGallery() {
   const grid = document.getElementById('gallery-grid');
@@ -1747,6 +1916,7 @@ function clearGallery() {
   document.getElementById('gallery-empty').style.display = 'flex';
   _dateGroups.clear(); _galleryBuffer = [];
   dbClear().catch(()=>{});
+  renderStorageBar();
   setStatus('GALLERY CLEARED','ok'); setTimeout(()=>setStatus('Void.gen'),1500);
 }
 function switchCenterTab(tab, el) {
@@ -1869,11 +2039,15 @@ function copyTaggerOutput() {
 let _ctxData = null;
 function showCtxMenu(e, dataUrl, title, meta) {
   e.preventDefault(); e.stopPropagation();
-  _ctxData = { dataUrl, title, meta };
+  const card = e.target.closest('.gallery-card');
+  _ctxData = { dataUrl, title, meta, favKey: card?.dataset.favKey || null };
   const menu = document.getElementById('ctx-menu');
   menu.style.display = 'block';
-  menu.style.left = Math.min(e.clientX, window.innerWidth  - 175) + 'px';
-  menu.style.top  = Math.min(e.clientY, window.innerHeight - 130) + 'px';
+  menu.style.left = Math.min(e.clientX, window.innerWidth  - 200) + 'px';
+  menu.style.top  = Math.min(e.clientY, window.innerHeight - 220) + 'px';
+  // highlight stars
+  const r = _ctxData.favKey ? (getCardRatings()[_ctxData.favKey] || 0) : 0;
+  menu.querySelectorAll('.ctx-star').forEach((s, idx) => s.classList.toggle('on', idx < r && idx < 5));
 }
 function hideCtxMenu() {
   document.getElementById('ctx-menu').style.display = 'none';
@@ -2253,9 +2427,11 @@ function sortGallery(by) {
   grid.querySelectorAll('.date-group-hdr').forEach(h => h.remove());
   _dateGroups.clear();
   const cards = [...grid.children].filter(c => c.classList.contains('gallery-card'));
+  const _ratings = by === 'rating' ? getCardRatings() : null;
   cards.sort((a, b) => {
-    if (by === 'time')  return parseInt(b.dataset.ts||0) - parseInt(a.dataset.ts||0);
-    if (by === 'model') return (a.dataset.model||'').localeCompare(b.dataset.model||'');
+    if (by === 'time')   return parseInt(b.dataset.ts||0) - parseInt(a.dataset.ts||0);
+    if (by === 'model')  return (a.dataset.model||'').localeCompare(b.dataset.model||'');
+    if (by === 'rating') return (_ratings[b.dataset.favKey]||0) - (_ratings[a.dataset.favKey]||0);
     return 0;
   });
   grid.innerHTML = '';
@@ -2269,9 +2445,11 @@ function sortGallery(by) {
 function toggleSelectMode() {
   gallerySelectMode = !gallerySelectMode;
   const btn  = document.getElementById('select-mode-btn');
+  const delBtn = document.getElementById('del-btn');
   const grid = document.getElementById('gallery-grid');
   btn.style.color       = gallerySelectMode ? 'var(--text)' : '';
   btn.style.borderColor = gallerySelectMode ? 'var(--muted)' : '';
+  if (delBtn) delBtn.style.display = gallerySelectMode ? 'inline-block' : 'none';
   grid.classList.toggle('gallery-select-mode', gallerySelectMode);
   if (!gallerySelectMode) {
     grid.querySelectorAll('.gallery-card.selected').forEach(c => c.classList.remove('selected'));
@@ -2338,15 +2516,22 @@ function toggleFavFilter() {
 function filterGallery() {
   const q     = (document.getElementById('gallery-search')?.value || '').toLowerCase();
   const model = (document.getElementById('gallery-model-filter')?.value || '').toLowerCase();
+  const albums = getAlbums();
+  const activeAlbumObj = _activeAlbum ? albums.find(a => String(a.id) === _activeAlbum) : null;
+  const activeAlbumCards = activeAlbumObj ? (activeAlbumObj.cards || []) : null;
+  const cardTagsAll = getCardTags();
   let visible = 0;
   document.querySelectorAll('.gallery-card').forEach(card => {
     const prompt     = card.querySelector('.card-prompt')?.textContent.toLowerCase() || '';
     const cardModel  = (card.dataset.model || '').toLowerCase();
     const isFav      = card.classList.contains('fav');
+    const favKey     = card.dataset.favKey || '';
     const matchQ     = !q     || prompt.includes(q);
     const matchModel = !model || cardModel.includes(model);
     const matchFav   = !_favFilterOn || isFav;
-    const show = matchQ && matchModel && matchFav;
+    const matchAlbum = !activeAlbumCards || activeAlbumCards.includes(favKey);
+    const matchTag   = !_activeTagFilter || (cardTagsAll[favKey] || []).includes(_activeTagFilter);
+    const show = matchQ && matchModel && matchFav && matchAlbum && matchTag;
     card.style.display = show ? '' : 'none';
     if (show) visible++;
   });
@@ -2439,7 +2624,7 @@ function _syncMobileGenBtn(running) {
 // ── VRAM DISPLAY ──────────────────────────────────────────────────
 async function pollVRAM() {
   try {
-    const d = await (await fetch(`${COMFY_API}/system_stats`, { signal: AbortSignal.timeout(3000) })).json();
+    const d = await (await _fetchWithTimeout(`${COMFY_API}/system_stats`, 3000)).json();
     const gpu = d?.devices?.[0];
     if (!gpu) return;
     const used = gpu.vram_used / (1024**3), total = gpu.vram_total / (1024**3);
@@ -2502,16 +2687,23 @@ document.body.addEventListener('drop', e => {
   if (!file || !file.type.startsWith('image/')) return;
   if (currentMode === 'img2txt') {
     _load2txtFile(file);
-  } else {
-    const reader = new FileReader();
-    reader.onload = ev => {
-      img2imgBase64 = ev.target.result.split(',')[1];
-      setMode('img2img', document.querySelectorAll('.mode-btn')[1]);
-      const up = document.getElementById('img-upload');
-      up.classList.add('has-img','vis');
-      up.innerHTML = `<img src="${ev.target.result}"><span class="ul" style="color:var(--text)">✓ LOADED</span>`;
-    };
-    reader.readAsDataURL(file);
+    return;
+  }
+  // Always load as img2img source
+  const reader = new FileReader();
+  reader.onload = ev => {
+    img2imgBase64 = ev.target.result.split(',')[1];
+    setMode('img2img', document.querySelectorAll('.mode-btn')[1]);
+    const up = document.getElementById('img-upload');
+    up.classList.add('has-img','vis');
+    up.innerHTML = `<img src="${ev.target.result}"><span class="ul" style="color:var(--text)">✓ LOADED</span>`;
+  };
+  reader.readAsDataURL(file);
+  // Also try to extract PNG metadata and restore settings
+  if (file.name.toLowerCase().endsWith('.png') || file.type === 'image/png') {
+    file.arrayBuffer().then(buf => parsePngMeta(buf)).then(meta => {
+      if (meta && meta.prompt) restoreFromMetaPng(meta);
+    }).catch(() => {});
   }
 });
 
@@ -2559,7 +2751,7 @@ function getPresets() {
 function togglePresets() {
   const panel = document.getElementById('presets-panel');
   panel.classList.toggle('open');
-  if (panel.classList.contains('open')) renderPresetsList();
+  if (panel.classList.contains('open')) { renderPresetsList(); renderWorkflowTemplatesList(); }
 }
 function renderPresetsList() {
   const list = document.getElementById('presets-list');
@@ -2766,6 +2958,8 @@ document.addEventListener('keydown', e => {
     document.getElementById('modal-bg').classList.remove('open');
     document.getElementById('shortcuts-overlay').classList.remove('open');
     document.getElementById('presets-panel').classList.remove('open');
+    document.getElementById('theme-panel')?.classList.remove('open');
+    closeEnhancePanel();
     if (document.getElementById('slideshow-overlay').classList.contains('open')) stopSlideshow();
     closeMobileDrawer();
     closeMobilePreview();
@@ -2806,15 +3000,446 @@ document.getElementById('sampler-select').addEventListener('change', () => {
   document.getElementById('m-sampler').textContent = document.getElementById('sampler-select').value;
 });
 
+// ── STORAGE BAR ───────────────────────────────────────────────────
+async function renderStorageBar() {
+  try {
+    const fill  = document.getElementById('storage-bar-fill');
+    const label = document.getElementById('storage-bar-label');
+    if (!fill || !label) return;
+    let mb = 0;
+    // Use browser Storage API first (instant, no DB read)
+    if (navigator.storage?.estimate) {
+      const est = await navigator.storage.estimate();
+      mb = (est.usage || 0) / (1024 * 1024);
+    } else {
+      // Fallback: estimate from DOM images + buffer (no extra IDB read)
+      let bytes = 0;
+      document.querySelectorAll('#gallery-grid .gallery-card img').forEach(img => {
+        if (img.src?.startsWith('data:')) bytes += img.src.length * 0.75;
+      });
+      (_galleryBuffer || []).forEach(item => { if (item.dataUrl) bytes += item.dataUrl.length * 0.75; });
+      mb = bytes / (1024 * 1024);
+    }
+    const pct = Math.min(mb / 500 * 100, 100);
+    fill.style.width = pct + '%';
+    fill.style.background = pct > 90 ? 'var(--red)' : pct > 70 ? 'var(--yellow)' : 'var(--muted2)';
+    label.textContent = mb < 1 ? `${(mb*1024).toFixed(0)}KB` : `${mb.toFixed(1)}MB`;
+    label.title = `~${mb.toFixed(1)}MB used`;
+  } catch {}
+}
+
+// ── PNG METADATA READER ───────────────────────────────────────────
+async function parsePngMeta(arrayBuffer) {
+  const bytes = new Uint8Array(arrayBuffer);
+  if (bytes[0] !== 0x89 || bytes[1] !== 0x50) return null;
+  let i = 8;
+  while (i < bytes.length - 12) {
+    const len = (bytes[i]<<24|bytes[i+1]<<16|bytes[i+2]<<8|bytes[i+3]) >>> 0;
+    const type = String.fromCharCode(bytes[i+4],bytes[i+5],bytes[i+6],bytes[i+7]);
+    if (type === 'tEXt' && len < 100000) {
+      const data = bytes.slice(i+8, i+8+len);
+      const nul = data.indexOf(0);
+      if (nul > 0) {
+        const key = String.fromCharCode(...data.slice(0, nul));
+        if (key === 'parameters') {
+          const val = String.fromCharCode(...data.slice(nul+1));
+          return parseA1111Meta(val);
+        }
+      }
+    }
+    if (type === 'IEND') break;
+    i += 12 + len;
+    if (len > 10000000) break;
+  }
+  return null;
+}
+function parseA1111Meta(str) {
+  const meta = {};
+  const negIdx  = str.search(/\nNegative prompt:/i);
+  const stepIdx = str.search(/\nSteps:/i);
+  if (negIdx >= 0) {
+    meta.prompt = str.slice(0, negIdx).trim();
+    const afterNeg = str.slice(negIdx).replace(/^\nNegative prompt:\s*/i, '');
+    meta.negative = stepIdx >= 0 ? str.slice(negIdx).replace(/^\nNegative prompt:\s*/i,'').slice(0, str.slice(negIdx).indexOf('\nSteps:')).trim() : afterNeg.trim();
+  } else if (stepIdx >= 0) {
+    meta.prompt = str.slice(0, stepIdx).trim();
+  } else {
+    meta.prompt = str.trim();
+  }
+  const paramsStr = stepIdx >= 0 ? str.slice(stepIdx+1) : '';
+  const get = key => { const m = paramsStr.match(new RegExp(key + ':\\s*([^,\\n]+)')); return m ? m[1].trim() : null; };
+  const steps = get('Steps');     if (steps)   meta.steps = parseInt(steps);
+  const cfg   = get('CFG scale'); if (cfg)     meta.cfg   = parseFloat(cfg);
+  const seed  = get('Seed');      if (seed)    meta.seed  = parseInt(seed);
+  const samp  = get('Sampler');   if (samp)    meta.sampler = samp;
+  const model = get('Model');     if (model)   meta.model = model;
+  const size  = get('Size');      if (size)    { const [w,h] = size.split('x'); if(w&&h){ meta.w=parseInt(w); meta.h=parseInt(h); } }
+  return meta;
+}
+function restoreFromMetaPng(meta) {
+  if (!meta) return;
+  restoreFromMeta(meta);
+  if (meta.w && meta.h) setSize(meta.w, meta.h, null);
+  if (meta.negative && activeTask >= 0) {
+    tasks[activeTask].negative = meta.negative;
+    const ta2 = document.getElementById('te-neg');
+    if (ta2) { ta2.value = meta.negative; updateNegTokenCount(); }
+  }
+  setStatus('PNG METADATA RESTORED', 'ok');
+  setTimeout(() => setStatus('Void.gen'), 2500);
+}
+
+// ── DELETE SELECTED ────────────────────────────────────────────────
+async function deleteSelected() {
+  const selected = [...document.querySelectorAll('.gallery-card.selected')];
+  if (!selected.length) return;
+  if (!confirm(`Delete ${selected.length} image${selected.length>1?'s':''}?`)) return;
+  for (const card of selected) {
+    const id = parseInt(card.dataset.dbId);
+    if (id) await dbDelete(id).catch(()=>{});
+    card.remove();
+  }
+  const grid = document.getElementById('gallery-grid');
+  if (!grid.querySelectorAll('.gallery-card').length) {
+    grid.style.display = 'none';
+    document.getElementById('gallery-empty').style.display = 'flex';
+  }
+  document.getElementById('del-btn').style.display = 'none';
+  document.getElementById('zip-btn').style.display = 'none';
+  toggleSelectMode();
+  renderStorageBar();
+  setStatus(`DELETED ${selected.length} IMAGE${selected.length>1?'S':''}`, 'ok');
+  setTimeout(() => setStatus('Void.gen'), 2000);
+}
+
+// ── THEME PRESETS ─────────────────────────────────────────────────
+const THEMES = {
+  VOID:  { '--accent2':'#c0c0c0', '--bg':'#080808', '--bg1':'#0f0f0f', '--bg2':'#141414', '--bg3':'#1a1a1a', '--line':'#222', '--line2':'#2e2e2e', '--text':'#e8e8e8', '--muted':'#555', '--muted2':'#3a3a3a' },
+  AMBER: { '--accent2':'#ffb347', '--bg':'#090807', '--bg1':'#110f0c', '--bg2':'#161310', '--bg3':'#1c1814', '--line':'#28221a', '--line2':'#362e24', '--text':'#f0e6d0', '--muted':'#6b5c47', '--muted2':'#3d3428' },
+  CYAN:  { '--accent2':'#5fd4d4', '--bg':'#070a0a', '--bg1':'#0c1010', '--bg2':'#101515', '--bg3':'#161c1c', '--line':'#1c2626', '--line2':'#263232', '--text':'#d0f0f0', '--muted':'#3d6666', '--muted2':'#2a3e3e' },
+  ROSE:  { '--accent2':'#e8888a', '--bg':'#0a0808', '--bg1':'#110c0c', '--bg2':'#161010', '--bg3':'#1c1414', '--line':'#281e1e', '--line2':'#362828', '--text':'#f0d8d8', '--muted':'#6b4a4a', '--muted2':'#3d2c2c' },
+  SAGE:  { '--accent2':'#88cc88', '--bg':'#080a08', '--bg1':'#0d100d', '--bg2':'#111511', '--bg3':'#161b16', '--line':'#1e261e', '--line2':'#283328', '--text':'#d0ecd0', '--muted':'#4a6a4a', '--muted2':'#2c3c2c' },
+  IRIS:  { '--accent2':'#9988ee', '--bg':'#08080b', '--bg1':'#0e0e13', '--bg2':'#131318', '--bg3':'#18181e', '--line':'#22222e', '--line2':'#2c2c3c', '--text':'#dcd8f0', '--muted':'#555575', '--muted2':'#38384e' },
+};
+let _currentTheme = localStorage.getItem('void-theme') || 'VOID';
+function applyTheme(name) {
+  const t = THEMES[name]; if (!t) return;
+  _currentTheme = name;
+  localStorage.setItem('void-theme', name);
+  const root = document.documentElement;
+  Object.entries(t).forEach(([k,v]) => root.style.setProperty(k, v));
+  renderThemeGrid();
+}
+function initTheme() { if (_currentTheme !== 'VOID') applyTheme(_currentTheme); }
+function toggleThemePanel() {
+  const p = document.getElementById('theme-panel');
+  p.classList.toggle('open');
+  if (p.classList.contains('open')) renderThemeGrid();
+}
+function renderThemeGrid() {
+  const grid = document.getElementById('theme-grid'); if (!grid) return;
+  grid.innerHTML = Object.keys(THEMES).map(name =>
+    `<div class="theme-swatch ${name===_currentTheme?'active':''}" onclick="applyTheme('${name}')">
+      <div class="theme-dot" style="background:${THEMES[name]['--accent2']}"></div>${name}
+    </div>`
+  ).join('');
+}
+
+// ── MASONRY TOGGLE ────────────────────────────────────────────────
+let _masonryMode = false;
+function toggleMasonry() {
+  _masonryMode = !_masonryMode;
+  document.getElementById('gallery-grid').classList.toggle('masonry', _masonryMode);
+  const btn = document.getElementById('mason-btn');
+  btn.textContent = _masonryMode ? 'MASON' : 'GRID';
+  btn.style.color       = _masonryMode ? 'var(--text)' : '';
+  btn.style.borderColor = _masonryMode ? 'var(--muted)' : '';
+}
+
+// ── WORKFLOW TEMPLATES ────────────────────────────────────────────
+const WFT_KEY = 'void-workflow-templates';
+function getWorkflowTemplates() {
+  try { return JSON.parse(localStorage.getItem(WFT_KEY) || '[]'); } catch { return []; }
+}
+function saveWorkflowTemplate() {
+  const nameEl = document.getElementById('wft-name-input');
+  const name = nameEl?.value.trim(); if (!name) return;
+  const s = getSavedSettings(); if (!s) return;
+  const prompts = tasks.map(t => ({ title: t.title, prompt: t.prompt, negative: t.negative }));
+  const tpls = getWorkflowTemplates().filter(t => t.name !== name);
+  tpls.push({ name, settings: s, prompts });
+  localStorage.setItem(WFT_KEY, JSON.stringify(tpls));
+  if (nameEl) nameEl.value = '';
+  renderWorkflowTemplatesList();
+  setStatus('TEMPLATE SAVED', 'ok'); setTimeout(() => setStatus('Void.gen'), 1500);
+}
+function loadWorkflowTemplate(i) {
+  const tpls = getWorkflowTemplates(); if (!tpls[i]) return;
+  const { settings, prompts } = tpls[i];
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  restoreImmediateSettings();
+  if (prompts?.length) {
+    tasks = prompts.map(p => ({ title: p.title||'Image', prompt: p.prompt||'', negative: p.negative||'', batch: 1 }));
+    activeTask = 0; renderTaskTabs(); renderTaskEditor();
+  }
+  document.getElementById('presets-panel').classList.remove('open');
+  setStatus(`TEMPLATE "${escHtml(tpls[i].name)}" LOADED`, 'ok');
+  setTimeout(() => setStatus('Void.gen'), 2000);
+}
+function deleteWorkflowTemplate(i) {
+  const tpls = getWorkflowTemplates(); tpls.splice(i, 1);
+  localStorage.setItem(WFT_KEY, JSON.stringify(tpls));
+  renderWorkflowTemplatesList();
+}
+function renderWorkflowTemplatesList() {
+  const list = document.getElementById('workflow-templates-list'); if (!list) return;
+  const tpls = getWorkflowTemplates();
+  if (!tpls.length) { list.innerHTML = '<div style="font-size:9px;color:var(--muted2);padding:4px 0">No templates yet.</div>'; return; }
+  list.innerHTML = tpls.map((t, i) =>
+    `<div class="wft-item">
+      <button class="wft-name-btn" onclick="loadWorkflowTemplate(${i})">${escHtml(t.name)}</button>
+      <button class="wft-del-btn" onclick="deleteWorkflowTemplate(${i})">×</button>
+    </div>`
+  ).join('');
+}
+
+// ── ALBUMS ────────────────────────────────────────────────────────
+const ALBUMS_KEY = 'void-gen-albums';
+let _activeAlbum = '';
+function getAlbums() {
+  try { return JSON.parse(localStorage.getItem(ALBUMS_KEY) || '[]'); } catch { return []; }
+}
+function saveAlbums(arr) { localStorage.setItem(ALBUMS_KEY, JSON.stringify(arr)); }
+function createAlbum() {
+  const name = prompt('Album name:'); if (!name?.trim()) return;
+  const albums = getAlbums();
+  if (albums.some(a => a.name === name.trim())) { alert('Album already exists'); return; }
+  albums.push({ id: Date.now(), name: name.trim(), cards: [] });
+  saveAlbums(albums); renderAlbumChips();
+}
+function filterByAlbum(albumId) {
+  _activeAlbum = albumId;
+  renderAlbumChips(); filterGallery();
+}
+function renderAlbumChips() {
+  const row = document.getElementById('album-chips-row'); if (!row) return;
+  const albums = getAlbums();
+  row.innerHTML =
+    `<span class="album-chip ${_activeAlbum===''?'active':''}" onclick="filterByAlbum('')">ALL</span>` +
+    albums.map(a =>
+      `<span class="album-chip ${_activeAlbum===String(a.id)?'active':''}" onclick="filterByAlbum('${a.id}')" oncontextmenu="event.preventDefault();deleteAlbum(${a.id})" title="Right-click to delete">${escHtml(a.name)}</span>`
+    ).join('') +
+    `<span class="album-chip add-album" onclick="createAlbum()">+ ALBUM</span>`;
+}
+function deleteAlbum(id) {
+  if (!confirm('Delete album? (Images stay in gallery)')) return;
+  saveAlbums(getAlbums().filter(a => a.id !== id));
+  if (_activeAlbum === String(id)) _activeAlbum = '';
+  renderAlbumChips(); filterGallery();
+}
+function ctxAddToAlbum() {
+  if (!_ctxData) return;
+  const albums = getAlbums();
+  if (!albums.length) { alert('No albums. Create one first via the chip row above the gallery.'); hideCtxMenu(); return; }
+  const names = albums.map((a,i) => `${i+1}. ${a.name}`).join('\n');
+  const choice = prompt(`Add to album:\n${names}\n\nEnter number:`);
+  if (!choice) { hideCtxMenu(); return; }
+  const idx = parseInt(choice.trim()) - 1;
+  if (isNaN(idx) || idx < 0 || idx >= albums.length) { hideCtxMenu(); return; }
+  const favKey = _ctxData.favKey;
+  if (favKey) {
+    const a = albums[idx];
+    if (!a.cards.includes(favKey)) a.cards.push(favKey);
+    saveAlbums(albums);
+    setStatus(`ADDED TO "${escHtml(a.name)}"`, 'ok'); setTimeout(() => setStatus('Void.gen'), 1500);
+  }
+  hideCtxMenu();
+}
+
+// ── GALLERY TAGS ──────────────────────────────────────────────────
+const CARD_TAGS_KEY = 'void-gen-card-tags';
+let _activeTagFilter = '', _cardTagsCache = null;
+function getCardTags() {
+  if (_cardTagsCache) return _cardTagsCache;
+  try { _cardTagsCache = JSON.parse(localStorage.getItem(CARD_TAGS_KEY) || '{}'); } catch { _cardTagsCache = {}; }
+  return _cardTagsCache;
+}
+function saveCardTags(obj) { localStorage.setItem(CARD_TAGS_KEY, JSON.stringify(obj)); _cardTagsCache = obj; }
+function addTagToCard(favKey, tag) {
+  const all = getCardTags();
+  if (!all[favKey]) all[favKey] = [];
+  if (!all[favKey].includes(tag)) { all[favKey].push(tag); saveCardTags(all); }
+  _cardTagsCache = all;
+  // refresh badge on card
+  const card = [...document.querySelectorAll('.gallery-card')].find(c => c.dataset.favKey === favKey);
+  if (card) {
+    let el = card.querySelector('.card-tags');
+    if (!el) { el = document.createElement('div'); el.className = 'card-tags'; card.appendChild(el); }
+    el.innerHTML = all[favKey].map(t => `<span class="card-tag-badge">${escHtml(t)}</span>`).join('');
+  }
+  refreshTagFilterRow();
+}
+function refreshTagFilterRow() {
+  const row = document.getElementById('gallery-tag-row'); if (!row) return;
+  const all = getCardTags();
+  const allTags = [...new Set(Object.values(all).flat())];
+  if (!allTags.length) { row.classList.remove('has-tags'); return; }
+  row.classList.add('has-tags');
+  row.innerHTML =
+    `<span class="gallery-tag-filter ${_activeTagFilter===''?'active':''}" onclick="setTagFilter('')">ALL</span>` +
+    allTags.map(t =>
+      `<span class="gallery-tag-filter ${_activeTagFilter===t?'active':''}" onclick="setTagFilter(${JSON.stringify(t)})">${escHtml(t)}</span>`
+    ).join('');
+}
+function setTagFilter(tag) {
+  _activeTagFilter = tag; refreshTagFilterRow(); filterGallery();
+}
+function ctxAddTag() {
+  if (!_ctxData) return;
+  const tag = prompt('Enter tag:'); if (!tag?.trim()) { hideCtxMenu(); return; }
+  if (_ctxData.favKey) addTagToCard(_ctxData.favKey, tag.trim());
+  hideCtxMenu();
+}
+
+// ── STAR RATING ───────────────────────────────────────────────────
+const RATINGS_KEY = 'void-gen-card-ratings';
+let _cardRatingsCache = null;
+function getCardRatings() {
+  if (_cardRatingsCache) return _cardRatingsCache;
+  try { _cardRatingsCache = JSON.parse(localStorage.getItem(RATINGS_KEY) || '{}'); return _cardRatingsCache; } catch { return {}; }
+}
+function saveCardRatings(obj) { localStorage.setItem(RATINGS_KEY, JSON.stringify(obj)); _cardRatingsCache = obj; }
+function setCardRating(favKey, rating) {
+  const all = getCardRatings();
+  if (rating === 0) delete all[favKey]; else all[favKey] = rating;
+  saveCardRatings(all);
+  // refresh on card
+  const card = [...document.querySelectorAll('.gallery-card')].find(c => c.dataset.favKey === favKey);
+  if (card) {
+    card.classList.toggle('rated', rating > 0);
+    let el = card.querySelector('.card-rating');
+    if (!el) { el = document.createElement('div'); el.className = 'card-rating'; card.appendChild(el); }
+    el.innerHTML = [1,2,3,4,5].map(i =>
+      `<span class="rating-star ${i<=rating?'on':''}" onclick="event.stopPropagation();setCardRating('${favKey}',${i})">${i<=rating?'★':'☆'}</span>`
+    ).join('');
+  }
+}
+function ctxSetRating(r) {
+  if (!_ctxData?.favKey) { hideCtxMenu(); return; }
+  setCardRating(_ctxData.favKey, r);
+  hideCtxMenu();
+}
+
+// ── LORA THUMBNAILS ───────────────────────────────────────────────
+async function loraThumbSave(name, dataUrl) {
+  const db = await _openDB();
+  return new Promise((res, rej) => {
+    const req = db.transaction(_LORA_THUMB_STORE, 'readwrite').objectStore(_LORA_THUMB_STORE).put({ name, dataUrl });
+    req.onsuccess = () => res(); req.onerror = () => rej(req.error);
+  });
+}
+async function loraThumbGet(name) {
+  try {
+    const db = await _openDB();
+    return new Promise((res) => {
+      const req = db.transaction(_LORA_THUMB_STORE, 'readonly').objectStore(_LORA_THUMB_STORE).get(name);
+      req.onsuccess = () => res(req.result?.dataUrl || null);
+      req.onerror = () => res(null);
+    });
+  } catch { return null; }
+}
+function loraThumbUpload(slotIndex) {
+  const sel = document.getElementById(`lora-sel-${slotIndex}`);
+  if (!sel?.value) { setStatus('SELECT A LORA FIRST','warn'); setTimeout(()=>setStatus('Void.gen'),1500); return; }
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/*';
+  input.onchange = async () => {
+    const file = input.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async e => {
+      await loraThumbSave(sel.value, e.target.result);
+      const thumbEl = document.getElementById(`lora-thumb-${slotIndex}`);
+      if (thumbEl) { thumbEl.innerHTML = `<img src="${e.target.result}">`; thumbEl.title = 'Click to change thumbnail'; }
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+async function loraThumbRefreshSlot(i) {
+  const sel = document.getElementById(`lora-sel-${i}`);
+  const thumbEl = document.getElementById(`lora-thumb-${i}`);
+  if (!sel || !thumbEl) return;
+  if (!sel.value) { thumbEl.innerHTML = ''; thumbEl.style.background = ''; return; }
+  const dataUrl = await loraThumbGet(sel.value);
+  if (dataUrl) {
+    thumbEl.innerHTML = `<img src="${dataUrl}">`;
+    thumbEl.style.background = '';
+    thumbEl.title = 'Click to change thumbnail';
+  } else {
+    thumbEl.innerHTML = '';
+    const hue = [...sel.value].reduce((h,c) => (h*31 + c.charCodeAt(0)) & 0xffff, 0) % 360;
+    thumbEl.style.background = `hsl(${hue},40%,22%)`;
+    thumbEl.title = 'Click to upload thumbnail';
+  }
+}
+async function loadLoraThumbsForSlots() {
+  for (let i = 0; i < 6; i++) await loraThumbRefreshSlot(i);
+}
+
+// ── PROMPT ENHANCE PANEL ──────────────────────────────────────────
+const ENHANCE_GROUPS = [
+  { label:'QUALITY',     chips:['masterpiece','best quality','ultra-detailed','8k','sharp focus','intricate details','RAW photo'] },
+  { label:'LIGHTING',    chips:['golden hour','dramatic lighting','rim light','studio lighting','cinematic lighting','soft diffused light','neon lights'] },
+  { label:'STYLE',       chips:['anime style','oil painting','watercolor','concept art','digital art','photorealistic','film noir'] },
+  { label:'COMPOSITION', chips:['dynamic pose','wide angle shot','close-up','aerial view','bokeh','depth of field','symmetrical composition'] },
+  { label:'MOOD',        chips:['ethereal','mysterious','epic','serene','vibrant','melancholic','dreamlike'] },
+];
+function openEnhancePanel() {
+  const panel = document.getElementById('enhance-panel');
+  const overlay = document.getElementById('enhance-overlay');
+  const inner = document.getElementById('enhance-inner');
+  if (!panel || !inner) return;
+  inner.innerHTML = ENHANCE_GROUPS.map(g =>
+    `<div class="enhance-group"><div class="enhance-group-label">${g.label}</div><div class="enhance-chips">` +
+    g.chips.map(c => `<span class="enhance-chip" onclick="insertEnhanceChip(${JSON.stringify(c)})">+ ${c}</span>`).join('') +
+    `</div></div>`
+  ).join('');
+  const ta = document.getElementById('te-prompt');
+  if (ta) {
+    const rect = ta.getBoundingClientRect();
+    const pw = 290;
+    let left = Math.min(rect.left, window.innerWidth - pw - 8);
+    panel.style.left = Math.max(4, left) + 'px';
+    panel.style.top  = (rect.bottom + 6) + 'px';
+  }
+  panel.style.display = 'block';
+  if (overlay) overlay.style.display = 'block';
+}
+function closeEnhancePanel() {
+  const panel = document.getElementById('enhance-panel');
+  const overlay = document.getElementById('enhance-overlay');
+  if (panel)   panel.style.display   = 'none';
+  if (overlay) overlay.style.display = 'none';
+}
+function insertEnhanceChip(text) {
+  insertSnippet(text);
+  // close only if user holds shift; otherwise keep open for multi-pick
+}
+
+
 document.addEventListener('input',  saveSettings, { passive: true });
 document.addEventListener('change', saveSettings, { passive: true });
 
-// dismiss context menu & history dropdown on outside click
+// dismiss context menu & history dropdown & theme panel on outside click
 document.addEventListener('click', e => {
   if (!document.getElementById('ctx-menu').contains(e.target)) hideCtxMenu();
   const drop = document.getElementById('prompt-hist-drop');
   if (drop && !drop.contains(e.target) && e.target.id !== 'hist-btn')
     drop.style.display = 'none';
+  const tp = document.getElementById('theme-panel');
+  const tb = document.getElementById('theme-btn');
+  if (tp && tp.classList.contains('open') && !tp.contains(e.target) && e.target !== tb)
+    tp.classList.remove('open');
 });
 document.addEventListener('contextmenu', e => {
   if (!e.target.closest('.gallery-card')) hideCtxMenu();
