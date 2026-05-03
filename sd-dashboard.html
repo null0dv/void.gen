@@ -40,7 +40,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13
 .main{flex:1;display:flex;overflow:hidden}
 
 /* SIDEBAR */
-.sidebar{width:300px;border-right:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0}
+.sidebar{width:300px;border-right:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
 .sidebar-scroll{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
 .ss{border-bottom:1px solid var(--line);padding:11px 15px}
 .sec-label{font-size:9px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
@@ -142,7 +142,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13
 .pipeline-inner{padding:10px;border-top:1px solid var(--line2);background:var(--bg)}
 
 /* GENERATE */
-.gen-wrap{padding:11px 15px;background:var(--bg);border-top:1px solid var(--line);position:sticky;bottom:0;z-index:5}
+.gen-wrap{padding:11px 15px;background:var(--bg);border-top:1px solid var(--line);flex-shrink:0}
 .gen-btn{width:100%;padding:12px;background:var(--text);color:var(--bg);border:none;border-radius:6px;font-family:var(--sans);font-weight:700;font-size:13px;letter-spacing:.12em;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px}
 .gen-btn:hover{background:var(--accent2)}
 .gen-btn:active{transform:scale(.98)}
@@ -867,15 +867,15 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
         </div>
       </div>
 
-      <div class="gen-wrap">
-        <button class="gen-btn" id="gen-btn" onclick="startGenerate()">
-          <div class="spinner"></div>
-          <span id="gen-label">GENERATE</span>
-        </button>
-        <button class="stop-btn" id="stop-btn" onclick="stopGenerate()">■ STOP</button>
-      </div>
-
     </div><!-- /sidebar-scroll -->
+
+    <div class="gen-wrap">
+      <button class="gen-btn" id="gen-btn" onclick="startGenerate()">
+        <div class="spinner"></div>
+        <span id="gen-label">GENERATE</span>
+      </button>
+      <button class="stop-btn" id="stop-btn" onclick="stopGenerate()">■ STOP</button>
+    </div>
   </div><!-- /sidebar -->
   <button class="sidebar-toggle-btn" id="sidebar-toggle-btn" onclick="toggleSidebar()" title="Hide/show sidebar">◀</button>
   <div class="resize-handle" id="rh-left" onmousedown="startResize(event,'left')"></div>
