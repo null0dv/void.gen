@@ -77,7 +77,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13
 .add-task-btn:hover{color:var(--text);border-color:var(--muted)}
 
 /* PROMPT */
-.prompt-area{width:100%;background:var(--bg2);border:1px solid var(--line2);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:12px;line-height:1.7;padding:9px 11px;resize:vertical;outline:none;transition:border-color .15s;min-height:76px}
+.prompt-area{width:100%;background:var(--bg2);border:1px solid var(--line2);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:12px;line-height:1.7;padding:9px 11px;resize:none;overflow:hidden;outline:none;transition:border-color .15s;min-height:76px;box-sizing:border-box}
 .prompt-area:focus{border-color:var(--muted)}
 .prompt-area::placeholder{color:var(--muted2)}
 .neg-area{min-height:48px;margin-top:6px}
@@ -1494,6 +1494,10 @@ function renderTaskTabs() {
       <span class="ttd" onclick="event.stopPropagation();deleteTask(${i})">×</span>
     </div>`).join('');
 }
+function _autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
 function renderTaskEditor() {
   const wrap = document.getElementById('task-editor');
   if (activeTask < 0 || !tasks.length) {
@@ -1516,8 +1520,8 @@ function renderTaskEditor() {
     <input style="width:100%;background:var(--bg2);color:var(--text);border:1px solid var(--line2);border-radius:5px;padding:5px 8px;font-size:10px;font-family:var(--mono);outline:none;margin-bottom:6px"
       type="text" id="te-title" value="${escHtml(t.title)}" placeholder="Task name…"
       oninput="tasks[${idx}].title=this.value;renderTaskTabs()">
-    <textarea class="prompt-area" id="te-prompt" rows="5" placeholder="describe your vision…"
-      oninput="tasks[${idx}].prompt=this.value;updateTokenCount()">${escHtml(t.prompt)}</textarea>
+    <textarea class="prompt-area" id="te-prompt" rows="3" placeholder="describe your vision…"
+      oninput="tasks[${idx}].prompt=this.value;updateTokenCount();_autoResize(this)">${escHtml(t.prompt)}</textarea>
     <div id="token-bar-wrap">
       <div id="token-bar-track">
         <div id="token-bar-fill"></div>
@@ -1527,7 +1531,7 @@ function renderTaskEditor() {
       <span id="token-bar-label">0t</span>
     </div>
     <textarea class="prompt-area neg-area" id="te-neg" rows="2" placeholder="negative…"
-      oninput="tasks[${idx}].negative=this.value;updateNegTokenCount()">${escHtml(t.negative)}</textarea>
+      oninput="tasks[${idx}].negative=this.value;updateNegTokenCount();_autoResize(this)">${escHtml(t.negative)}</textarea>
     <div id="neg-token-bar-wrap">
       <div id="neg-token-bar-track">
         <div id="neg-token-bar-fill"></div>
@@ -1542,6 +1546,12 @@ function renderTaskEditor() {
   bindTagChips(wrap);
   updateTokenCount();
   updateNegTokenCount();
+  requestAnimationFrame(() => {
+    const p = document.getElementById('te-prompt');
+    const n = document.getElementById('te-neg');
+    if (p) _autoResize(p);
+    if (n) _autoResize(n);
+  });
 }
 function renderTagGroups() {
   const groups = [
@@ -1561,6 +1571,7 @@ function bindTagChips(wrap) {
       if (!el) return;
       el.value = el.value.trim() ? el.value.trim()+', '+chip.dataset.tag : chip.dataset.tag;
       tasks[activeTask].prompt = el.value;
+      _autoResize(el);
     });
   });
 }
