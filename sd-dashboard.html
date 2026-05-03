@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Void.gen">
 <link rel="apple-touch-icon" href="icon-192.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap');
 :root {
@@ -264,6 +265,19 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13
 ::-webkit-scrollbar-thumb{background:var(--line2);border-radius:2px}
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
+
+/* NEG TOKEN BAR */
+#neg-token-bar-wrap{display:flex;align-items:center;gap:6px;margin-top:3px;margin-bottom:4px}
+#neg-token-bar-track{flex:1;height:2px;background:var(--line2);border-radius:2px;position:relative}
+#neg-token-bar-fill{position:absolute;top:0;left:0;bottom:0;width:0%;border-radius:2px;transition:width .15s,background .2s}
+#neg-token-bar-label{font-size:9px;color:var(--muted2);white-space:nowrap;min-width:40px;text-align:right;font-family:var(--mono);letter-spacing:.04em}
+
+/* GALLERY SELECT MODE */
+.gallery-card.selected{border-color:var(--text)!important;box-shadow:0 0 0 1px var(--text)}
+.card-check{position:absolute;top:6px;left:7px;width:18px;height:18px;background:var(--text);color:var(--bg);border-radius:50%;font-size:11px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;pointer-events:none;font-family:var(--mono);line-height:1;z-index:2}
+.gallery-card.selected .card-check{opacity:1}
+.gallery-select-mode .gallery-card{cursor:pointer}
+.gallery-select-mode .gallery-card:not(.selected):hover{border-color:var(--muted2)}
 </style>
 </head>
 <body>
@@ -313,7 +327,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
       <div class="ss" id="img2txt-section" style="display:none">
         <div class="sec-label" style="margin-bottom:6px">
           SOURCE IMAGE
-          <span style="font-size:8px;color:var(--muted2);letter-spacing:.06em">WD Tagger v3</span>
+          <span style="font-size:8px;color:var(--muted2);letter-spacing:.06em">WD14 LOCAL</span>
         </div>
         <div class="img-upload vis" id="img2txt-upload" onclick="triggerUpload2txt()"
           ondragover="event.preventDefault();this.style.borderColor='var(--muted)'"
@@ -580,10 +594,19 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 
   <!-- CENTER -->
   <div class="center">
-    <div class="center-tabs">
-      <div class="center-tab active" onclick="switchCenterTab('gallery',this)">GALLERY</div>
-      <div class="center-tab" onclick="switchCenterTab('queue',this)">QUEUE
-        <span id="queue-count" style="display:none;background:var(--bg3);border-radius:3px;padding:1px 5px;font-size:9px;margin-left:4px">0</span>
+    <div class="center-tabs" style="justify-content:space-between">
+      <div style="display:flex">
+        <div class="center-tab active" onclick="switchCenterTab('gallery',this)">GALLERY</div>
+        <div class="center-tab" onclick="switchCenterTab('queue',this)">QUEUE
+          <span id="queue-count" style="display:none;background:var(--bg3);border-radius:3px;padding:1px 5px;font-size:9px;margin-left:4px">0</span>
+        </div>
+      </div>
+      <div id="gallery-toolbar" style="display:flex;align-items:center;gap:4px;padding:0 8px">
+        <span style="font-size:8px;color:var(--muted2);letter-spacing:.1em">SORT</span>
+        <button class="tb-btn" onclick="sortGallery('time')" title="Sort by time">TIME</button>
+        <button class="tb-btn" onclick="sortGallery('model')" title="Sort by model">MODEL</button>
+        <button class="tb-btn" id="select-mode-btn" onclick="toggleSelectMode()">SELECT</button>
+        <button class="tb-btn" id="zip-btn" onclick="downloadZip()" style="display:none;color:var(--text);border-color:var(--muted)">ZIP</button>
       </div>
     </div>
     <div id="gallery-view">
@@ -720,12 +743,13 @@ async function loadSavedGallery() {
   try {
     const imgs = await dbLoadAll();
     imgs.sort((a,b) => a.ts - b.ts);
-    imgs.forEach(img => addToGallery(img.dataUrl, img.title, img.meta || {}, img.id));
+    imgs.forEach(img => addToGallery(img.dataUrl, img.title, {...(img.meta||{}), ts: img.ts}, img.id));
   } catch(e) { console.warn('Gallery restore failed', e); }
 }
 async function saveAndAddToGallery(dataUrl, title, meta) {
+  const ts = Date.now();
   const dbId = await dbSave(dataUrl, title, meta).catch(() => null);
-  addToGallery(dataUrl, title, meta, dbId);
+  addToGallery(dataUrl, title, {...meta, ts}, dbId);
 }
 
 // ── SETTINGS PERSISTENCE ──────────────────────────────────────────
@@ -809,6 +833,10 @@ function restoreImmediateSettings() {
   activeTask = 0;
   renderTaskTabs(); renderTaskEditor(); renderQueue();
   restoreImmediateSettings();
+  const sw = localStorage.getItem('void-panel-left');
+  const rw = localStorage.getItem('void-panel-right');
+  if (sw) document.querySelector('.sidebar').style.width = sw;
+  if (rw) document.querySelector('.right-panel').style.width = rw;
   loadSavedGallery();
   checkApi();
   setInterval(checkApiSilent, 9000);
@@ -1026,10 +1054,17 @@ function renderTaskEditor() {
       <span id="token-bar-label">0t</span>
     </div>
     <textarea class="prompt-area neg-area" id="te-neg" rows="2" placeholder="negative…"
-      oninput="tasks[${idx}].negative=this.value">${escHtml(t.negative)}</textarea>
+      oninput="tasks[${idx}].negative=this.value;updateNegTokenCount()">${escHtml(t.negative)}</textarea>
+    <div id="neg-token-bar-wrap">
+      <div id="neg-token-bar-track">
+        <div id="neg-token-bar-fill"></div>
+      </div>
+      <span id="neg-token-bar-label">0t</span>
+    </div>
     <div class="tag-section">${renderTagGroups()}</div>`;
   bindTagChips(wrap);
   updateTokenCount();
+  updateNegTokenCount();
 }
 function renderTagGroups() {
   const groups = [
@@ -1081,6 +1116,18 @@ function updateTokenCount() {
     fill.style.background = 'var(--yellow)'; lbl.style.color = 'var(--yellow)';
     lbl.textContent = `${n}t · ${Math.ceil(n/75)}ch`;
   }
+}
+
+function updateNegTokenCount() {
+  const ta   = document.getElementById('te-neg');
+  const fill = document.getElementById('neg-token-bar-fill');
+  const lbl  = document.getElementById('neg-token-bar-label');
+  if (!ta || !fill || !lbl) return;
+  const n = countClipTokens(ta.value);
+  fill.style.width = Math.min((n / 75) * 100, 100) + '%';
+  fill.style.background = n > 75 ? 'var(--red)' : n > 50 ? 'var(--yellow)' : 'var(--muted2)';
+  lbl.style.color = n > 75 ? 'var(--red)' : 'var(--muted2)';
+  lbl.textContent = n ? `${n}t` : '0t';
 }
 
 // ── LORA ──────────────────────────────────────────────────────────
@@ -1155,57 +1202,64 @@ async function runInterrogate() {
   const outWrap = document.getElementById('tagger-output-wrap');
   btn.textContent = 'ANALYZING…'; btn.disabled = true;
   outWrap.style.display = 'none';
-  setStatus('SENDING TO WD TAGGER…');
+  setStatus('RUNNING WD14 TAGGER…');
 
   try {
     const genThreshold  = parseFloat(document.getElementById('tagger-threshold').value)      || 0.30;
     const charThreshold = parseFloat(document.getElementById('tagger-char-threshold').value) || 0.75;
-    const dataUrl = 'data:image/png;base64,' + img2txtBase64;
 
-    // Step 1: submit to SmilingWolf WD Tagger v3 (EVA02-large)
-    const submitResp = await fetch('https://smilingwolf-wd-tagger.hf.space/call/predict', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        data: [
-          { url: dataUrl },
-          'SmilingWolf/wd-eva02-large-tagger-v3',
-          genThreshold,
-          false,
-          charThreshold,
-          false
-        ]
-      }),
-      signal: AbortSignal.timeout(30000)
+    // Use local ComfyUI WD14-Tagger node (ETN_LoadImageBase64 → WD14Tagger|pysssss)
+    const workflow = {
+      "1": { class_type: "ETN_LoadImageBase64", inputs: { image: img2txtBase64 } },
+      "2": { class_type: "WD14Tagger|pysssss", inputs: {
+        image: ["1", 0],
+        model: "wd-v1-4-moat-tagger-v2",
+        threshold: genThreshold,
+        character_threshold: charThreshold,
+        replace_underscore: false,
+        trailing_comma: false,
+        exclude_tags: ""
+      }}
+    };
+
+    const clientId = crypto.randomUUID();
+    const ws = new WebSocket(`ws://127.0.0.1:8188/ws?clientId=${clientId}`);
+    await new Promise((res, rej) => {
+      ws.onopen = res;
+      ws.onerror = () => rej(new Error('ComfyUI offline — start ComfyUI first'));
+      setTimeout(() => rej(new Error('Connection timeout — is ComfyUI running?')), 5000);
     });
-    if (!submitResp.ok) throw new Error(`API ${submitResp.status}`);
-    const { event_id } = await submitResp.json();
 
-    // Step 2: read SSE result stream
-    setStatus('ANALYZING WITH WD TAGGER v3…');
-    const sseResp = await fetch(
-      `https://smilingwolf-wd-tagger.hf.space/call/predict/${event_id}`,
-      { signal: AbortSignal.timeout(60000) }
-    );
-    if (!sseResp.ok) throw new Error(`SSE ${sseResp.status}`);
-    const sseText = await sseResp.text();
+    const r = await fetch(`${COMFY_API}/prompt`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: workflow, client_id: clientId })
+    });
+    if (!r.ok) { ws.close(); throw new Error(`Prompt submit failed: HTTP ${r.status}`); }
+    const { prompt_id } = await r.json();
 
-    // Parse SSE: pick the longest comma-separated string (= combined tag output)
-    let tags = '';
-    for (const line of sseText.split('\n')) {
-      if (!line.startsWith('data:')) continue;
-      try {
-        const parsed = JSON.parse(line.slice(5).trim());
-        if (!Array.isArray(parsed)) continue;
-        for (const item of parsed) {
-          if (typeof item === 'string' && item.includes(',') && item.length > tags.length)
-            tags = item;
-        }
-      } catch {}
-    }
+    const tags = await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => { ws.close(); reject(new Error('Tagger timeout (60s)')); }, 60000);
+      ws.onmessage = (event) => {
+        if (event.data instanceof Blob) return;
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'executed' && msg.data.prompt_id === prompt_id) {
+            const t = msg.data.output?.tags;
+            if (t && t.length) {
+              clearTimeout(timeout); ws.close();
+              resolve(Array.isArray(t) ? t[0] : t);
+            }
+          }
+          if (msg.type === 'execution_error' && msg.data.prompt_id === prompt_id) {
+            clearTimeout(timeout); ws.close();
+            reject(new Error(msg.data.exception_message || 'WD14 execution error'));
+          }
+        } catch {}
+      };
+      ws.onerror = () => { clearTimeout(timeout); reject(new Error('WebSocket disconnected')); };
+    });
 
     if (!tags) throw new Error('No tags returned — try lowering thresholds');
-
     outEl.textContent = tags;
     outWrap.style.display = 'block';
     setStatus('TAGS EXTRACTED — PRESS SEND TO FILL PROMPT', 'ok');
@@ -1326,8 +1380,11 @@ function addToGallery(dataUrl, title, meta={}, dbId=null) {
   const card = document.createElement('div');
   card.className = 'gallery-card';
   if (dbId !== null) card.dataset.dbId = dbId;
+  card.dataset.ts    = meta.ts    || Date.now();
+  card.dataset.model = (meta.model || '').replace(/\.(safetensors|ckpt|pt)$/i,'');
   const safeUrl = dataUrl.replace(/'/g,'%27');
   card.innerHTML = `
+    <div class="card-check">✓</div>
     <img src="${dataUrl}" loading="lazy">
     <div class="card-overlay"><div class="card-prompt">${escHtml((meta.prompt||title).slice(0,80))}</div></div>
     <div class="card-actions">
@@ -1336,7 +1393,17 @@ function addToGallery(dataUrl, title, meta={}, dbId=null) {
       <div class="card-action-btn" title="Delete" onclick="event.stopPropagation();deleteFromGallery(this.closest('.gallery-card'))">×</div>
     </div>`;
   card.querySelector('img').onclick = null;
-  card.onclick = () => openModal(dataUrl, title, meta);
+  card.onclick = () => {
+    if (gallerySelectMode) {
+      card.classList.toggle('selected');
+      const n = document.getElementById('gallery-grid').querySelectorAll('.selected').length;
+      const zipBtn = document.getElementById('zip-btn');
+      zipBtn.style.display = n > 0 ? 'inline-block' : 'none';
+      if (n > 0) zipBtn.textContent = `ZIP (${n})`;
+    } else {
+      openModal(dataUrl, title, meta);
+    }
+  };
   card.oncontextmenu = e => showCtxMenu(e, dataUrl, title, meta);
   grid.prepend(card);
 }
@@ -1435,10 +1502,13 @@ function copyPrompt() {
 }
 
 // ── PROMPT CLEAR / TAGGER ACTIONS ────────────────────────────────
+let _promptUndoStack = [];
 function clearPrompt(idx) {
-  tasks[idx].prompt = '';
   const ta = document.getElementById('te-prompt');
-  if (ta) ta.value = '';
+  const prev = ta ? ta.value : (tasks[idx]?.prompt || '');
+  if (prev.trim()) _promptUndoStack.push({ idx, text: prev });
+  tasks[idx].prompt = '';
+  if (ta) { ta.value = ''; updateTokenCount(); }
 }
 function sendTaggerToPrompt() {
   const text = document.getElementById('tagger-output').textContent;
@@ -1570,7 +1640,10 @@ function _doResize(e) {
   _rs.el.style.width = newW + 'px';
 }
 function _stopResize() {
-  if (_rs) document.getElementById('rh-' + _rs.side).classList.remove('active');
+  if (_rs) {
+    document.getElementById('rh-' + _rs.side).classList.remove('active');
+    localStorage.setItem('void-panel-' + _rs.side, _rs.el.style.width);
+  }
   _rs = null;
   document.removeEventListener('mousemove', _doResize);
   document.removeEventListener('mouseup', _stopResize);
@@ -1800,6 +1873,13 @@ async function startGenerate() {
   document.getElementById('stop-btn').style.display = 'none';
   document.getElementById('progress-wrap').style.display = 'none';
   document.getElementById('preview-loading').style.display = 'none';
+  if (!stopRequested && ok > 0 && !seedLocked) {
+    seedLocked = true;
+    const lbtn = document.getElementById('seed-lock-btn');
+    lbtn.textContent = '🔒'; lbtn.classList.add('locked');
+    document.getElementById('seed-status').textContent = 'AUTO-LOCKED';
+    saveSettings();
+  }
   if (!stopRequested) {
     if (fail > 0 && ok === 0) {
       setStatus(`FAILED · ${lastErr}`, 'error');
@@ -1810,6 +1890,58 @@ async function startGenerate() {
   }
 }
 
+// ── GALLERY SORT / SELECT / ZIP ───────────────────────────────────
+let gallerySelectMode = false;
+
+function sortGallery(by) {
+  const grid = document.getElementById('gallery-grid');
+  const cards = [...grid.children];
+  cards.sort((a, b) => {
+    if (by === 'time')  return parseInt(b.dataset.ts||0) - parseInt(a.dataset.ts||0);
+    if (by === 'model') return (a.dataset.model||'').localeCompare(b.dataset.model||'');
+    return 0;
+  });
+  cards.forEach(c => grid.appendChild(c));
+}
+
+function toggleSelectMode() {
+  gallerySelectMode = !gallerySelectMode;
+  const btn  = document.getElementById('select-mode-btn');
+  const grid = document.getElementById('gallery-grid');
+  btn.style.color       = gallerySelectMode ? 'var(--text)' : '';
+  btn.style.borderColor = gallerySelectMode ? 'var(--muted)' : '';
+  grid.classList.toggle('gallery-select-mode', gallerySelectMode);
+  if (!gallerySelectMode) {
+    grid.querySelectorAll('.gallery-card.selected').forEach(c => c.classList.remove('selected'));
+    document.getElementById('zip-btn').style.display = 'none';
+  }
+}
+
+async function downloadZip() {
+  const selected = [...document.querySelectorAll('.gallery-card.selected')];
+  if (!selected.length) return;
+  setStatus(`PACKING ${selected.length} IMAGES…`);
+  if (typeof JSZip !== 'undefined') {
+    const zip = new JSZip();
+    selected.forEach((card, i) => {
+      const img = card.querySelector('img');
+      if (!img || !img.src.startsWith('data:')) return;
+      zip.file(`void-gen-${String(i+1).padStart(3,'0')}.png`, img.src.split(',')[1], { base64: true });
+    });
+    const blob = await zip.generateAsync({ type:'blob' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = `void-gen-${Date.now()}.zip`; a.click();
+    URL.revokeObjectURL(a.href);
+  } else {
+    selected.forEach((card, i) => {
+      const img = card.querySelector('img');
+      if (img) downloadImg(img.src, `void-gen-${i+1}`);
+    });
+  }
+  setStatus(`DOWNLOADED ${selected.length} IMAGES`, 'ok');
+  setTimeout(() => setStatus('Void.gen'), 2000);
+}
+
 // ── PWA ───────────────────────────────────────────────────────────
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
@@ -1817,6 +1949,17 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').ca
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey||e.metaKey) && e.key==='Enter') startGenerate();
   if (e.key==='Escape') document.getElementById('modal-bg').classList.remove('open');
+  if ((e.ctrlKey||e.metaKey) && e.key==='z' && _promptUndoStack.length) {
+    const ta = document.getElementById('te-prompt');
+    if (document.activeElement === ta || !ta) {
+      if (ta && ta.value === '') {
+        e.preventDefault();
+        const { idx, text } = _promptUndoStack.pop();
+        tasks[idx].prompt = text;
+        if (activeTask === idx) { ta.value = text; updateTokenCount(); }
+      }
+    }
+  }
 });
 
 document.getElementById('sampler-select').addEventListener('change', () => {
