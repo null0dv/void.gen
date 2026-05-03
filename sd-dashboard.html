@@ -1202,64 +1202,35 @@ async function runInterrogate() {
   const outWrap = document.getElementById('tagger-output-wrap');
   btn.textContent = 'ANALYZING…'; btn.disabled = true;
   outWrap.style.display = 'none';
-  setStatus('RUNNING WD14 TAGGER…');
+  setStatus('UPLOADING TO WD14 TAGGER…');
 
   try {
-    const genThreshold  = parseFloat(document.getElementById('tagger-threshold').value)      || 0.30;
-    const charThreshold = parseFloat(document.getElementById('tagger-char-threshold').value) || 0.75;
+    // Step 1: upload base64 image to ComfyUI input folder
+    const raw = atob(img2txtBase64);
+    const buf = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) buf[i] = raw.charCodeAt(i);
+    const blob = new Blob([buf], { type: 'image/png' });
+    const form = new FormData();
+    form.append('image', blob, 'wd14_input.png');
+    form.append('type', 'input');
+    form.append('overwrite', 'true');
 
-    // Use local ComfyUI WD14-Tagger node (ETN_LoadImageBase64 → WD14Tagger|pysssss)
-    const workflow = {
-      "1": { class_type: "ETN_LoadImageBase64", inputs: { image: img2txtBase64 } },
-      "2": { class_type: "WD14Tagger|pysssss", inputs: {
-        image: ["1", 0],
-        model: "wd-v1-4-moat-tagger-v2",
-        threshold: genThreshold,
-        character_threshold: charThreshold,
-        replace_underscore: false,
-        trailing_comma: false,
-        exclude_tags: ""
-      }}
-    };
-
-    const clientId = crypto.randomUUID();
-    const ws = new WebSocket(`ws://127.0.0.1:8188/ws?clientId=${clientId}`);
-    await new Promise((res, rej) => {
-      ws.onopen = res;
-      ws.onerror = () => rej(new Error('ComfyUI offline — start ComfyUI first'));
-      setTimeout(() => rej(new Error('Connection timeout — is ComfyUI running?')), 5000);
+    const upResp = await fetch(`${COMFY_API}/upload/image`, {
+      method: 'POST', body: form, signal: AbortSignal.timeout(15000)
     });
+    if (!upResp.ok) throw new Error(`Upload failed: HTTP ${upResp.status}`);
+    const { name } = await upResp.json();
 
-    const r = await fetch(`${COMFY_API}/prompt`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: workflow, client_id: clientId })
-    });
-    if (!r.ok) { ws.close(); throw new Error(`Prompt submit failed: HTTP ${r.status}`); }
-    const { prompt_id } = await r.json();
+    // Step 2: call the WD14-Tagger REST endpoint (uses installed wd-v1-4-moat-tagger-v2)
+    setStatus('ANALYZING WITH WD14 TAGGER…');
+    const tagResp = await fetch(
+      `${COMFY_API}/pysssss/wd14tagger/tag?filename=${encodeURIComponent(name)}&type=input`,
+      { signal: AbortSignal.timeout(120000) }
+    );
+    if (!tagResp.ok) throw new Error(`Tagger HTTP ${tagResp.status}`);
+    const tags = await tagResp.json();
 
-    const tags = await new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => { ws.close(); reject(new Error('Tagger timeout (60s)')); }, 60000);
-      ws.onmessage = (event) => {
-        if (event.data instanceof Blob) return;
-        try {
-          const msg = JSON.parse(event.data);
-          if (msg.type === 'executed' && msg.data.prompt_id === prompt_id) {
-            const t = msg.data.output?.tags;
-            if (t && t.length) {
-              clearTimeout(timeout); ws.close();
-              resolve(Array.isArray(t) ? t[0] : t);
-            }
-          }
-          if (msg.type === 'execution_error' && msg.data.prompt_id === prompt_id) {
-            clearTimeout(timeout); ws.close();
-            reject(new Error(msg.data.exception_message || 'WD14 execution error'));
-          }
-        } catch {}
-      };
-      ws.onerror = () => { clearTimeout(timeout); reject(new Error('WebSocket disconnected')); };
-    });
-
-    if (!tags) throw new Error('No tags returned — try lowering thresholds');
+    if (!tags) throw new Error('No tags returned');
     outEl.textContent = tags;
     outWrap.style.display = 'block';
     setStatus('TAGS EXTRACTED — PRESS SEND TO FILL PROMPT', 'ok');
