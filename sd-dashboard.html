@@ -307,6 +307,105 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 /* CONTENT VISIBILITY for large galleries */
 .gallery-card{content-visibility:auto;contain-intrinsic-size:0 185px}
 
+/* MOBILE DRAWER HANDLE */
+.mobile-drawer-handle{display:none;width:36px;height:4px;background:var(--line2);border-radius:2px;margin:10px auto 4px;flex-shrink:0}
+
+/* MOBILE NAV BAR */
+#mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--bg1);border-top:1px solid var(--line2);align-items:center;padding:0 10px;gap:6px;z-index:201}
+.mob-nav-btn{padding:0 12px;height:38px;background:var(--bg3);border:1px solid var(--line2);border-radius:7px;color:var(--muted);font-family:var(--mono);font-size:10px;letter-spacing:.07em;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s;white-space:nowrap;flex-shrink:0}
+.mob-nav-btn:active,.mob-nav-btn.active{color:var(--text);border-color:var(--muted);background:var(--bg2)}
+#mob-gen-btn{flex:1;background:var(--text);color:var(--bg);border:none;font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.1em;justify-content:center;height:42px;border-radius:7px;cursor:pointer;transition:all .15s}
+#mob-gen-btn:active{transform:scale(.97)}
+#mob-gen-btn.running{background:var(--bg3);color:var(--muted);border:1px solid var(--line2);cursor:not-allowed;transform:none}
+
+/* MOBILE BACKDROP */
+#mobile-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:199;backdrop-filter:blur(2px)}
+#mobile-backdrop.open{display:block}
+
+/* MOBILE PREVIEW OVERLAY */
+#mobile-preview-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:300;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px}
+#mob-preview-img{max-width:96vw;max-height:72vh;object-fit:contain;border-radius:6px}
+
+/* ── MOBILE RESPONSIVE ─────────────────────────────────────────── */
+@media (max-width:768px){
+  /* Hide desktop-only elements */
+  .resize-handle,.sidebar-toggle-btn,.right-panel,#sb-backend,#vram-badge{display:none!important}
+
+  /* Topbar: compact */
+  .topbar{padding:0 10px;gap:6px;height:48px}
+  .logo{font-size:13px}
+  .topbar-right{gap:3px}
+  .tb-btn{padding:3px 8px;font-size:9px}
+  #presets-btn{display:none}
+
+  /* Statusbar */
+  .statusbar{padding:0 10px;gap:10px}
+
+  /* Main layout */
+  .main{position:relative}
+
+  /* Sidebar → fixed bottom drawer */
+  .sidebar{
+    position:fixed!important;bottom:56px!important;left:0!important;right:0!important;
+    width:100%!important;max-height:82vh;
+    border-right:none!important;border-top:1px solid var(--line2);
+    border-radius:14px 14px 0 0;
+    z-index:200;
+    transform:translateY(108%);
+    transition:transform .28s cubic-bezier(.4,0,.2,1);
+    overflow:hidden
+  }
+  .sidebar.mobile-open{transform:translateY(0)}
+  .sidebar-scroll{max-height:calc(82vh - 100px)}
+  .mobile-drawer-handle{display:block}
+
+  /* Center: full width */
+  .center{flex:1;min-width:0;width:100%}
+
+  /* Gallery: 2 columns */
+  .gallery-grid{grid-template-columns:repeat(2,1fr)!important;gap:5px}
+  #gallery-view{padding:8px 8px 70px}
+  #queue-view{padding:8px 8px 70px}
+
+  /* Gallery search */
+  #gallery-search-wrap{padding:5px 8px;gap:4px}
+  #gallery-model-filter{width:72px;font-size:9px}
+
+  /* Gallery toolbar */
+  #gallery-toolbar{padding:0 6px;gap:3px}
+  #gallery-toolbar .tb-btn{padding:3px 6px;font-size:9px}
+  #gallery-toolbar>span{display:none}
+
+  /* Tabs */
+  .center-tab{padding:10px 14px;font-size:10px}
+
+  /* Touch: always show card actions */
+  .gallery-card:hover{transform:none}
+  .gallery-card .card-actions{opacity:1}
+  .card-action-btn{width:28px;height:28px;font-size:11px}
+  .card-overlay{opacity:1;background:linear-gradient(to top,rgba(0,0,0,.75) 0%,transparent 45%)}
+
+  /* Modal */
+  .modal{width:96vw;padding:16px;max-height:88vh}
+  .shortcuts-box{width:96vw;padding:16px}
+
+  /* Presets */
+  #presets-panel{right:4px;left:4px;top:50px;width:auto}
+
+  /* Progress: above mobile nav */
+  #progress-wrap{bottom:56px}
+
+  /* Slideshow */
+  #ss-img{max-width:98vw;max-height:75vh}
+  #ss-controls{bottom:12px}
+
+  /* Disable tooltip on touch */
+  #card-tooltip{display:none!important}
+
+  /* Show mobile nav */
+  #mobile-nav{display:flex!important}
+}
+
 /* DATE GROUP HEADERS */
 .date-group-hdr{grid-column:1/-1;font-size:9px;letter-spacing:.14em;color:var(--muted2);text-transform:uppercase;padding:8px 2px 4px;border-bottom:1px solid var(--line);margin-bottom:2px;pointer-events:none}
 
@@ -393,6 +492,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 
   <!-- SIDEBAR -->
   <div class="sidebar">
+    <div class="mobile-drawer-handle"></div>
     <div class="sidebar-scroll">
 
       <div class="ss">
@@ -775,7 +875,8 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 <div class="statusbar">
   <div class="sb-item" id="sb-main">Void.gen</div>
   <span id="vram-badge" title="GPU VRAM usage">VRAM —</span>
-  <div class="sb-item" style="margin-left:auto" id="sb-backend">ComfyUI · 127.0.0.1:8188</div>
+  <span id="sb-api-url" style="font-size:9px;color:var(--muted2);cursor:pointer;letter-spacing:.05em;margin-left:auto" onclick="changeApiUrl()" title="Click to change server URL">127.0.0.1:8188</span>
+  <div class="sb-item" id="sb-backend">ComfyUI · 127.0.0.1:8188</div>
 </div>
 
 <div class="modal-bg" id="modal-bg" onclick="closeModal(event)">
@@ -816,6 +917,27 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
   </div>
 </div>
 
+<!-- MOBILE NAV -->
+<div id="mobile-nav">
+  <button class="mob-nav-btn" id="mob-params-btn" onclick="toggleMobileDrawer()">⚙ PARAMS</button>
+  <button class="mob-nav-btn" id="mob-gen-btn" onclick="startGenerate()">GENERATE</button>
+  <button class="mob-nav-btn" id="mob-preview-btn" onclick="showMobilePreview()" title="Last image">◻ VIEW</button>
+</div>
+
+<!-- MOBILE BACKDROP -->
+<div id="mobile-backdrop" onclick="closeMobileDrawer()"></div>
+
+<!-- MOBILE PREVIEW OVERLAY -->
+<div id="mobile-preview-overlay">
+  <img id="mob-preview-img" src="" alt="">
+  <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+    <button class="mob-nav-btn" onclick="closeMobilePreview()">× CLOSE</button>
+    <button class="mob-nav-btn" onclick="saveLastImg()">↓ SAVE</button>
+    <button class="mob-nav-btn" onclick="sendToImg2Img();closeMobilePreview()">→ i2i</button>
+    <button class="mob-nav-btn" onclick="copyPrompt()">⎘ PROMPT</button>
+  </div>
+</div>
+
 <!-- SLIDESHOW OVERLAY -->
 <div id="slideshow-overlay" onclick="ssHandleClick(event)">
   <span id="ss-close" onclick="stopSlideshow()">×</span>
@@ -848,7 +970,22 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 </div>
 
 <script>
-const COMFY_API = 'http://127.0.0.1:8188';
+function _defaultComfyApi() {
+  const h = window.location.hostname;
+  if (!h || h === '127.0.0.1' || h === 'localhost') return 'http://127.0.0.1:8188';
+  return `http://${h}:8188`;
+}
+let COMFY_API = localStorage.getItem('void-comfy-api') || _defaultComfyApi();
+function changeApiUrl() {
+  const newUrl = prompt('ComfyUI server URL:', COMFY_API);
+  if (!newUrl || newUrl.trim() === COMFY_API) return;
+  COMFY_API = newUrl.trim().replace(/\/$/, '');
+  localStorage.setItem('void-comfy-api', COMFY_API);
+  const disp = COMFY_API.replace(/^https?:\/\//, '');
+  document.getElementById('sb-api-url').textContent = disp;
+  document.getElementById('sb-backend').textContent = 'ComfyUI · ' + disp;
+  checkApi();
+}
 
 let tasks = [], activeTask = -1;
 let currentMode = 'txt2img';
@@ -1002,6 +1139,10 @@ function restoreImmediateSettings() {
   const rw = localStorage.getItem('void-panel-right');
   if (sw) document.querySelector('.sidebar').style.width = sw;
   if (rw) document.querySelector('.right-panel').style.width = rw;
+  // update statusbar with current API url
+  const _apiDisp = COMFY_API.replace(/^https?:\/\//, '');
+  document.getElementById('sb-api-url').textContent = _apiDisp;
+  document.getElementById('sb-backend').textContent = 'ComfyUI · ' + _apiDisp;
   loadSavedGallery();
   checkApi();
   setInterval(checkApiSilent, 9000);
@@ -1623,6 +1764,8 @@ function switchCenterTab(tab, el) {
 // ── PREVIEW ───────────────────────────────────────────────────────
 function showPreviewFinal(dataUrl, meta={}) {
   lastResult = { dataUrl, meta };
+  const mobImg = document.getElementById('mob-preview-img');
+  if (mobImg) mobImg.src = dataUrl;
   const img = document.getElementById('preview-img');
   img.src = dataUrl; img.style.display = 'block';
   document.getElementById('preview-loading').style.display = 'none';
@@ -1934,7 +2077,8 @@ async function comfyuiGenerate(task) {
   let currentStage = 0, lastStepVal = -1;
 
   const clientId = crypto.randomUUID();
-  const ws = new WebSocket(`ws://127.0.0.1:8188/ws?clientId=${clientId}`);
+  const wsBase = COMFY_API.replace(/^http/, 'ws');
+  const ws = new WebSocket(`${wsBase}/ws?clientId=${clientId}`);
   await new Promise((res,rej) => {
     ws.onopen = res;
     ws.onerror = () => rej(new Error('WebSocket connection failed'));
@@ -2006,13 +2150,16 @@ function stopGenerate() {
   stopRequested = true;
   fetch(`${COMFY_API}/interrupt`, {method:'POST'}).catch(()=>{});
   setStatus('STOPPING…','warn');
+  _syncMobileGenBtn(false);
 }
 async function startGenerate() {
   if (isGenerating) return;
   if (!tasks.length) { setStatus('ADD A TASK FIRST','warn'); return; }
   if (!tasks.some(t => t.prompt.trim())) { setStatus('ADD A PROMPT','warn'); return; }
+  closeMobileDrawer();
   saveTasks();
   isGenerating = true; stopRequested = false;
+  _syncMobileGenBtn(true);
   const btn = document.getElementById('gen-btn');
   btn.classList.add('running');
   document.getElementById('gen-label').textContent = 'GENERATING';
@@ -2056,6 +2203,7 @@ async function startGenerate() {
     renderQueue();
   }
   isGenerating = false;
+  _syncMobileGenBtn(false);
   btn.classList.remove('running');
   document.getElementById('gen-label').textContent = 'GENERATE';
   document.getElementById('stop-btn').style.display = 'none';
@@ -2074,6 +2222,7 @@ async function startGenerate() {
     } else {
       setStatus(`DONE · ${ok} image${ok!==1?'s':''}${fail?' · '+fail+' failed':''}`, ok>0?'ok':'error');
       switchCenterTab('gallery', document.querySelectorAll('.center-tab')[0]);
+      if (window.innerWidth <= 768 && ok > 0 && lastResult) showMobilePreview();
     }
   }
 }
@@ -2243,6 +2392,44 @@ function togglePreviewFullscreen() {
   } else {
     document.exitFullscreen();
   }
+}
+
+// ── MOBILE UI ─────────────────────────────────────────────────────
+function toggleMobileDrawer() {
+  const sb = document.querySelector('.sidebar');
+  const bd = document.getElementById('mobile-backdrop');
+  const btn = document.getElementById('mob-params-btn');
+  const isOpen = sb.classList.contains('mobile-open');
+  sb.classList.toggle('mobile-open', !isOpen);
+  bd.classList.toggle('open', !isOpen);
+  if (btn) btn.classList.toggle('active', !isOpen);
+}
+function closeMobileDrawer() {
+  document.querySelector('.sidebar').classList.remove('mobile-open');
+  document.getElementById('mobile-backdrop').classList.remove('open');
+  const btn = document.getElementById('mob-params-btn');
+  if (btn) btn.classList.remove('active');
+}
+function showMobilePreview() {
+  if (!lastResult) { setStatus('GENERATE SOMETHING FIRST','warn'); return; }
+  const overlay = document.getElementById('mobile-preview-overlay');
+  const img = document.getElementById('mob-preview-img');
+  img.src = lastResult.dataUrl;
+  overlay.style.display = 'flex';
+  const btn = document.getElementById('mob-preview-btn');
+  if (btn) btn.classList.add('active');
+}
+function closeMobilePreview() {
+  document.getElementById('mobile-preview-overlay').style.display = 'none';
+  const btn = document.getElementById('mob-preview-btn');
+  if (btn) btn.classList.remove('active');
+}
+function _syncMobileGenBtn(running) {
+  const btn = document.getElementById('mob-gen-btn');
+  if (!btn) return;
+  btn.classList.toggle('running', running);
+  btn.disabled = running;
+  btn.textContent = running ? 'GENERATING…' : 'GENERATE';
 }
 
 // ── VRAM DISPLAY ──────────────────────────────────────────────────
@@ -2576,6 +2763,8 @@ document.addEventListener('keydown', e => {
     document.getElementById('shortcuts-overlay').classList.remove('open');
     document.getElementById('presets-panel').classList.remove('open');
     if (document.getElementById('slideshow-overlay').classList.contains('open')) stopSlideshow();
+    closeMobileDrawer();
+    closeMobilePreview();
   }
   if (document.getElementById('slideshow-overlay').classList.contains('open')) {
     if (e.key === 'ArrowLeft')  { e.preventDefault(); ssPrev(); }
