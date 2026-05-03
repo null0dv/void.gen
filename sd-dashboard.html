@@ -40,7 +40,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13
 .main{flex:1;display:flex;overflow:hidden;align-items:stretch}
 
 /* SIDEBAR */
-.sidebar{width:300px;border-right:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;position:relative;height:100%}
+.sidebar{width:300px;border-right:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;position:relative;height:calc(100vh - 54px - 24px)}
 .sidebar-scroll{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line2) transparent;padding-bottom:78px}
 .ss{border-bottom:1px solid var(--line);padding:11px 15px}
 .sec-label{font-size:9px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
