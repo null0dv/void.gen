@@ -1101,6 +1101,19 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 </div>
 
 <script>
+// ── STARTUP DEFAULTS (must be first — used by async functions) ────
+const DEFAULTS = {
+  model:   'novaAnimeXL_ilV180.safetensors',
+  refiner: 'JANKUTrainedChenkinNoobai_v777.safetensors',
+  baseSwitch: 80,
+  loras: [
+    { name: 'Hyper-SDXL-2steps-lora', strength: 0.70 },
+    { name: 'dmd2_sdxl_4step_lora',   strength: 0.70 },
+    { name: 'Nai_emul style',         strength: 0.70 },
+    { name: 'Stocking Meow_Nai V0',   strength: 0.70 },
+    { name: 'nai origen',             strength: 0.70 },
+  ]
+};
 const _LOCAL_API = 'http://127.0.0.1:8188';
 // Clear any stale LAN IP saved from phone testing
 (function(){ const s = localStorage.getItem('void-comfy-api'); if (s && s !== _LOCAL_API && !s.includes('localhost')) { localStorage.removeItem('void-comfy-api'); } })();
@@ -1333,19 +1346,6 @@ function setApiOnline(ok) {
   document.getElementById('sb-backend').className = 'sb-item ' + (ok ? 'ok' : 'error');
 }
 
-// ── STARTUP DEFAULTS ─────────────────────────────────────────────
-const DEFAULTS = {
-  model:   'novaAnimeXL_ilV180.safetensors',
-  refiner: 'JANKUTrainedChenkinNoobai_v777.safetensors',
-  baseSwitch: 80,
-  loras: [
-    { name: 'Hyper-SDXL-2steps-lora', strength: 0.70 },
-    { name: 'dmd2_sdxl_4step_lora',   strength: 0.70 },
-    { name: 'Nai_emul style',         strength: 0.70 },
-    { name: 'Stocking Meow_Nai V0',   strength: 0.70 },
-    { name: 'nai origen',             strength: 0.70 },
-  ]
-};
 function findOption(sel, name) {
   const n = name.toLowerCase();
   return [...sel.options].find(o => {
