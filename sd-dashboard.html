@@ -1374,7 +1374,7 @@ async function loadComfyModels() {
     saveSettings();
     updateModelBadge();
     pollVRAM();
-  } catch { sel.innerHTML = '<option value="">— connection failed —</option>'; }
+  } catch(e) { sel.innerHTML = `<option value="">— ${e?.message||'failed'} —</option>`; console.error('loadComfyModels',e); }
 }
 async function loadRefinerModels() {
   const sel = document.getElementById('refiner-select');
