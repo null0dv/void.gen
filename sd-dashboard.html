@@ -1674,12 +1674,13 @@ function renderLoraSlots() {
       ondragover="_loraDragOver(event,${i})"
       ondrop="_loraDrop(event,${i})"
       ondragend="_loraDragEnd()">
-      <div class="lora-thumb" id="lora-thumb-${i}" onclick="loraThumbUpload(${i})" title="Click to upload thumbnail"></div>
-      <select id="lora-sel-${i}" class="sel" style="font-size:10px;padding:5px 8px" onchange="loraThumbRefreshSlot(${i})">
+      <div class="lora-thumb" id="lora-thumb-${i}" onclick="loraThumbUpload(${i})" ondragstart="event.stopPropagation();event.preventDefault()" title="Click to upload thumbnail"></div>
+      <select id="lora-sel-${i}" class="sel" style="font-size:10px;padding:5px 8px" onchange="loraThumbRefreshSlot(${i})" ondragstart="event.stopPropagation()">
         <option value="">(none)</option>
         ${loraList.map(l=>`<option value="${l}">${l.replace(/\.(safetensors|ckpt|pt)$/i,'').slice(0,22)}</option>`).join('')}
       </select>
       <input type="range" class="slider" id="lora-sldr-${i}" min="0" max="2" step="0.1" value="0.7"
+        ondragstart="event.stopPropagation()"
         oninput="document.getElementById('lora-val-${i}').textContent=parseFloat(this.value).toFixed(1)">
       <span class="lora-val" id="lora-val-${i}">0.7</span>
     </div>`).join('');
@@ -3011,6 +3012,7 @@ function ssHandleClick(e) {
 // ── LORA DRAG-AND-DROP REORDER ─────────────────────────────────────
 let _loraDragSrc = null;
 function _loraStartDrag(e, i) {
+  if (e.target.closest('input, select')) { e.preventDefault(); return; }
   _loraDragSrc = i;
   e.dataTransfer.effectAllowed = 'move';
 }
