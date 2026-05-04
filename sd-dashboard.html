@@ -2346,8 +2346,31 @@ async function comfyuiGenerate(task) {
           const taskPct = (currentStage + stagePct) / stagesInTask;
           const globalPct = Math.round((_progressCompleted + taskPct) / _progressTotal * 100);
           document.getElementById('progress-fill').style.width = globalPct+'%';
-          document.getElementById('progress-label').textContent = globalPct+'%';
+          document.getElementById('progress-label').textContent = `${msg.data.value}/${msg.data.max} · ${globalPct}%`;
           document.getElementById('progress-wrap').style.display = 'flex';
+        }
+        if (msg.type==='execution_success' && msg.data.prompt_id===prompt_id) {
+          // Fallback: executed message might have been missed; poll history for images
+          setTimeout(async () => {
+            try {
+              const hr = await fetch(`${COMFY_API}/history/${prompt_id}`);
+              if (!hr.ok) return;
+              const hist = await hr.json();
+              const outputs = hist[prompt_id]?.outputs;
+              if (!outputs) return;
+              const images = Object.values(outputs).flatMap(o => o.images || []);
+              if (images.length) {
+                clearTimeout(timeout); clearLivePreview();
+                const dataUrls = await Promise.all(images.map(async img => {
+                  const url = `${COMFY_API}/view?filename=${encodeURIComponent(img.filename)}&subfolder=${encodeURIComponent(img.subfolder)}&type=${img.type}`;
+                  const resp = await fetch(url); if (!resp.ok) throw new Error(`/view ${resp.status}`);
+                  const blob = await resp.blob();
+                  return new Promise((res,rej) => { const rd=new FileReader(); rd.onload=()=>res(rd.result); rd.onerror=rej; rd.readAsDataURL(blob); });
+                }));
+                ws.close(); resolve({ dataUrls, seed, model: modelName });
+              }
+            } catch(_) {}
+          }, 300);
         }
         if (msg.type==='executed' && msg.data.prompt_id===prompt_id) {
           const images = msg.data.output?.images;
@@ -2424,14 +2447,14 @@ async function startGenerate() {
     try {
       const { dataUrls, seed, model } = await comfyuiGenerate(tasks[i]);
       const elapsed = ((Date.now()-t0)/1000).toFixed(1)+'s';
-      dataUrls.forEach((dataUrl, j) => {
+      await Promise.all(dataUrls.map(async (dataUrl, j) => {
         const title = tasks[i].title + (dataUrls.length>1 ? ` #${j+1}` : '');
         const meta = { prompt:tasks[i].prompt, negative:tasks[i].negative, seed, model,
           steps:document.getElementById('steps-num').value, cfg:document.getElementById('cfg-num').value,
           sampler:document.getElementById('sampler-select').value, time:elapsed };
-        saveAndAddToGallery(dataUrl, title, meta);
+        await saveAndAddToGallery(dataUrl, title, meta);
         showPreviewFinal(dataUrl, meta);
-      });
+      }));
       queueStatuses[i] = 'done'; ok += dataUrls.length;
       _progressCompleted++;
     } catch(e) {
