@@ -2374,19 +2374,23 @@ async function comfyuiGenerate(task) {
         }
         if (msg.type==='executed' && msg.data.prompt_id===prompt_id) {
           const images = msg.data.output?.images;
+          console.log('[void.gen] executed msg, node=', msg.data.node, 'images=', images);
           if (images?.length) {
             clearTimeout(timeout); clearLivePreview();
             try {
               const dataUrls = await Promise.all(images.map(async img => {
                 const url = `${COMFY_API}/view?filename=${encodeURIComponent(img.filename)}&subfolder=${encodeURIComponent(img.subfolder)}&type=${img.type}`;
+                console.log('[void.gen] fetching image from', url);
                 const resp = await fetch(url);
                 if (!resp.ok) throw new Error(`fetch /view ${resp.status}`);
                 const blob = await resp.blob();
                 return new Promise((res,rej) => { const rd=new FileReader(); rd.onload=()=>res(rd.result); rd.onerror=rej; rd.readAsDataURL(blob); });
               }));
+              console.log('[void.gen] all images fetched, resolving');
               ws.close();
               resolve({ dataUrls, seed, model: modelName });
             } catch(fetchErr) {
+              console.error('[void.gen] image fetch failed:', fetchErr);
               ws.close();
               reject(new Error('圖片讀取失敗: ' + fetchErr.message));
             }
@@ -2446,18 +2450,22 @@ async function startGenerate() {
     setStatus(`GENERATING ${i+1}/${tasks.length} · ${tasks[i].title}`);
     try {
       const { dataUrls, seed, model } = await comfyuiGenerate(tasks[i]);
+      console.log('[void.gen] comfyuiGenerate resolved, dataUrls.length=', dataUrls.length, 'seed=', seed);
       const elapsed = ((Date.now()-t0)/1000).toFixed(1)+'s';
       await Promise.all(dataUrls.map(async (dataUrl, j) => {
         const title = tasks[i].title + (dataUrls.length>1 ? ` #${j+1}` : '');
         const meta = { prompt:tasks[i].prompt, negative:tasks[i].negative, seed, model,
           steps:document.getElementById('steps-num').value, cfg:document.getElementById('cfg-num').value,
           sampler:document.getElementById('sampler-select').value, time:elapsed };
+        console.log('[void.gen] calling saveAndAddToGallery for', title, 'dataUrl starts:', dataUrl?.slice(0,30));
         await saveAndAddToGallery(dataUrl, title, meta);
+        console.log('[void.gen] saveAndAddToGallery done for', title);
         showPreviewFinal(dataUrl, meta);
       }));
       queueStatuses[i] = 'done'; ok += dataUrls.length;
       _progressCompleted++;
     } catch(e) {
+      console.error('[void.gen] generation error:', e);
       queueStatuses[i] = 'error'; fail++;
       _progressCompleted++;
       lastErr = e.message;
