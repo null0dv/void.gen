@@ -1138,6 +1138,16 @@ const ENHANCE_GROUPS = [
   { label:'COMPOSITION', chips:['dynamic pose','wide angle shot','close-up','aerial view','bokeh','depth of field','symmetrical composition'] },
   { label:'MOOD',        chips:['ethereal','mysterious','epic','serene','vibrant','melancholic','dreamlike'] },
 ];
+const _dateGroups = new Set();
+let _galleryBuffer   = [];
+let _galleryObserver = null;
+let _currentTheme    = localStorage.getItem('void-theme') || 'VOID';
+let _masonryMode     = false;
+let _activeAlbum     = '';
+let _activeTagFilter = '', _cardTagsCache = null;
+let _cardRatingsCache = null;
+let _favorites    = new Set(JSON.parse(localStorage.getItem('void-gen-favs') || '[]'));
+let _favFilterOn  = false;
 // Clear any stale LAN IP saved from phone testing
 (function(){ const s = localStorage.getItem('void-comfy-api'); if (s && s !== _LOCAL_API && !s.includes('localhost')) { localStorage.removeItem('void-comfy-api'); } })();
 let COMFY_API = _LOCAL_API;
@@ -2577,8 +2587,6 @@ async function downloadZip() {
 }
 
 // ── FAVORITES ────────────────────────────────────────────────────
-let _favorites = new Set(JSON.parse(localStorage.getItem('void-gen-favs') || '[]'));
-let _favFilterOn = false;
 function saveFavorites() {
   localStorage.setItem('void-gen-favs', JSON.stringify([..._favorites]));
 }
@@ -2890,7 +2898,6 @@ function deletePreset(i) {
 }
 
 // ── GALLERY DATE GROUPS ───────────────────────────────────────────
-const _dateGroups = new Set();
 function getDateLabel(ts) {
   const d = new Date(ts);
   const today = new Date();
@@ -2912,8 +2919,6 @@ function ensureDateGroup(label, grid, append) {
 }
 
 // ── GALLERY INFINITE SCROLL ───────────────────────────────────────
-let _galleryBuffer = [];
-let _galleryObserver = null;
 function setupGalleryObserver() {
   const sentinel = document.getElementById('gallery-sentinel');
   if (!sentinel) return;
@@ -3211,7 +3216,6 @@ async function deleteSelected() {
 }
 
 // ── THEME PRESETS ─────────────────────────────────────────────────
-let _currentTheme = localStorage.getItem('void-theme') || 'VOID';
 function applyTheme(name) {
   const t = THEMES[name]; if (!t) return;
   _currentTheme = name;
@@ -3236,7 +3240,6 @@ function renderThemeGrid() {
 }
 
 // ── MASONRY TOGGLE ────────────────────────────────────────────────
-let _masonryMode = false;
 function toggleMasonry() {
   _masonryMode = !_masonryMode;
   document.getElementById('gallery-grid').classList.toggle('masonry', _masonryMode);
@@ -3293,7 +3296,6 @@ function renderWorkflowTemplatesList() {
 }
 
 // ── ALBUMS ────────────────────────────────────────────────────────
-let _activeAlbum = '';
 function getAlbums() {
   try { return JSON.parse(localStorage.getItem(ALBUMS_KEY) || '[]'); } catch { return []; }
 }
@@ -3345,7 +3347,6 @@ function ctxAddToAlbum() {
 }
 
 // ── GALLERY TAGS ──────────────────────────────────────────────────
-let _activeTagFilter = '', _cardTagsCache = null;
 function getCardTags() {
   if (_cardTagsCache) return _cardTagsCache;
   try { _cardTagsCache = JSON.parse(localStorage.getItem(CARD_TAGS_KEY) || '{}'); } catch { _cardTagsCache = {}; }
@@ -3389,7 +3390,6 @@ function ctxAddTag() {
 }
 
 // ── STAR RATING ───────────────────────────────────────────────────
-let _cardRatingsCache = null;
 function getCardRatings() {
   if (_cardRatingsCache) return _cardRatingsCache;
   try { _cardRatingsCache = JSON.parse(localStorage.getItem(RATINGS_KEY) || '{}'); return _cardRatingsCache; } catch { return {}; }
