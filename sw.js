@@ -1,5 +1,5 @@
 // ── 版本號 ── 每次更新 sd-dashboard.html 就把這裡改一下（v1 → v2 → v3…）
-const CACHE = "sd-panel-v12";
+const CACHE = "sd-panel-v13";
 const PRECACHE = [
   "./sd-dashboard.html",
   "./manifest.json",
@@ -34,7 +34,7 @@ self.addEventListener("fetch", e => {
   if (e.request.destination === "document") {
     e.respondWith(
       fetch(e.request).then(resp => {
-        if (resp.ok) caches.open(CACHE).then(c => c.put(e.request, resp.clone()));
+        if (resp.ok) { const clone = resp.clone(); caches.open(CACHE).then(c => c.put(e.request, clone)); }
         return resp;
       }).catch(() => caches.match(e.request))
     );
@@ -46,7 +46,7 @@ self.addEventListener("fetch", e => {
     caches.match(e.request).then(hit => {
       if (hit) return hit;
       return fetch(e.request).then(resp => {
-        if (resp.ok) caches.open(CACHE).then(c => c.put(e.request, resp.clone()));
+        if (resp.ok) { const clone = resp.clone(); caches.open(CACHE).then(c => c.put(e.request, clone)); }
         return resp;
       });
     })

@@ -1115,6 +1115,7 @@ const DEFAULTS = {
   ]
 };
 const _LOCAL_API = 'http://127.0.0.1:8188';
+const GALLERY_PAGE = 40;
 // Clear any stale LAN IP saved from phone testing
 (function(){ const s = localStorage.getItem('void-comfy-api'); if (s && s !== _LOCAL_API && !s.includes('localhost')) { localStorage.removeItem('void-comfy-api'); } })();
 let COMFY_API = _LOCAL_API;
@@ -2863,8 +2864,6 @@ function ensureDateGroup(label, grid, append) {
 // ── GALLERY INFINITE SCROLL ───────────────────────────────────────
 let _galleryBuffer = [];
 let _galleryObserver = null;
-const GALLERY_PAGE = 40;
-
 function setupGalleryObserver() {
   const sentinel = document.getElementById('gallery-sentinel');
   if (!sentinel) return;
