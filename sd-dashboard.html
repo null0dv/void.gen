@@ -1116,6 +1116,28 @@ const DEFAULTS = {
 };
 const _LOCAL_API = 'http://127.0.0.1:8188';
 const GALLERY_PAGE = 40;
+const HIST_KEY      = 'void-gen-prompt-hist';
+const SNIPPETS_KEY  = 'void-gen-snippets';
+const PRESETS_KEY   = 'void-gen-presets';
+const WFT_KEY       = 'void-workflow-templates';
+const ALBUMS_KEY    = 'void-gen-albums';
+const CARD_TAGS_KEY = 'void-gen-card-tags';
+const RATINGS_KEY   = 'void-gen-card-ratings';
+const THEMES = {
+  VOID:  { '--accent2':'#c0c0c0', '--bg':'#080808', '--bg1':'#0f0f0f', '--bg2':'#141414', '--bg3':'#1a1a1a', '--line':'#222', '--line2':'#2e2e2e', '--text':'#e8e8e8', '--muted':'#555', '--muted2':'#3a3a3a' },
+  AMBER: { '--accent2':'#ffb347', '--bg':'#090807', '--bg1':'#110f0c', '--bg2':'#161310', '--bg3':'#1c1814', '--line':'#28221a', '--line2':'#362e24', '--text':'#f0e6d0', '--muted':'#6b5c47', '--muted2':'#3d3428' },
+  CYAN:  { '--accent2':'#5fd4d4', '--bg':'#070a0a', '--bg1':'#0c1010', '--bg2':'#101515', '--bg3':'#161c1c', '--line':'#1c2626', '--line2':'#263232', '--text':'#d0f0f0', '--muted':'#3d6666', '--muted2':'#2a3e3e' },
+  ROSE:  { '--accent2':'#e8888a', '--bg':'#0a0808', '--bg1':'#110c0c', '--bg2':'#161010', '--bg3':'#1c1414', '--line':'#281e1e', '--line2':'#362828', '--text':'#f0d8d8', '--muted':'#6b4a4a', '--muted2':'#3d2c2c' },
+  SAGE:  { '--accent2':'#88cc88', '--bg':'#080a08', '--bg1':'#0d100d', '--bg2':'#111511', '--bg3':'#161b16', '--line':'#1e261e', '--line2':'#283328', '--text':'#d0ecd0', '--muted':'#4a6a4a', '--muted2':'#2c3c2c' },
+  IRIS:  { '--accent2':'#9988ee', '--bg':'#08080b', '--bg1':'#0e0e13', '--bg2':'#131318', '--bg3':'#18181e', '--line':'#22222e', '--line2':'#2c2c3c', '--text':'#dcd8f0', '--muted':'#555575', '--muted2':'#38384e' },
+};
+const ENHANCE_GROUPS = [
+  { label:'QUALITY',     chips:['masterpiece','best quality','ultra-detailed','8k','sharp focus','intricate details','RAW photo'] },
+  { label:'LIGHTING',    chips:['golden hour','dramatic lighting','rim light','studio lighting','cinematic lighting','soft diffused light','neon lights'] },
+  { label:'STYLE',       chips:['anime style','oil painting','watercolor','concept art','digital art','photorealistic','film noir'] },
+  { label:'COMPOSITION', chips:['dynamic pose','wide angle shot','close-up','aerial view','bokeh','depth of field','symmetrical composition'] },
+  { label:'MOOD',        chips:['ethereal','mysterious','epic','serene','vibrant','melancholic','dreamlike'] },
+];
 // Clear any stale LAN IP saved from phone testing
 (function(){ const s = localStorage.getItem('void-comfy-api'); if (s && s !== _LOCAL_API && !s.includes('localhost')) { localStorage.removeItem('void-comfy-api'); } })();
 let COMFY_API = _LOCAL_API;
@@ -2126,7 +2148,6 @@ function restoreFromMeta(meta) {
 }
 
 // ── PROMPT HISTORY ────────────────────────────────────────────────
-const HIST_KEY = 'void-gen-prompt-hist';
 function getHistory() {
   try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); } catch { return []; }
 }
@@ -2750,7 +2771,6 @@ document.body.addEventListener('drop', e => {
 });
 
 // ── PROMPT SNIPPETS ───────────────────────────────────────────────
-const SNIPPETS_KEY = 'void-gen-snippets';
 function getSnippets() {
   try { return JSON.parse(localStorage.getItem(SNIPPETS_KEY) || '[]'); } catch { return []; }
 }
@@ -2786,7 +2806,6 @@ function renderSnippets() {
 }
 
 // ── SETTINGS PRESETS ──────────────────────────────────────────────
-const PRESETS_KEY = 'void-gen-presets';
 function getPresets() {
   try { return JSON.parse(localStorage.getItem(PRESETS_KEY) || '[]'); } catch { return []; }
 }
@@ -3153,14 +3172,6 @@ async function deleteSelected() {
 }
 
 // ── THEME PRESETS ─────────────────────────────────────────────────
-const THEMES = {
-  VOID:  { '--accent2':'#c0c0c0', '--bg':'#080808', '--bg1':'#0f0f0f', '--bg2':'#141414', '--bg3':'#1a1a1a', '--line':'#222', '--line2':'#2e2e2e', '--text':'#e8e8e8', '--muted':'#555', '--muted2':'#3a3a3a' },
-  AMBER: { '--accent2':'#ffb347', '--bg':'#090807', '--bg1':'#110f0c', '--bg2':'#161310', '--bg3':'#1c1814', '--line':'#28221a', '--line2':'#362e24', '--text':'#f0e6d0', '--muted':'#6b5c47', '--muted2':'#3d3428' },
-  CYAN:  { '--accent2':'#5fd4d4', '--bg':'#070a0a', '--bg1':'#0c1010', '--bg2':'#101515', '--bg3':'#161c1c', '--line':'#1c2626', '--line2':'#263232', '--text':'#d0f0f0', '--muted':'#3d6666', '--muted2':'#2a3e3e' },
-  ROSE:  { '--accent2':'#e8888a', '--bg':'#0a0808', '--bg1':'#110c0c', '--bg2':'#161010', '--bg3':'#1c1414', '--line':'#281e1e', '--line2':'#362828', '--text':'#f0d8d8', '--muted':'#6b4a4a', '--muted2':'#3d2c2c' },
-  SAGE:  { '--accent2':'#88cc88', '--bg':'#080a08', '--bg1':'#0d100d', '--bg2':'#111511', '--bg3':'#161b16', '--line':'#1e261e', '--line2':'#283328', '--text':'#d0ecd0', '--muted':'#4a6a4a', '--muted2':'#2c3c2c' },
-  IRIS:  { '--accent2':'#9988ee', '--bg':'#08080b', '--bg1':'#0e0e13', '--bg2':'#131318', '--bg3':'#18181e', '--line':'#22222e', '--line2':'#2c2c3c', '--text':'#dcd8f0', '--muted':'#555575', '--muted2':'#38384e' },
-};
 let _currentTheme = localStorage.getItem('void-theme') || 'VOID';
 function applyTheme(name) {
   const t = THEMES[name]; if (!t) return;
@@ -3197,7 +3208,6 @@ function toggleMasonry() {
 }
 
 // ── WORKFLOW TEMPLATES ────────────────────────────────────────────
-const WFT_KEY = 'void-workflow-templates';
 function getWorkflowTemplates() {
   try { return JSON.parse(localStorage.getItem(WFT_KEY) || '[]'); } catch { return []; }
 }
@@ -3244,7 +3254,6 @@ function renderWorkflowTemplatesList() {
 }
 
 // ── ALBUMS ────────────────────────────────────────────────────────
-const ALBUMS_KEY = 'void-gen-albums';
 let _activeAlbum = '';
 function getAlbums() {
   try { return JSON.parse(localStorage.getItem(ALBUMS_KEY) || '[]'); } catch { return []; }
@@ -3297,7 +3306,6 @@ function ctxAddToAlbum() {
 }
 
 // ── GALLERY TAGS ──────────────────────────────────────────────────
-const CARD_TAGS_KEY = 'void-gen-card-tags';
 let _activeTagFilter = '', _cardTagsCache = null;
 function getCardTags() {
   if (_cardTagsCache) return _cardTagsCache;
@@ -3342,7 +3350,6 @@ function ctxAddTag() {
 }
 
 // ── STAR RATING ───────────────────────────────────────────────────
-const RATINGS_KEY = 'void-gen-card-ratings';
 let _cardRatingsCache = null;
 function getCardRatings() {
   if (_cardRatingsCache) return _cardRatingsCache;
@@ -3427,13 +3434,6 @@ async function loadLoraThumbsForSlots() {
 }
 
 // ── PROMPT ENHANCE PANEL ──────────────────────────────────────────
-const ENHANCE_GROUPS = [
-  { label:'QUALITY',     chips:['masterpiece','best quality','ultra-detailed','8k','sharp focus','intricate details','RAW photo'] },
-  { label:'LIGHTING',    chips:['golden hour','dramatic lighting','rim light','studio lighting','cinematic lighting','soft diffused light','neon lights'] },
-  { label:'STYLE',       chips:['anime style','oil painting','watercolor','concept art','digital art','photorealistic','film noir'] },
-  { label:'COMPOSITION', chips:['dynamic pose','wide angle shot','close-up','aerial view','bokeh','depth of field','symmetrical composition'] },
-  { label:'MOOD',        chips:['ethereal','mysterious','epic','serene','vibrant','melancholic','dreamlike'] },
-];
 function openEnhancePanel() {
   const panel = document.getElementById('enhance-panel');
   const overlay = document.getElementById('enhance-overlay');
