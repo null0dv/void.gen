@@ -2053,7 +2053,7 @@ function sendToI2IFromGallery(dataUrl) {
 }
 function copyPrompt() {
   const p = tasks[activeTask]?.prompt || '';
-  if (p) navigator.clipboard.writeText(p).then(() => { setStatus('PROMPT COPIED','ok'); setTimeout(()=>setStatus('Void.gen'),1500); });
+  if (p) navigator.clipboard.writeText(p).then(() => { setStatus('PROMPT COPIED','ok'); setTimeout(()=>setStatus('Void.gen'),1500); }).catch(()=>{});
 }
 
 // ── PROMPT CLEAR / TAGGER ACTIONS ────────────────────────────────
@@ -2083,7 +2083,7 @@ function copyTaggerOutput() {
     const btn = document.getElementById('tagger-copy-btn');
     btn.textContent = 'COPIED';
     setTimeout(() => btn.textContent = 'COPY', 1500);
-  });
+  }).catch(()=>{});
 }
 
 // ── CONTEXT MENU ─────────────────────────────────────────────────
@@ -2645,7 +2645,7 @@ function ctxCopyPrompt() {
   navigator.clipboard.writeText(_ctxData.meta.prompt).then(() => {
     setStatus('PROMPT COPIED', 'ok');
     setTimeout(() => setStatus('Void.gen'), 1500);
-  });
+  }).catch(()=>{});
   hideCtxMenu();
 }
 
@@ -2925,37 +2925,40 @@ _tooltip.id = 'card-tooltip';
 document.body.appendChild(_tooltip);
 
 let _tooltipTimer = null;
-document.getElementById('gallery-view').addEventListener('mouseover', e => {
-  const card = e.target.closest('.gallery-card');
-  if (!card) return;
-  clearTimeout(_tooltipTimer);
-  _tooltipTimer = setTimeout(() => {
-    let meta = {};
-    try { meta = JSON.parse(card.dataset.metaJson || '{}'); } catch {}
-    const rows = [
-      meta.model && { k:'MODEL', v: meta.model.replace(/\.(safetensors|ckpt|pt)$/i,'') },
-      meta.seed !== undefined && { k:'SEED', v: meta.seed },
-      meta.steps && { k:'STEPS', v: meta.steps },
-      meta.cfg   && { k:'CFG',   v: meta.cfg   },
-      meta.sampler && { k:'SAMPLER', v: meta.sampler },
-      meta.time   && { k:'TIME',    v: meta.time  },
-    ].filter(Boolean);
-    if (!rows.length) return;
-    _tooltip.innerHTML = rows.map(r =>
-      `<div class="ct-row"><span class="ct-key">${r.k}</span><span class="ct-val" title="${escHtml(String(r.v))}">${escHtml(String(r.v))}</span></div>`
-    ).join('');
-    _tooltip.style.display = 'block';
-    const rect = card.getBoundingClientRect();
-    let x = rect.right + 8, y = rect.top;
-    if (x + 210 > window.innerWidth)  x = rect.left - 210;
-    if (y + 160 > window.innerHeight) y = window.innerHeight - 160;
-    _tooltip.style.left = x + 'px';
-    _tooltip.style.top  = y + 'px';
-  }, 400);
-});
-document.getElementById('gallery-view').addEventListener('mouseout', e => {
-  if (e.target.closest('.gallery-card')) { clearTimeout(_tooltipTimer); _tooltip.style.display = 'none'; }
-});
+const _gvEl = document.getElementById('gallery-view');
+if (_gvEl) {
+  _gvEl.addEventListener('mouseover', e => {
+    const card = e.target.closest('.gallery-card');
+    if (!card) return;
+    clearTimeout(_tooltipTimer);
+    _tooltipTimer = setTimeout(() => {
+      let meta = {};
+      try { meta = JSON.parse(card.dataset.metaJson || '{}'); } catch {}
+      const rows = [
+        meta.model && { k:'MODEL', v: meta.model.replace(/\.(safetensors|ckpt|pt)$/i,'') },
+        meta.seed !== undefined && { k:'SEED', v: meta.seed },
+        meta.steps && { k:'STEPS', v: meta.steps },
+        meta.cfg   && { k:'CFG',   v: meta.cfg   },
+        meta.sampler && { k:'SAMPLER', v: meta.sampler },
+        meta.time   && { k:'TIME',    v: meta.time  },
+      ].filter(Boolean);
+      if (!rows.length) return;
+      _tooltip.innerHTML = rows.map(r =>
+        `<div class="ct-row"><span class="ct-key">${r.k}</span><span class="ct-val" title="${escHtml(String(r.v))}">${escHtml(String(r.v))}</span></div>`
+      ).join('');
+      _tooltip.style.display = 'block';
+      const rect = card.getBoundingClientRect();
+      let x = rect.right + 8, y = rect.top;
+      if (x + 210 > window.innerWidth)  x = rect.left - 210;
+      if (y + 160 > window.innerHeight) y = window.innerHeight - 160;
+      _tooltip.style.left = x + 'px';
+      _tooltip.style.top  = y + 'px';
+    }, 400);
+  });
+  _gvEl.addEventListener('mouseout', e => {
+    if (e.target.closest('.gallery-card')) { clearTimeout(_tooltipTimer); _tooltip.style.display = 'none'; }
+  });
+}
 
 // ── GALLERY SLIDESHOW ─────────────────────────────────────────────
 let _ssCards = [], _ssIdx = 0, _ssPlaying = false, _ssTimer = null;
@@ -3078,7 +3081,7 @@ document.addEventListener('keydown', e => {
   }
 });
 
-document.getElementById('sampler-select').addEventListener('change', () => {
+document.getElementById('sampler-select')?.addEventListener('change', () => {
   document.getElementById('m-sampler').textContent = document.getElementById('sampler-select').value;
 });
 
@@ -3142,7 +3145,12 @@ function parseA1111Meta(str) {
   if (negIdx >= 0) {
     meta.prompt = str.slice(0, negIdx).trim();
     const afterNeg = str.slice(negIdx).replace(/^\nNegative prompt:\s*/i, '');
-    meta.negative = stepIdx >= 0 ? str.slice(negIdx).replace(/^\nNegative prompt:\s*/i,'').slice(0, str.slice(negIdx).indexOf('\nSteps:')).trim() : afterNeg.trim();
+    if (stepIdx >= 0) {
+      const stepsOffset = afterNeg.indexOf('\nSteps:');
+      meta.negative = (stepsOffset >= 0 ? afterNeg.slice(0, stepsOffset) : afterNeg).trim();
+    } else {
+      meta.negative = afterNeg.trim();
+    }
   } else if (stepIdx >= 0) {
     meta.prompt = str.slice(0, stepIdx).trim();
   } else {
