@@ -1,8 +1,7 @@
 // ── 版本號 ── 每次更新 sd-dashboard.html 就把這裡改一下（v1 → v2 → v3…）
-const CACHE = "sd-panel-v20";
+const CACHE = "sd-panel-v22";
 const PRECACHE = [
   "./sd-dashboard.html",
-  "./jszip.min.js",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png"
