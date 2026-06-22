@@ -2298,7 +2298,7 @@ function _addToGalleryInternal(thumbUrl, fullDataUrl, title, meta={}, dbId=null,
       <div class="card-overlay">
         <div class="card-meta-wrap">
           ${meta.model ? `<div class="card-model-badge">${escHtml(meta.model.replace(/\.(safetensors|ckpt|pt)$/i,'').slice(0,28))}</div>` : ''}
-          ${(meta.loras||[]).length ? `<div class="card-loras">${(meta.loras||[]).map(l=>`<span class="card-lora-chip">${escHtml(l.name.replace(/\.(safetensors|pt|ckpt)$/i,'').slice(0,18))} <b>${parseFloat(l.strength).toFixed(1)}</b></span>`).join('')}</div>` : ''}
+          ${(meta.loras||[]).filter(l=>l&&l.name).length ? `<div class="card-loras">${(meta.loras||[]).filter(l=>l&&l.name).map(l=>`<span class="card-lora-chip">${escHtml(l.name.replace(/\.(safetensors|pt|ckpt)$/i,'').slice(0,18))} <b>${parseFloat(l.strength||0).toFixed(1)}</b></span>`).join('')}</div>` : ''}
           <div class="card-prompt">${escHtml((meta.prompt||title).slice(0,80))}</div>
         </div>
       </div>
@@ -2339,8 +2339,12 @@ function _addToGalleryInternal(thumbUrl, fullDataUrl, title, meta={}, dbId=null,
     ensureDateGroup(dateLabel, grid, true);
     grid.appendChild(card);
   } else {
+    const _gv = document.getElementById('gallery-view');
+    const _savedScroll = _gv ? _gv.scrollTop : 0;
     const todayHdr = ensureDateGroup('TODAY', grid, false);
     todayHdr.after ? todayHdr.after(card) : grid.prepend(card);
+    // Restore scroll so prepend doesn't reset user's position
+    if (_gv && _savedScroll > 0) requestAnimationFrame(() => { _gv.scrollTop = _savedScroll; });
   }
   // Update model filter dropdown
   const modelVal = card.dataset.model;
@@ -2383,7 +2387,8 @@ function switchCenterTab(tab, el) {
   qv.style.flex     = tab==='queue' ? '1' : '';
   if (sw) sw.style.display = tab==='gallery' ? '' : 'none';
   if (tb) tb.style.display = tab==='gallery' ? '' : 'none';
-  requestAnimationFrame(fitGalleryView);
+  // double-rAF: first frame commits display change, second frame measures correct offsetHeight
+  requestAnimationFrame(() => requestAnimationFrame(fitGalleryView));
 }
 
 // ── PREVIEW ───────────────────────────────────────────────────────
@@ -2421,9 +2426,9 @@ let _lbCards = [], _lbIdx = -1, _lbMeta = {};
 function openModal(dataUrl, title, meta, srcCard) {
   _lbCards = [...document.querySelectorAll('#gallery-grid .gallery-card')].filter(c => c.style.display !== 'none');
   _lbIdx = srcCard ? _lbCards.indexOf(srcCard) : -1;
-  _setLightboxContent(dataUrl, title, meta);
+  try { _setLightboxContent(dataUrl, title, meta); } catch(e) { console.error('[lb] setContent error', e); }
   _updateLbNavBtns();
-  document.getElementById('modal-bg').classList.add('open');
+  document.getElementById('modal-bg').classList.add('open'); // always open even if sidebar fails
 }
 function _setLightboxContent(dataUrl, title, meta) {
   _lbMeta = meta || {};
@@ -2431,7 +2436,7 @@ function _setLightboxContent(dataUrl, title, meta) {
   document.getElementById('modal-title').textContent = title || '';
   const ctr = document.getElementById('lb-counter');
   if (ctr) ctr.textContent = _lbIdx >= 0 ? `${_lbIdx + 1} / ${_lbCards.length}` : '';
-  _renderLbSidebar(_lbMeta);
+  try { _renderLbSidebar(_lbMeta); } catch(e) { console.warn('[lb] sidebar render error', e); }
 }
 function _renderLbSidebar(meta) {
   const el = document.getElementById('lb-sidebar-content');
@@ -2445,11 +2450,12 @@ function _renderLbSidebar(meta) {
     const clean = meta.model.replace(/\.(safetensors|ckpt|pt)$/i, '');
     html += `<div class="lb-sec"><div class="lb-sec-label">Model</div><div class="lb-model-name">${escHtml(clean)}</div></div>`;
   }
-  if (meta.loras?.length) {
+  const validLoras = (meta.loras || []).filter(l => l && typeof l.name === 'string' && l.name);
+  if (validLoras.length) {
     html += `<div class="lb-sec"><div class="lb-sec-label">LoRA</div><div class="lb-lora-list">`;
-    meta.loras.forEach(l => {
+    validLoras.forEach(l => {
       const n = l.name.replace(/\.(safetensors|pt|ckpt)$/i, '');
-      html += `<div class="lb-lora-row"><span class="lb-lora-name" title="${escHtml(n)}">${escHtml(n)}</span><span class="lb-lora-str">${parseFloat(l.strength).toFixed(2)}</span></div>`;
+      html += `<div class="lb-lora-row"><span class="lb-lora-name" title="${escHtml(n)}">${escHtml(n)}</span><span class="lb-lora-str">${parseFloat(l.strength||0).toFixed(2)}</span></div>`;
     });
     html += `</div></div>`;
   }
@@ -3478,11 +3484,13 @@ function fitGalleryView() {
   if (!center || !gv || gv.style.display === 'none') return;
   let usedH = 0;
   for (let s = gv.previousElementSibling; s; s = s.previousElementSibling) {
-    usedH += s.offsetHeight;
+    usedH += s.getBoundingClientRect().height; // getBoundingClientRect reflects post-layout values
   }
   const h = Math.max(center.clientHeight - usedH, 60);
+  const prev = gv.scrollTop;
   gv.style.flex = 'none';
   gv.style.height = h + 'px';
+  if (gv.scrollTop !== prev) gv.scrollTop = prev; // preserve scroll after height change
   const qv = document.getElementById('queue-view');
   if (qv && qv.style.display !== 'none') { qv.style.flex = 'none'; qv.style.height = h + 'px'; }
 }
