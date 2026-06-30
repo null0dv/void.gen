@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Void.gen V3</title>
+<title>Void.gen Full V3</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#080808">
 <meta name="mobile-web-app-capable" content="yes">
@@ -73,9 +73,9 @@ body.file-protocol-warn{padding-top:40px}
 .collapsible-body{overflow:hidden}
 
 /* MODE */
-.mode-toggle{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;background:rgba(0,0,0,.3);border-radius:8px;padding:3px;border:1px solid var(--line)}
-
-
+.mode-toggle{display:grid;grid-template-columns:repeat(2,1fr);gap:3px;background:rgba(0,0,0,.3);border-radius:8px;padding:3px;border:1px solid var(--line)}
+.mode-btn{font-size:9px;letter-spacing:.04em}
+#center-gallery-stack{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
 .mode-btn{padding:7px;text-align:center;cursor:pointer;border-radius:6px;font-size:10px;letter-spacing:.07em;color:var(--muted);transition:all .18s;font-family:var(--mono);border:1px solid transparent}
 .mode-btn:hover{color:var(--text);background:var(--bg3)}
 .mode-btn.active{background:var(--bg3);color:var(--text);border-color:var(--line2);}
@@ -688,7 +688,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 <body>
 
 <div class="topbar">
-  <div class="logo">VOID<span>.gen</span></div>
+  <div class="logo">VOID<span>.gen</span> <span style="font-size:9px;letter-spacing:.12em;color:var(--muted)">FULL V3</span></div>
   <div class="topbar-right">
     <button class="tb-btn" id="folder-btn" onclick="selectOutputFolder()" title="選擇 ComfyUI 輸出資料夾">FOLDER</button>
     <button class="tb-btn" onclick="saveTasks()">SAVE</button>
@@ -713,8 +713,8 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
       <div class="ss">
         <div class="sec-label">MODE</div>
         <div class="mode-toggle">
-          <div class="mode-btn active" onclick="setMode('txt2img',this)">TXT → IMG</div>
-          <div class="mode-btn" onclick="setMode('img2txt',this)">IMG → TXT</div>
+          <div class="mode-btn active" data-mode="txt2img" onclick="setMode('txt2img',this)">TXT → IMG</div>
+          <div class="mode-btn" data-mode="img2txt" onclick="setMode('img2txt',this)">IMG → TXT</div>
         </div>
       </div>
 
@@ -993,8 +993,9 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
   <div class="resize-handle" id="rh-left" onmousedown="startResize(event,'left')"></div>
 
   <!-- CENTER -->
-  <div class="center">
-    <div class="center-tabs" style="justify-content:space-between">
+  <div class="center" id="center-panel">
+    <div id="center-gallery-stack">
+    <div class="center-tabs" id="center-tabs-bar" style="justify-content:space-between">
       <div style="display:flex">
         <div class="center-tab active" onclick="switchCenterTab('gallery',this)">GALLERY</div>
         <div class="center-tab" onclick="switchCenterTab('queue',this)">QUEUE
@@ -1036,6 +1037,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
       </div>
       <div id="queue-list"></div>
     </div>
+    </div><!-- /center-gallery-stack -->
   </div>
 
   <div class="resize-handle" id="rh-right" onmousedown="startResize(event,'right')"></div>
@@ -1092,6 +1094,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
     </div>
     <div class="lb-topbar-right">
       <button class="lb-tb-btn" title="Download" onclick="lbDownload()">↓</button>
+
       <button class="lb-tb-btn" title="Apply model + LoRA + all settings" onclick="lbApplyAll()">⚡</button>
       <button class="lb-tb-btn" id="lb-info-btn" title="Show / hide parameters" onclick="toggleLbSidebar()">☰</button>
       <button class="lb-tb-btn" title="Delete image and output file" onclick="lbDelete()">🗑</button>
@@ -1117,6 +1120,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 
 <!-- CONTEXT MENU -->
 <div id="ctx-menu">
+
   <div class="ctx-item" onclick="ctxRestoreSettings()">↺ Restore Settings</div>
   <div class="ctx-item" onclick="ctxCopyPrompt()">⎘ Copy Prompt</div>
   <div class="ctx-sep"></div>
@@ -1172,6 +1176,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
   <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
     <button class="mob-nav-btn" onclick="closeMobilePreview()">× CLOSE</button>
     <button class="mob-nav-btn" onclick="saveLastImg()">↓ SAVE</button>
+
     <button class="mob-nav-btn" onclick="copyPrompt()">⎘ PROMPT</button>
   </div>
 </div>
@@ -1960,6 +1965,12 @@ function restoreImmediateSettings() {
   renderWorkflowTemplatesList();
   // defer non-critical startup tasks
   setTimeout(renderStorageBar, 2000);
+  document.querySelector('.mode-toggle')?.addEventListener('click', e => {
+    const btn = e.target.closest('.mode-btn[data-mode]');
+    if (!btn) return;
+    setMode(btn.dataset.mode, btn);
+  });
+  mountCharRngIframe();
   checkApi();
   _initComfyWs();
   setInterval(pollVRAM, 20000);
@@ -2295,12 +2306,10 @@ function renderTaskEditor() {
       </div>
       <span id="neg-token-bar-label">0t</span>
     </div>
-    <div class="tag-section">${renderTagGroups()}</div>
     <div class="snippets-section">
       <div class="sec-label" style="margin-bottom:5px">SNIPPETS</div>
       <div style="display:flex;flex-wrap:wrap;gap:3px">${renderSnippets()}</div>
     </div>`;
-  bindTagChips(wrap);
   updateTokenCount();
   updateNegTokenCount();
   requestAnimationFrame(() => {
@@ -2315,6 +2324,12 @@ function renderTagGroups() {
     `<div class="tag-group${g.spicy ? ' spicy' : ''}"><div class="tag-group-label">${g.label}</div><div class="tag-chips">`+
     g.tags.map(tag=>`<span class="tag-chip${g.spicy ? ' spicy' : ''}" data-tag="${escHtml(tag)}">${tag}</span>`).join('')+
     `</div></div>`).join('');
+}
+function renderPromptTagsPanel() {
+  const panel = document.getElementById('prompt-tags-panel');
+  if (!panel) return;
+  panel.innerHTML = renderTagGroups();
+  bindTagChips(panel);
 }
 function bindTagChips(wrap) {
   wrap.querySelectorAll('.tag-chip').forEach(chip => {
@@ -2419,10 +2434,12 @@ function syncParam(id, v) {
 }
 function setMode(mode, el) {
   currentMode = mode;
-  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('img2txt-section').style.display = mode==='img2txt' ? 'block' : 'none';
+  document.querySelectorAll('.mode-toggle .mode-btn').forEach(b => b.classList.remove('active'));
+  (el || document.querySelector('.mode-toggle .mode-btn[data-mode="' + mode + '"]'))?.classList.add('active');
+  const img2sec = document.getElementById('img2txt-section');
+  if (img2sec) img2sec.style.display = mode === 'img2txt' ? 'block' : 'none';
 }
+window.setMode = setMode;
 function triggerUpload2txt() { document.getElementById('file-input-2txt').click(); }
 function handleUpload2txt(input) {
   const file = input.files[0]; if (!file) return;
@@ -3391,6 +3408,7 @@ async function startGenerate(allTasks = false, opts = {}) {
   closeMobileDrawer();
   saveTasks();
   isGenerating = true; stopRequested = false;
+  if (window.VoidGenFlow) VoidGenFlow.setState('generating');
   _syncMobileGenBtn(true);
   const btn = document.getElementById('gen-btn');
   btn.classList.add('running');
@@ -3447,6 +3465,7 @@ async function startGenerate(allTasks = false, opts = {}) {
   }
   } finally {
   isGenerating = false;
+  if (window.VoidGenFlow) VoidGenFlow.setState(stopRequested ? 'cancelled' : (fail ? 'error' : 'idle'));
   document.querySelectorAll('.center-tab')[1]?.classList.remove('generating');
   _syncMobileGenBtn(false);
   btn.classList.remove('running');
@@ -3745,7 +3764,7 @@ document.body.addEventListener('drop', e => {
   e.preventDefault();
   const file = e.dataTransfer.files[0];
   if (!file || !file.type.startsWith('image/')) return;
-  const img2txtBtn = document.querySelector('.mode-btn[onclick*="img2txt"]');
+  const img2txtBtn = document.querySelector('.mode-toggle .mode-btn[data-mode="img2txt"]');
   if (img2txtBtn) setMode('img2txt', img2txtBtn);
   _load2txtFile(file);
   if (file.name.toLowerCase().endsWith('.png') || file.type === 'image/png') {

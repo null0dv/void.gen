@@ -4,6 +4,21 @@
 
 ## 開啟面板
 
+### Void.gen Full V3（本機完整版 · 推薦）
+
+雙擊 **`VOID-GEN-FULL.cmd`** 或 **`啟動 VOID.GEN FULL.bat`** → 瀏覽器開啟  
+**http://localhost:8080/sd-dashboard.full.html**（TXT→IMG、IMG→TXT、圖庫）
+
+### VOID.RNG（獨立專案）
+
+Prompt 亂數生成器已與 Full 分離，請到 **`void-rng/`** 目錄啟動：
+
+雙擊 **`void-rng/VOID-RNG.cmd`** 或根目錄 **`啟動 VOID.RNG.bat`** → **http://127.0.0.1:8787/**
+
+架構說明見 **[docs/void-full-v3.md](docs/void-full-v3.md)**。
+
+### 線上精簡面板
+
 **[https://null0dv.github.io/void.gen/sd-dashboard.html](https://null0dv.github.io/void.gen/sd-dashboard.html)**
 
 > 需要在本機安裝並啟動 ComfyUI 才能運作
@@ -221,7 +236,8 @@ C:\ComfyUI_portable\ComfyUI\models\upscale_models\
 
 ## 功能一覽
 
-- TXT→IMG 生成 + IMG→TXT（WD14 反推標籤）+ 角色 PROMPT（內嵌 VOID.RNG）
+- TXT→IMG 生成 + IMG→TXT（WD14 反推標籤）
+- 角色 Prompt 請用獨立專案 **VOID.RNG**（`void-rng/`），複製結果到 Full 左側 PROMPT
 - 主模型 + Refiner 雙模型管線
 - 最多 6 個 LoRA 同時疊加（可調強度）
 - Hi-res Fix 潛空間放大 + Upscaler 像素放大

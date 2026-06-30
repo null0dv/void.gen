@@ -1,0 +1,1 @@
+& (Join-Path $PSScriptRoot 'install-desktop-void-full.ps1')
