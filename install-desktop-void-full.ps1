@@ -2,7 +2,8 @@ $Root = 'C:\Users\User\Desktop\VS'
 $Desk = [Environment]::GetFolderPath('Desktop')
 $Cmd  = Join-Path $Root 'VOID-GEN-FULL.cmd'
 $Lnk  = Join-Path $Desk 'VOID.GEN FULL.lnk'
-$Ico  = Join-Path $Root 'icon-192.png'
+$Ico  = Join-Path $Root 'icon-gen.ico'
+if (-not (Test-Path -LiteralPath $Ico)) { $Ico = Join-Path $Root 'icon-192.png' }
 
 if (-not (Test-Path $Cmd)) { Write-Error "Missing $Cmd"; exit 1 }
 
