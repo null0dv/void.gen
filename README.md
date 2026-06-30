@@ -32,7 +32,7 @@
 
 編輯 `run_nvidia_gpu.bat`，改成：
 ```bat
-.\python_embeded\python.exe -s ComfyUI\main.py --windows-standalone-build --lowvram --enable-cors-header *
+.\python_embeded\python.exe -s ComfyUI\main.py --windows-standalone-build --normalvram --enable-cors-header *
 pause
 ```
 
@@ -49,7 +49,7 @@ pause
 | 項目 | 最低 | 推薦 |
 |------|------|------|
 | 作業系統 | Windows 10 | Windows 11 |
-| 顯卡 | NVIDIA 4GB VRAM | NVIDIA 8GB+ VRAM |
+| 顯卡 | NVIDIA 4GB VRAM（需改 `--lowvram`） | NVIDIA 8GB+ VRAM |
 | 記憶體 | 8GB RAM | 16GB RAM |
 | 硬碟空間 | 15GB | 50GB+ |
 
@@ -221,7 +221,7 @@ C:\ComfyUI_portable\ComfyUI\models\upscale_models\
 
 ## 功能一覽
 
-- TXT→IMG / IMG→IMG 雙模式
+- TXT→IMG 生成 + IMG→TXT（WD14 反推標籤）+ 角色 PROMPT（內嵌 VOID.RNG）
 - 主模型 + Refiner 雙模型管線
 - 最多 6 個 LoRA 同時疊加（可調強度）
 - Hi-res Fix 潛空間放大 + Upscaler 像素放大

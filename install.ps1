@@ -111,7 +111,7 @@ Write-Ok "解壓縮完成：$InstallDir"
 :Configure
 Write-Step "5/5" "設定 ComfyUI 啟動參數..."
 
-$batContent = "@echo off`r`ncd /d `"%~dp0`"`r`necho ================================================`r`necho  ComfyUI 後端啟動中，請勿關閉此視窗`r`necho  面板網址：$PanelUrl`r`necho ================================================`r`necho.`r`npython_embeded\python.exe -s ComfyUI\main.py --windows-standalone-build --lowvram --enable-cors-header *`r`npause`r`n"
+$batContent = "@echo off`r`ncd /d `"%~dp0`"`r`necho ================================================`r`necho  ComfyUI 後端啟動中，請勿關閉此視窗`r`necho  面板網址：$PanelUrl`r`necho ================================================`r`necho.`r`npython_embeded\python.exe -s ComfyUI\main.py --windows-standalone-build --normalvram --enable-cors-header *`r`npause`r`n"
 Set-Content -Path "$InstallDir\run_sd_panel.bat" -Value $batContent -Encoding ascii
 
 # 建立桌面捷徑

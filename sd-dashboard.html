@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Void.gen">
 <link rel="apple-touch-icon" href="icon-192.png">
+<script src="js/void-boot.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap');
@@ -31,6 +32,10 @@
 body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;height:100vh;height:-webkit-fill-available;overflow:hidden;display:flex;flex-direction:column;
   
 }
+body.file-protocol-warn{padding-top:40px}
+#file-protocol-banner{position:fixed;top:0;left:0;right:0;z-index:9999;height:40px;display:flex;align-items:center;justify-content:center;gap:10px;padding:0 16px;background:rgba(232,64,64,.92);color:#fff;font-size:10px;letter-spacing:.06em;border-bottom:1px solid rgba(255,255,255,.2);backdrop-filter:blur(8px)}
+#file-protocol-banner a{color:#fff;text-decoration:underline;font-weight:500}
+#file-protocol-banner button{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:5px;padding:4px 10px;font-size:9px;cursor:pointer;font-family:var(--mono);letter-spacing:.08em}
 
 /* TOP BAR */
 .topbar{height:52px;display:flex;align-items:center;padding:0 18px;border-bottom:1px solid var(--line);gap:16px;flex-shrink:0;overflow:visible;position:relative;z-index:10;
@@ -66,11 +71,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13
 
 /* MODE */
 .mode-toggle{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;background:rgba(0,0,0,.3);border-radius:8px;padding:3px;border:1px solid var(--line)}
+
+.char-rng-wrap{padding-bottom:0!important}
+.char-rng-frame{width:100%;height:min(64vh,640px);border:none;border-radius:8px;background:var(--bg2);display:block}
+.char-rng-gen-btn{width:100%;margin-top:8px;padding:11px;background:var(--text);color:var(--bg);border:none;border-radius:8px;font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:.14em;cursor:pointer;transition:all .2s}
+.char-rng-gen-btn:hover{opacity:.92;transform:translateY(-1px)}
+.char-rng-gen-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
 .mode-btn{padding:7px;text-align:center;cursor:pointer;border-radius:6px;font-size:10px;letter-spacing:.07em;color:var(--muted);transition:all .18s;font-family:var(--mono);border:1px solid transparent}
 .mode-btn:hover{color:var(--text);background:var(--bg3)}
 .mode-btn.active{background:var(--bg3);color:var(--text);border-color:var(--line2);}
 
-/* IMG2IMG UPLOAD */
+/* IMG UPLOAD (tagger) */
 .img-upload{display:none;border:1px dashed rgba(255,255,255,.12);border-radius:8px;height:80px;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:11px;letter-spacing:.05em;flex-direction:column;gap:6px;transition:all .2s;background:var(--glass);position:relative;overflow:hidden}
 .img-upload.vis{display:flex}
 .img-upload:hover{border-color:var(--accent2);color:var(--text);background:var(--glass2);box-shadow:0 0 16px rgba(200,200,200,0.08)}
@@ -98,7 +109,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13
 .neg-area{min-height:48px;margin-top:6px}
 
 /* TAG CHIPS */
-.tag-section{margin-top:8px}
+.tag-section{margin-top:8px;max-height:320px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.07) transparent;padding-right:2px}
+.tag-group.spicy .tag-group-label{color:rgba(232,100,120,.75)}
+.tag-chip.spicy{border-color:rgba(232,100,120,.18)}
+.tag-chip.spicy:hover{border-color:rgba(232,100,120,.35);color:rgba(255,170,185,.95)}
 .tag-group{margin-bottom:6px}
 .tag-group-label{font-size:8px;color:var(--muted2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
 .tag-chips{display:flex;flex-wrap:wrap;gap:3px}
@@ -180,30 +194,34 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13
 .center-tab{padding:10px 18px;font-size:10px;letter-spacing:.1em;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .18s;font-family:var(--mono)}
 .center-tab.active{color:var(--text);border-bottom-color:var(--text)}
 .center-tab:hover:not(.active){color:var(--accent2)}
+.center-tab.generating:not(.active){color:var(--yellow)}
+.center-tab.generating:not(.active)::after{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--yellow);margin-left:6px;vertical-align:middle;animation:pulse 1s infinite}
 
 /* GALLERY */
-#gallery-view{flex:1;min-height:0;overflow-y:auto;padding:16px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.07) transparent}
-.gallery-grid{display:block;column-count:4;column-gap:8px}
-.gallery-card{background:var(--bg2);border-radius:10px;overflow:hidden;border:1px solid var(--line);cursor:pointer;transition:all .22s;position:relative;display:flex;flex-direction:column}
-.gallery-card:hover{border-color:rgba(220,220,220,0.12);transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,.6),0 0 0 1px rgba(220,220,220,0.12)}
-.card-img-wrap{position:relative;overflow:hidden;flex:1 0 auto}
+#gallery-view{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:16px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.07) transparent;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.gallery-grid{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;width:100%}
+.gallery-card{flex:0 0 calc(25% - 7.5px);max-width:calc(25% - 7.5px);min-width:0;align-self:flex-start;background:var(--bg2);border-radius:10px;overflow:hidden;border:1px solid var(--line);cursor:pointer;transition:border-color .22s,box-shadow .22s;position:relative;display:flex;flex-direction:column;contain:layout;isolation:isolate}
+.gallery-card:hover{border-color:rgba(220,220,220,0.12);box-shadow:0 8px 32px rgba(0,0,0,.6),0 0 0 1px rgba(220,220,220,0.12)}
+.card-img-wrap{position:relative;overflow:hidden;flex:1 0 auto;cursor:pointer}
 .card-img-wrap img{width:100%;display:block;height:auto;object-fit:cover;image-rendering:auto;-webkit-image-rendering:auto}
 .gallery-card img{width:100%;display:block;height:auto;object-fit:cover}
-.card-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.88) 0%,transparent 55%);opacity:0;transition:opacity .22s;display:flex;align-items:flex-end;padding:11px}
+.card-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.88) 0%,transparent 55%);opacity:0;transition:opacity .22s;display:flex;align-items:flex-end;padding:11px;pointer-events:none}
 .gallery-card:hover .card-overlay{opacity:1}
-.card-meta-wrap{display:flex;flex-direction:column;gap:5px;width:100%;min-width:0}
+.card-meta-wrap{display:flex;flex-direction:column;gap:5px;width:100%;min-width:0;pointer-events:none}
 .card-model-badge{font-size:8px;font-family:var(--mono);color:rgba(255,255,255,.8);background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.2);border-radius:4px;padding:2px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;letter-spacing:.04em;align-self:flex-start}
-.card-loras{display:flex;flex-wrap:wrap;gap:3px}
+.card-loras{display:flex;flex-wrap:wrap;gap:3px;pointer-events:none}
 .card-lora-chip{font-size:8.5px;font-family:var(--mono);color:rgba(255,255,255,.55);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:4px;padding:1px 5px;white-space:nowrap;letter-spacing:.03em}
 .card-lora-chip b{color:rgba(255,255,255,.85);font-weight:500}
-.card-prompt{font-size:10px;color:var(--accent2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.card-actions{position:absolute;top:7px;right:7px;display:flex;gap:4px;opacity:0;transition:opacity .2s}
-.gallery-card:hover .card-actions{opacity:1}
-.card-action-btn{width:27px;height:27px;background:rgba(9,8,12,.75);border:1px solid rgba(255,255,255,.1);border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;transition:all .15s;backdrop-filter:blur(6px)}
+.card-prompt{font-size:10px;color:var(--accent2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;pointer-events:none}
+.card-model-badge,.card-lora-chip,.card-tag-badge{pointer-events:none}
+.card-actions{position:absolute;top:7px;right:7px;display:flex;gap:4px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:5}
+.gallery-card:hover .card-actions,.gallery-card:focus-within .card-actions{opacity:1}
+.card-action-btn{width:27px;height:27px;background:rgba(9,8,12,.75);border:1px solid rgba(255,255,255,.1);border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;transition:all .15s;backdrop-filter:blur(6px);pointer-events:none}
+.gallery-card:hover .card-action-btn,.gallery-card:focus-within .card-action-btn{pointer-events:auto}
 .card-action-btn:hover{background:rgba(200,200,200,0.06);border-color:rgba(220,220,220,0.12);color:var(--accent2)}
 
 /* QUEUE */
-#queue-view{flex:1;min-height:0;overflow-y:auto;padding:16px;display:none;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.07) transparent}
+#queue-view{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:16px;display:none;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.07) transparent;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y}
 .queue-item{display:flex;align-items:center;gap:12px;padding:10px 13px;background:var(--glass);border-radius:8px;border:1px solid var(--line);margin-bottom:6px;backdrop-filter:blur(4px);transition:border-color .18s}
 .queue-item:hover{border-color:var(--line2)}
 .q-status{width:6px;height:6px;border-radius:50%;flex-shrink:0}
@@ -211,6 +229,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13
 .q-status.running{background:var(--yellow);box-shadow:0 0 8px var(--yellow),0 0 16px rgba(255,209,102,.3);animation:pulse 1s infinite}
 .q-status.done{background:var(--green);box-shadow:0 0 6px rgba(61,255,160,.4)}
 .q-status.error{background:var(--red)}
+.q-status.skipped,.q-badge.skipped{opacity:.45}
+.q-badge.skipped{background:rgba(255,255,255,.03);color:var(--muted2)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 .q-info{flex:1;min-width:0}
 .q-title{font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -259,6 +279,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13
 #ctx-menu{position:fixed;z-index:300;background:rgba(14,13,18,.96);border:1px solid var(--line2);border-radius:10px;padding:5px;min-width:168px;display:none;box-shadow:0 8px 40px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.04);backdrop-filter:blur(20px)}
 .ctx-item{padding:7px 11px;font-size:10px;color:var(--muted);cursor:pointer;border-radius:6px;letter-spacing:.06em;transition:all .12s}
 .ctx-item:hover{background:rgba(200,200,200,0.06);color:var(--accent2)}
+.ctx-item.ctx-danger{color:var(--red)}
+.ctx-item.ctx-danger:hover{background:rgba(232,64,64,.12);color:var(--red)}
 .ctx-sep{height:1px;background:var(--line);margin:4px 5px}
 .ctx-stars{display:flex;align-items:center;gap:5px;padding:5px 11px}
 .ctx-stars-label{font-size:9px;color:var(--muted);letter-spacing:.08em;flex-shrink:0}
@@ -284,7 +306,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13
 
 /* LIGHTBOX */
 /* ── LIGHTBOX FULLSCREEN ── */
-.modal-bg{position:fixed;inset:0;background:#060606;display:none;flex-direction:column;z-index:100}
+.modal-bg{position:fixed;inset:0;background:#060606;display:none;flex-direction:column;z-index:1200}
 .modal-bg.open{display:flex}
 /* Top bar */
 .lb-topbar{height:48px;display:flex;align-items:center;padding:0 12px;gap:8px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;background:rgba(8,7,11,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:3}
@@ -353,8 +375,8 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 .gallery-card.selected .card-check{opacity:1}
 .gallery-select-mode .gallery-card{cursor:pointer}
 .gallery-select-mode .gallery-card:not(.selected):hover{border-color:rgba(255,255,255,.12)}
-.card-star{position:absolute;top:5px;left:7px;font-size:14px;opacity:0;transition:all .15s;cursor:pointer;z-index:2;line-height:1;color:var(--muted);text-shadow:0 1px 6px rgba(0,0,0,.9)}
-.gallery-card:hover .card-star,.gallery-card.fav .card-star{opacity:1}
+.card-star{position:absolute;top:5px;left:7px;font-size:14px;opacity:0;transition:all .15s;cursor:pointer;z-index:5;line-height:1;color:var(--muted);text-shadow:0 1px 6px rgba(0,0,0,.9);pointer-events:none}
+.gallery-card:hover .card-star,.gallery-card.fav .card-star,.gallery-card:focus-within .card-star{opacity:1;pointer-events:auto}
 .gallery-card.fav .card-star{color:var(--yellow);filter:drop-shadow(0 0 4px rgba(255,209,102,.5))}
 
 /* ALBUM CHIPS */
@@ -394,10 +416,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 .preview-box:hover .preview-fs-btn{opacity:1}
 .preview-fs-btn:hover{color:var(--accent2);border-color:rgba(220,220,220,0.12)}
 
-/* CONTENT VISIBILITY for large galleries (desktop only) */
-@media (min-width:901px){
-  .gallery-card{content-visibility:auto;contain-intrinsic-size:0 220px}
-}
+/* content-visibility disabled — breaks click/hit-test on desktop during live gallery updates */
 
 /* MOBILE DRAWER HANDLE */
 .mobile-drawer-handle{display:none;width:40px;height:4px;background:rgba(255,255,255,.1);border-radius:2px;margin:10px auto 6px;flex-shrink:0;cursor:pointer}
@@ -456,7 +475,8 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
   .center{flex:1;min-width:0;width:100%;display:flex;flex-direction:column}
 
   /* Gallery: 2 columns */
-  .gallery-grid{grid-template-columns:repeat(2,1fr)!important;gap:5px}
+  .gallery-card{flex:0 0 calc(50% - 5px)!important;max-width:calc(50% - 5px)!important}
+  .gallery-card .card-actions{opacity:1}
   #gallery-view{padding:8px 8px 70px;flex:1;min-height:0;overflow-y:auto;display:block}
   #queue-view{padding:8px 8px 70px}
   .empty-state{color:var(--muted)}
@@ -476,6 +496,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
   /* Touch: always show card actions */
   .gallery-card:hover{transform:none}
   .gallery-card .card-actions{opacity:1}
+  .gallery-card .card-action-btn{pointer-events:auto}
   .card-action-btn{width:28px;height:28px;font-size:11px}
   .card-overlay{opacity:1;background:linear-gradient(to top,rgba(0,0,0,.75) 0%,transparent 45%)}
 
@@ -501,7 +522,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 }
 
 /* DATE GROUP HEADERS */
-.date-group-hdr{column-span:all;grid-column:1/-1;font-size:8px;letter-spacing:.18em;color:var(--muted2);text-transform:uppercase;padding:10px 2px 5px;border-bottom:1px solid var(--line);margin-bottom:3px;pointer-events:none}
+.date-group-hdr{flex:0 0 100%;width:100%;font-size:8px;letter-spacing:.18em;color:var(--muted2);text-transform:uppercase;padding:10px 2px 5px;border-bottom:1px solid var(--line);margin-bottom:3px;pointer-events:none}
 
 /* SIDEBAR TOGGLE */
 .sidebar-toggle-btn{width:16px;background:transparent;border:none;border-right:1px solid var(--line);cursor:pointer;color:var(--muted2);font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;writing-mode:vertical-rl;letter-spacing:.1em;padding:8px 0}
@@ -561,11 +582,9 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 .theme-dot{width:10px;height:10px;border-radius:50%;margin:0 auto 4px}
 
 /* MASONRY */
-.gallery-grid.masonry{display:block!important;column-count:3;column-gap:10px}
-.gallery-grid.masonry .gallery-card{break-inside:avoid;margin-bottom:10px;display:flex;flex-direction:column}
+.gallery-grid.masonry .gallery-card{flex:0 0 calc(33.333% - 6.7px);max-width:calc(33.333% - 6.7px)}
 .gallery-grid.masonry .gallery-card img{aspect-ratio:unset!important;height:auto!important}
-.gallery-grid.masonry .date-group-hdr{column-span:all}
-@media (max-width:900px){.gallery-grid.masonry{column-count:2}}
+@media (max-width:900px){.gallery-grid.masonry .gallery-card{flex:0 0 calc(50% - 5px)!important;max-width:calc(50% - 5px)!important}}
 
 /* ENHANCE PANEL */
 #enhance-panel{position:fixed;z-index:60;background:rgba(14,13,18,.97);border:1px solid var(--line2);border-radius:12px;padding:13px 15px;display:none;width:296px;max-height:65vh;overflow-y:auto;box-shadow:var(--shadow-lg),0 0 0 1px rgba(255,255,255,.03);backdrop-filter:blur(20px)}
@@ -574,6 +593,9 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 .enhance-chips{display:flex;flex-wrap:wrap;gap:3px}
 .enhance-chip{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:99px;padding:2px 9px;font-size:9px;color:var(--muted);cursor:pointer;transition:all .18s;font-family:var(--mono)}
 .enhance-chip:hover{background:rgba(200,200,200,0.06);border-color:rgba(220,220,220,0.12);color:var(--accent2)}
+.enhance-group.spicy .enhance-group-label{color:rgba(232,100,120,.75)}
+.enhance-chip.spicy{border-color:rgba(232,100,120,.18)}
+.enhance-chip.spicy:hover{border-color:rgba(232,100,120,.35);color:rgba(255,170,185,.95)}
 
 .ctx-star.clear{font-size:10px;color:var(--muted2)}
 .ctx-star.clear:hover{color:var(--red)}
@@ -600,12 +622,13 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 .model-badge-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block;margin-right:4px;vertical-align:middle;transition:background .4s;box-shadow:0 0 8px currentColor}
 
 /* GALLERY CARD TAGS */
-.card-tags{position:absolute;bottom:6px;left:6px;right:6px;display:flex;flex-wrap:wrap;gap:2px;opacity:0;transition:opacity .15s;z-index:2}
-.gallery-card:hover .card-tags{opacity:1}
+.card-tags{position:absolute;bottom:6px;left:6px;right:6px;display:flex;flex-wrap:wrap;gap:2px;opacity:0;transition:opacity .15s;z-index:2;pointer-events:none}
+.gallery-card:hover .card-tags{opacity:1;pointer-events:none}
 .card-tag-badge{background:rgba(9,8,12,.8);border:1px solid rgba(220,220,220,0.12);border-radius:99px;padding:1px 6px;font-size:8px;color:var(--accent2);white-space:nowrap;font-family:var(--mono);letter-spacing:.04em}
 
 /* GALLERY CARD RATING — below image, always visible */
-.card-rating{display:flex;gap:4px;padding:5px 9px 4px;background:rgba(0,0,0,.18);border-top:1px solid var(--line);justify-content:flex-end;flex-shrink:0}
+.card-rating{display:flex;gap:4px;padding:5px 9px 4px;background:rgba(0,0,0,.18);border-top:1px solid var(--line);justify-content:flex-end;flex-shrink:0;pointer-events:none}
+.rating-star{cursor:pointer;pointer-events:auto}
 .rating-star{font-size:13px;cursor:pointer;color:var(--muted2);line-height:1;transition:color .15s}
 .rating-star.on{color:var(--yellow);filter:drop-shadow(0 0 3px rgba(255,209,102,.5))}
 .rating-star:hover{color:var(--yellow)}
@@ -641,17 +664,14 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 #preview-img[src]{animation:img-fade-in .35s ease}
 @keyframes img-fade-in{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
 
-/* GALLERY CARD entrance */
-.gallery-card{animation:card-in .25s ease both}
-@keyframes card-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-
 /* MOBILE touch improvements */
 @media (max-width:900px){
-  .gallery-grid{column-count:2!important;gap:0}
+  .gallery-card{flex:0 0 calc(50% - 5px)!important;max-width:calc(50% - 5px)!important}
   #gallery-view{padding:10px 10px 80px;flex:1;min-height:0;overflow-y:auto;display:block}
   #queue-view{padding:10px 10px 80px}
   .gallery-card:hover{transform:none}
   .gallery-card .card-actions{opacity:1}
+  .gallery-card .card-action-btn{pointer-events:auto}
   .card-action-btn{width:30px;height:30px;font-size:12px}
   .card-overlay{opacity:1;background:linear-gradient(to top,rgba(0,0,0,.78) 0%,transparent 50%)}
   .lb-img{max-width:calc(100% - 92px)}
@@ -695,24 +715,18 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
         <div class="sec-label">MODE</div>
         <div class="mode-toggle">
           <div class="mode-btn active" onclick="setMode('txt2img',this)">TXT → IMG</div>
-          <div class="mode-btn" onclick="setMode('img2img',this)">IMG → IMG</div>
+          <div class="mode-btn" onclick="setMode('char',this)">角色 PROMPT</div>
           <div class="mode-btn" onclick="setMode('img2txt',this)">IMG → TXT</div>
         </div>
       </div>
 
-      <div class="ss" id="img2img-section" style="display:none">
-        <div class="sec-label">SOURCE IMAGE</div>
-        <div class="img-upload vis" id="img-upload" onclick="triggerUpload()">
-          <span>↑</span>
-          <span class="ul">CLICK TO UPLOAD</span>
+      <div class="ss char-rng-wrap" id="char-rng-section" style="display:none">
+        <div class="sec-label" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span>VOID.RNG · 角色生成</span>
+          <span class="icon-btn" onclick="sendCharRngToPrompt()" title="套用到目前 Task">SEND →</span>
         </div>
-        <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleUpload(this)">
-        <div class="param-row" style="margin-top:10px;margin-bottom:0">
-          <span class="param-name">DENOISE</span>
-          <input type="range" class="slider" id="denoise-slider" min="0" max="1" step="0.01" value="0.75"
-            oninput="document.getElementById('denoise-val').textContent=parseFloat(this.value).toFixed(2)">
-          <span class="param-val" id="denoise-val">0.75</span>
-        </div>
+        <iframe id="char-rng-frame" class="char-rng-frame" src="random-prompt-responder.html?embed=char" title="VOID.RNG 角色生成"></iframe>
+        <button class="char-rng-gen-btn" id="char-rng-gen-btn" onclick="sendCharRngToGenerate()">GENERATE</button>
       </div>
 
       <div class="ss" id="img2txt-section" style="display:none">
@@ -773,7 +787,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
       <div class="ss">
         <div class="sec-label">
           MODEL
-          <span style="cursor:pointer;color:var(--muted);font-size:14px" onclick="loadComfyModels()" title="Refresh">↻</span>
+          <span style="cursor:pointer;color:var(--muted);font-size:14px" onclick="loadComfyModels(true)" title="Refresh">↻</span>
         </div>
         <div style="display:flex;align-items:center;gap:6px">
           <span class="model-badge-dot" id="model-badge-dot"></span>
@@ -1000,9 +1014,9 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
       </div>
       <div id="gallery-toolbar" style="display:flex;align-items:center;gap:4px;padding:0 8px">
         <span style="font-size:8px;color:var(--muted2);letter-spacing:.1em">SORT</span>
-        <button class="tb-btn" onclick="sortGallery('time')" title="Sort by time">TIME</button>
-        <button class="tb-btn" onclick="sortGallery('model')" title="Sort by model">MODEL</button>
-        <button class="tb-btn" onclick="sortGallery('rating')" title="Sort by rating">RATE</button>
+        <button class="tb-btn" data-sort="time" onclick="sortGallery('time')" title="Sort by time (newest first)">TIME</button>
+        <button class="tb-btn" data-sort="model" onclick="sortGallery('model')" title="Sort by model">MODEL</button>
+        <button class="tb-btn" data-sort="rating" onclick="sortGallery('rating')" title="Sort by rating">RATE</button>
         <button class="tb-btn" id="select-mode-btn" onclick="toggleSelectMode()">SELECT</button>
         <button class="tb-btn" id="del-btn" onclick="deleteSelected()" title="Delete selected">DEL</button>
         <button class="tb-btn" id="zip-btn" onclick="downloadZip()" style="display:none;color:var(--text);border-color:var(--muted)">ZIP</button>
@@ -1067,7 +1081,6 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
     </div>
     <div class="action-row">
       <div class="action-btn" onclick="saveLastImg()">SAVE</div>
-      <div class="action-btn" onclick="sendToImg2Img()">→ i2i</div>
       <div class="action-btn" onclick="copyPrompt()">COPY</div>
     </div>
   </div>
@@ -1081,7 +1094,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
   <div class="sb-item" id="sb-backend">ComfyUI · 127.0.0.1:8188</div>
 </div>
 
-<div class="modal-bg" id="modal-bg" onclick="closeLightbox()">
+<div class="modal-bg" id="modal-bg">
   <!-- Top bar -->
   <div class="lb-topbar" onclick="event.stopPropagation()">
     <div class="lb-topbar-left">
@@ -1090,9 +1103,9 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
     </div>
     <div class="lb-topbar-right">
       <button class="lb-tb-btn" title="Download" onclick="lbDownload()">↓</button>
-      <button class="lb-tb-btn" title="Send to img2img" onclick="lbSendI2I()">→</button>
       <button class="lb-tb-btn" title="Apply model + LoRA + all settings" onclick="lbApplyAll()">⚡</button>
       <button class="lb-tb-btn" id="lb-info-btn" title="Show / hide parameters" onclick="toggleLbSidebar()">☰</button>
+      <button class="lb-tb-btn" title="Delete image and output file" onclick="lbDelete()">🗑</button>
       <button class="lb-tb-btn" title="Close  (Esc)" onclick="closeLightbox()">×</button>
     </div>
   </div>
@@ -1115,7 +1128,6 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 
 <!-- CONTEXT MENU -->
 <div id="ctx-menu">
-  <div class="ctx-item" onclick="ctxSendToI2I()">→ IMG → IMG</div>
   <div class="ctx-item" onclick="ctxRestoreSettings()">↺ Restore Settings</div>
   <div class="ctx-item" onclick="ctxCopyPrompt()">⎘ Copy Prompt</div>
   <div class="ctx-sep"></div>
@@ -1132,6 +1144,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
   <div class="ctx-item" onclick="ctxAddToAlbum()">+ Add to Album</div>
   <div class="ctx-sep"></div>
   <div class="ctx-item" onclick="ctxDownload()">↓ Download</div>
+  <div class="ctx-item ctx-danger" onclick="ctxDeleteFromGallery()">🗑 Delete (gallery + disk)</div>
 </div>
 
 <!-- SHORTCUTS OVERLAY -->
@@ -1170,7 +1183,6 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
   <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
     <button class="mob-nav-btn" onclick="closeMobilePreview()">× CLOSE</button>
     <button class="mob-nav-btn" onclick="saveLastImg()">↓ SAVE</button>
-    <button class="mob-nav-btn" onclick="sendToImg2Img();closeMobilePreview()">→ i2i</button>
     <button class="mob-nav-btn" onclick="copyPrompt()">⎘ PROMPT</button>
   </div>
 </div>
@@ -1236,16 +1248,17 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 // ── STARTUP DEFAULTS (must be first — used by async functions) ────
 const DEFAULTS = {
   model:   'novaAnimeXL_ilV180.safetensors',
-  refiner: 'JANKUTrainedChenkinNoobai_v777.safetensors',
-  baseSwitch: 80,
+  refiner: '',
+  baseSwitch: 75,
   loras: [
     { name: 'Hyper-SDXL-2steps-lora', strength: 0.70 },
-    { name: 'dmd2_sdxl_4step_lora',   strength: 0.70 },
-    { name: 'Nai_emul style',         strength: 0.70 },
-    { name: 'Stocking Meow_Nai V0',   strength: 0.70 },
-    { name: 'nai origen',             strength: 0.70 },
   ]
 };
+// Per-tab client id — fixed id caused multi-tab WS / progress / image conflicts
+const _COMFY_CLIENT_ID = 'void-gen-' + crypto.randomUUID().slice(0, 12);
+const _MODEL_CACHE_KEY = 'void-model-list-cache';
+const _MODEL_CACHE_TTL = 5 * 60 * 1000;
+const _FOLDER_SYNC_PREFIX = 'void-folder-sync-';
 const _LOCAL_API = 'http://127.0.0.1:8188';
 const GALLERY_PAGE = 40;
 const HIST_KEY      = 'void-gen-prompt-hist';
@@ -1263,13 +1276,36 @@ const THEMES = {
   SAGE:  { '--accent2':'#88cc88', '--bg':'#080a08', '--bg1':'#0d100d', '--bg2':'#111511', '--bg3':'#161b16', '--line':'#1e261e', '--line2':'#283328', '--text':'#d0ecd0', '--muted':'#4a6a4a', '--muted2':'#2c3c2c' },
   IRIS:  { '--accent2':'#9988ee', '--bg':'#08080b', '--bg1':'#0e0e13', '--bg2':'#131318', '--bg3':'#18181e', '--line':'#22222e', '--line2':'#2c2c3c', '--text':'#dcd8f0', '--muted':'#555575', '--muted2':'#38384e' },
 };
-const ENHANCE_GROUPS = [
-  { label:'QUALITY',     chips:['masterpiece','best quality','ultra-detailed','8k','sharp focus','intricate details','RAW photo'] },
-  { label:'LIGHTING',    chips:['golden hour','dramatic lighting','rim light','studio lighting','cinematic lighting','soft diffused light','neon lights'] },
-  { label:'STYLE',       chips:['anime style','oil painting','watercolor','concept art','digital art','photorealistic','film noir'] },
-  { label:'COMPOSITION', chips:['dynamic pose','wide angle shot','close-up','aerial view','bokeh','depth of field','symmetrical composition'] },
-  { label:'MOOD',        chips:['ethereal','mysterious','epic','serene','vibrant','melancholic','dreamlike'] },
+const PROMPT_TAG_GROUPS = [
+  { label:'QUALITY', tags:['masterpiece','best quality','ultra-detailed','8k','sharp focus','intricate details','RAW photo','highly detailed'] },
+  { label:'STYLE', tags:['anime style','oil painting','watercolor','concept art','digital art','photorealistic','film noir','cyberpunk','fantasy','cinematic'] },
+  { label:'LIGHT', tags:['golden hour','dramatic lighting','rim light','studio lighting','cinematic lighting','soft diffused light','neon lights','soft light','backlighting'] },
+  { label:'服裝', tags:[
+    'school uniform','serafuku','maid outfit','bunny suit','bikini','swimsuit','lingerie','babydoll','nightgown',
+    'kimono','yukata','gothic lolita','frilly dress','office lady','business suit','pencil skirt','nurse outfit',
+    'witch hat','crop top','off-shoulder','miniskirt','pleated skirt','thighhighs','pantyhose','fishnet stockings',
+    'garter belt','hoodie','oversized sweater','leather jacket','qipao','wedding dress','fantasy armor','naked apron',
+    'wet clothes','see-through','open jacket','unbuttoned shirt','torn clothes','towel only','bare shoulders'
+  ]},
+  { label:'動作', tags:[
+    'standing','full body','sitting','seiza','lying on back','lying on side','on stomach','kneeling','squatting',
+    'walking','running','jumping','dancing','arms behind head','hand on own hip','arms crossed','looking back',
+    'from behind','from above','from below','dutch angle','reaching out','stretching','hugging self','peace sign',
+    'finger to mouth','adjusting hair','holding umbrella','reading book','dynamic pose','action pose','fighting stance',
+    'casting spell','playing instrument','holding weapon','carrying bag','winking','looking at viewer'
+  ], spicy:false },
+  { label:'色色動作', spicy:true, tags:[
+    'seductive smile','bedroom eyes','biting own lip','blush','heavy blush','embarrassed','sweat','glistening skin',
+    'on bed','bed sheet','shower','wet hair','steam','bath','towel','clothes lift','shirt lift','skirt lift',
+    'undressing','unbuttoning','pulling own clothes','spread legs','legs apart','all fours','on all fours',
+    'leaning forward','bent over','arched back','cleavage','midriff','navel','pantyshot','hand on own chest',
+    'hand on own thigh','covering breasts','covering crotch','open shirt','unzipped','panty peek','collar',
+    'bound wrists','tongue out','half-closed eyes','open mouth','saliva','lewd expression','afterglow','messy hair'
+  ]},
+  { label:'構圖', tags:['wide angle shot','close-up','upper body','cowboy shot','aerial view','bokeh','depth of field','symmetrical composition','profile','three-quarter view'] },
+  { label:'氛圍', tags:['ethereal','mysterious','epic','serene','vibrant','melancholic','dreamlike','romantic','intimate','sultry'] },
 ];
+const ENHANCE_GROUPS = PROMPT_TAG_GROUPS.map(g => ({ label: g.label, chips: g.tags, spicy: g.spicy }));
 // Clear any stale LAN IP saved from phone testing
 (function(){ const s = localStorage.getItem('void-comfy-api'); if (s && s !== _LOCAL_API && !s.includes('localhost')) { localStorage.removeItem('void-comfy-api'); } })();
 let COMFY_API = _LOCAL_API;
@@ -1281,15 +1317,25 @@ function changeApiUrl() {
   const disp = COMFY_API.replace(/^https?:\/\//, '');
   document.getElementById('sb-api-url').textContent = disp;
   document.getElementById('sb-backend').textContent = 'ComfyUI · ' + disp;
+  _resetComfyWs();
   checkApi();
-  _initHealthWs();
+  _initComfyWs();
+}
+
+function _resetComfyWs() {
+  clearTimeout(_comfyWsRetry);
+  _comfyWsListeners = {};
+  _comfyPreviewHandler = null;
+  if (_comfyWs) { try { _comfyWs.close(); } catch {} _comfyWs = null; }
+  _comfyWsReady = null;
 }
 
 let tasks = [], activeTask = -1;
 let currentMode = 'txt2img';
 let currentW = 1024, currentH = 1024, currentBatch = 1;
 let seedLocked = false, stopRequested = false, isGenerating = false;
-let img2imgBase64 = null, img2txtBase64 = null, lastResult = null, loraList = [];
+let img2txtBase64 = null, lastResult = null, loraList = [];
+let _charRngGenPending = false, _charRngGenTimer = null;
 let queueStatuses = {};
 let _progressTotal = 1, _progressCompleted = 0;
 let _currentTheme = localStorage.getItem('void-theme') || 'VOID';
@@ -1297,10 +1343,19 @@ let _favorites = new Set(JSON.parse(localStorage.getItem('void-gen-favs') || '[]
 let _favFilterOn = false;
 let _galleryBuffer = [];
 let _galleryObserver = null;
+let _gallerySortMode = 'time';
 let _masonryMode = true;
+let gallerySelectMode = false;
 let _activeAlbum = '';
 let _activeTagFilter = '', _cardTagsCache = null;
 let _cardRatingsCache = null;
+let _comfyWs = null, _comfyWsReady = null, _comfyWsRetry = null;
+let _comfyWsListeners = {}, _comfyPreviewHandler = null, _modelListPromise = null;
+let _lbCards = [], _lbIdx = -1, _lbMeta = {};
+let _saveTimer = null;
+// stubs for inline oninput handlers (replaced with debounced versions later)
+window._debouncedTokenCount = () => {};
+window._debouncedNegTokenCount = () => {};
 
 // ── GALLERY THUMBNAIL HELPER ──────────────────────────────────────
 function _makeThumbnail(dataUrl, maxPx=800) {
@@ -1366,6 +1421,18 @@ async function dbDelete(id) {
   const db = await _openDB();
   return new Promise(res => db.transaction(_DB_STORE,'readwrite').objectStore(_DB_STORE).delete(id).onsuccess = res);
 }
+async function dbUpdate(id, patch) {
+  const rec = await dbLoadById(id);
+  if (!rec) return false;
+  if (patch.meta) rec.meta = { ...(rec.meta || {}), ...patch.meta };
+  Object.keys(patch).forEach(k => { if (k !== 'meta') rec[k] = patch[k]; });
+  const db = await _openDB();
+  return new Promise((res, rej) => {
+    const req = db.transaction(_DB_STORE, 'readwrite').objectStore(_DB_STORE).put(rec);
+    req.onsuccess = () => res(true);
+    req.onerror = () => rej(req.error);
+  });
+}
 async function dbClear() {
   const db = await _openDB();
   return new Promise(res => db.transaction(_DB_STORE,'readwrite').objectStore(_DB_STORE).clear().onsuccess = res);
@@ -1386,22 +1453,241 @@ async function dbDeleteDiskEntries() {
   all.filter(r => r.source === 'disk').forEach(r => store.delete(r.id));
   return new Promise(res => { tx.oncomplete = res; tx.onerror = res; });
 }
+
+// ── GALLERY DATE GROUPS + SCROLL (before init) ───────────────────
+function getDateLabel(ts) {
+  const d = new Date(ts);
+  const today = new Date();
+  const yest = new Date(today); yest.setDate(today.getDate() - 1);
+  if (d.toDateString() === today.toDateString()) return 'TODAY';
+  if (d.toDateString() === yest.toDateString()) return 'YESTERDAY';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+function getGalleryGroupLabel(cardOrTs, mode = _gallerySortMode) {
+  if (mode === 'model') {
+    const model = typeof cardOrTs === 'object' ? (cardOrTs.dataset.model || '') : '';
+    return model || 'UNKNOWN MODEL';
+  }
+  if (mode === 'rating') {
+    const key = typeof cardOrTs === 'object' ? cardOrTs.dataset.favKey : '';
+    const stars = getCardRatings()[key] || 0;
+    return stars > 0 ? `${stars} ★` : 'UNRATED';
+  }
+  const ts = typeof cardOrTs === 'object' ? parseInt(cardOrTs.dataset.ts || 0) : cardOrTs;
+  return getDateLabel(ts || Date.now());
+}
+function ensureDateGroup(label, grid, append) {
+  const existing = [...grid.querySelectorAll('.date-group-hdr')].find(h => h.textContent === label);
+  if (existing) return existing;
+  const hdr = document.createElement('div');
+  hdr.className = 'date-group-hdr';
+  hdr.textContent = label;
+  if (append) grid.appendChild(hdr);
+  else grid.prepend(hdr);
+  return hdr;
+}
+function prependCardToGroup(card, grid, label) {
+  const hdr = ensureDateGroup(label, grid, false);
+  let insertBefore = hdr.nextElementSibling;
+  while (insertBefore && insertBefore.classList.contains('gallery-card') &&
+         getDateLabel(parseInt(insertBefore.dataset.ts || 0)) === label &&
+         parseInt(insertBefore.dataset.ts || 0) > parseInt(card.dataset.ts || 0)) {
+    insertBefore = insertBefore.nextElementSibling;
+  }
+  grid.insertBefore(card, insertBefore);
+}
+function appendCardToGroup(card, grid, label) {
+  const headers = [...grid.querySelectorAll('.date-group-hdr')];
+  let hdr = headers.find(h => h.textContent === label);
+  if (!hdr) {
+    hdr = document.createElement('div');
+    hdr.className = 'date-group-hdr';
+    hdr.textContent = label;
+    grid.appendChild(hdr);
+  }
+  let insertAfter = hdr;
+  let n = hdr.nextElementSibling;
+  const sameGroup = (el) => {
+    if (_gallerySortMode === 'model') return (el.dataset.model || 'UNKNOWN MODEL') === label;
+    if (_gallerySortMode === 'rating') {
+      const stars = getCardRatings()[el.dataset.favKey] || 0;
+      return (stars > 0 ? `${stars} ★` : 'UNRATED') === label;
+    }
+    return getDateLabel(parseInt(el.dataset.ts || 0)) === label;
+  };
+  while (n && n.classList.contains('gallery-card') && sameGroup(n)) {
+    insertAfter = n;
+    n = n.nextElementSibling;
+  }
+  insertAfter.after(card);
+}
+function fitGalleryView() {
+  const gv = document.getElementById('gallery-view');
+  const qv = document.getElementById('queue-view');
+  [gv, qv].forEach(el => {
+    if (!el || el.style.display === 'none') return;
+    el.style.flex = '1 1 0';
+    el.style.minHeight = '0';
+    el.style.height = '';
+    el.style.maxHeight = '';
+    el.style.overflowY = 'auto';
+    el.style.overflowX = 'hidden';
+  });
+}
+function setupGalleryObserver() {
+  const sentinel = document.getElementById('gallery-sentinel');
+  if (!sentinel) return;
+  if (_galleryObserver) _galleryObserver.disconnect();
+  _galleryObserver = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting && _galleryBuffer.length) {
+      const batch = _galleryBuffer.splice(0, GALLERY_PAGE);
+      batch.forEach(item => _addToGalleryInternal(item.thumbUrl || item.dataUrl, item.dataUrl, item.title, item.meta, item.id, true));
+    }
+  }, { root: document.getElementById('gallery-view'), threshold: 0.1 });
+  _galleryObserver.observe(sentinel);
+}
+function _setGalleryEmptyVisible(show) {
+  const empty = document.getElementById('gallery-empty');
+  if (!empty) return;
+  empty.style.display = show ? 'flex' : 'none';
+}
+function _handleGalleryCardClick(e, card) {
+  if (!card || card.style.display === 'none') return;
+  if (gallerySelectMode) {
+    card.classList.toggle('selected');
+    const n = document.getElementById('gallery-grid').querySelectorAll('.gallery-card.selected').length;
+    const zipBtn = document.getElementById('zip-btn');
+    if (zipBtn) {
+      zipBtn.style.display = n > 0 ? 'inline-block' : 'none';
+      if (n > 0) zipBtn.textContent = `ZIP (${n})`;
+    }
+    return;
+  }
+  openGalleryCard(card);
+}
+function _runGalleryCardAction(action, card) {
+  if (!card || !action) return;
+  switch (action) {
+    case 'fav': toggleFav(card); break;
+    case 'apply': applyAllFromCard(card); break;
+    case 'copy': copyPromptToEditor(card); break;
+    case 'download': downloadFromCard(card, card.dataset.title); break;
+    case 'delete': deleteFromGallery(card); break;
+  }
+}
+function _initGalleryEvents() {
+  const gv = document.getElementById('gallery-view');
+  if (!gv || gv._galleryEventsInited) return;
+  gv._galleryEventsInited = true;
+  gv.addEventListener('click', e => {
+    const actionEl = e.target.closest('[data-gallery-action]');
+    if (actionEl) {
+      e.preventDefault();
+      e.stopPropagation();
+      const card = actionEl.closest('.gallery-card');
+      if (card) _runGalleryCardAction(actionEl.dataset.galleryAction, card);
+      return;
+    }
+    const ratingEl = e.target.closest('.rating-star[data-rating]');
+    if (ratingEl) {
+      e.preventDefault();
+      e.stopPropagation();
+      const card = ratingEl.closest('.gallery-card');
+      const favKey = card?.dataset.favKey;
+      const n = parseInt(ratingEl.dataset.rating, 10);
+      if (favKey && n) setCardRating(favKey, n);
+      return;
+    }
+    const card = e.target.closest('.gallery-card');
+    if (!card) return;
+    _handleGalleryCardClick(e, card);
+  });
+  gv.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const card = e.target.closest('.gallery-card');
+    if (!card || e.target.closest('[data-gallery-action],.rating-star')) return;
+    e.preventDefault();
+    _handleGalleryCardClick(e, card);
+  });
+}
+function initGalleryOpen() { _initGalleryEvents(); }
+
+async function _backfillGalleryRecords(records) {
+  let updated = 0;
+  for (const rec of records) {
+    if (rec.source === 'disk') continue;
+    const meta = { ...(rec.meta || {}) };
+    let dirty = false;
+    if (!meta.filename && rec.filename) { meta.filename = rec.filename; dirty = true; }
+    if (!meta.filename && /\.(png|jpe?g|webp)$/i.test(rec.title || '')) {
+      meta.filename = rec.title;
+      dirty = true;
+    }
+    if (!meta.ts && rec.ts) { meta.ts = rec.ts; dirty = true; }
+    if (dirty) {
+      await dbUpdate(rec.id, { meta, filename: meta.filename || rec.filename || '' }).catch(() => {});
+      rec.meta = meta;
+      if (meta.filename) rec.filename = meta.filename;
+      updated++;
+    }
+  }
+  if (updated) console.log('[void.gen] backfilled filename meta:', updated);
+  return records;
+}
+async function _resolveFilenameFromFolder(filename, subfolder, ts) {
+  if (filename) return { filename, subfolder };
+  const handle = await _getFolderHandle();
+  if (!handle || !ts) return { filename: '', subfolder };
+  try {
+    const perm = await handle.queryPermission({ mode: 'read' });
+    if (perm !== 'granted') return { filename: '', subfolder };
+    const candidates = [];
+    for await (const entry of handle.values()) {
+      if (entry.kind !== 'file') continue;
+      if (!/\.(png|jpe?g|webp)$/i.test(entry.name)) continue;
+      const file = await entry.getFile();
+      const diff = Math.abs(file.lastModified - ts);
+      if (diff <= 5000) candidates.push({ name: entry.name, diff });
+    }
+    if (!candidates.length) return { filename: '', subfolder };
+    candidates.sort((a, b) => a.diff - b.diff);
+    return { filename: candidates[0].name, subfolder: '' };
+  } catch {
+    return { filename: '', subfolder };
+  }
+}
 async function loadSavedGallery() {
   try {
-    const all = await dbLoadAll();
-    const imgs = all.filter(r => r.source !== 'disk'); // disk images come from syncOutputFolder
-    imgs.sort((a,b) => a.ts - b.ts);
+    const all = await _backfillGalleryRecords(await dbLoadAll());
+    const imgs = all.filter(r => r.source !== 'disk');
+    imgs.sort((a, b) => (b.ts || 0) - (a.ts || 0));
     const first = imgs.splice(0, GALLERY_PAGE);
     _galleryBuffer = imgs.map(img => ({
       thumbUrl: img.thumbUrl || img.dataUrl,
       dataUrl: img.dataUrl, title: img.title,
       meta: {...(img.meta||{}), ts: img.ts}, id: img.id
     }));
-    first.forEach(img => _addToGalleryInternal(
-      img.thumbUrl || img.dataUrl, img.dataUrl,
-      img.title, {...(img.meta||{}), ts: img.ts}, img.id, true
-    ));
+    const grid = document.getElementById('gallery-grid');
+    grid.innerHTML = '';
+    if (first.length) {
+      _setGalleryEmptyVisible(false);
+      grid.style.display = 'flex';
+      first.slice().reverse().forEach(img => _addToGalleryInternal(
+        img.thumbUrl || img.dataUrl, img.dataUrl,
+        img.title, {...(img.meta||{}), ts: img.ts}, img.id, false
+      ));
+    } else {
+      grid.style.display = 'none';
+      _setGalleryEmptyVisible(true);
+    }
     setupGalleryObserver();
+    initGalleryOpen();
+    document.querySelectorAll('#gallery-toolbar .tb-btn[data-sort]').forEach(btn => {
+      const on = btn.dataset.sort === 'time';
+      btn.style.color = on ? 'var(--text)' : '';
+      btn.style.borderColor = on ? 'var(--muted)' : '';
+    });
+    requestAnimationFrame(fitGalleryView);
   } catch(e) { console.warn('Gallery restore failed', e); }
 }
 async function saveAndAddToGallery(dataUrl, title, meta) {
@@ -1455,25 +1741,29 @@ async function selectOutputFolder() {
     // Try to restore permission on the STORED handle first (no re-pick needed)
     const existing = await _getFolderHandle();
     if (existing) {
-      const perm = await existing.requestPermission({ mode:'read' });
+      const perm = await existing.requestPermission({ mode:'readwrite' });
       if (perm === 'granted') {
         _setFolderBtn(existing.name, true);
         localStorage.setItem('void-folder-name', existing.name);
-        await syncOutputFolder(existing);
+        await syncOutputFolder(existing, { force: true });
         return;
       }
     }
     // Stored handle missing or user denied — open fresh picker
-    const handle = await window.showDirectoryPicker({ mode:'read', startIn:'downloads' });
+    const handle = await window.showDirectoryPicker({ mode:'readwrite', startIn:'downloads' });
     await _saveFolderHandle(handle);
     _setFolderBtn(handle.name, true);
     localStorage.setItem('void-folder-name', handle.name);
-    await syncOutputFolder(handle);
+    localStorage.removeItem(_FOLDER_SYNC_PREFIX + handle.name);
+    await syncOutputFolder(handle, { force: true });
   } catch(e) {
     if (e.name !== 'AbortError') { setStatus('FOLDER SELECT FAILED','error'); setTimeout(()=>setStatus('Void.gen'),2000); }
   }
 }
-async function syncOutputFolder(handle) {
+function _folderSyncKey(name) { return _FOLDER_SYNC_PREFIX + (name || ''); }
+
+async function syncOutputFolder(handle, options = {}) {
+  const force = !!options.force;
   handle = handle || await _getFolderHandle();
   if (!handle) return;
 
@@ -1488,8 +1778,7 @@ async function syncOutputFolder(handle) {
   _setFolderBtn(handle.name, true);
   localStorage.setItem('void-folder-name', handle.name);
 
-  // Purge stale disk entries so gallery reflects current folder state
-  await dbDeleteDiskEntries();
+  if (force) await dbDeleteDiskEntries();
 
   // Collect all image file handles from folder
   const fileEntries = [];
@@ -1503,15 +1792,23 @@ async function syncOutputFolder(handle) {
     setTimeout(()=>setStatus('Void.gen'),2000); return;
   }
 
-  // Sort by lastModified descending (newest first), then process oldest first for gallery order
   await Promise.all(fileEntries.map(e => e.getFile().then(f => { e._lm = f.lastModified; })));
-  fileEntries.sort((a,b) => a._lm - b._lm);
 
-  setStatus(`IMPORTING ${fileEntries.length} IMAGES FROM OUTPUT FOLDER…`);
+  const lastSync = force ? 0 : parseInt(localStorage.getItem(_folderSyncKey(handle.name)) || '0', 10);
+  const newEntries = fileEntries.filter(e => e._lm > lastSync);
+  if (!newEntries.length) {
+    setStatus('OUTPUT FOLDER UP TO DATE','ok');
+    setTimeout(()=>setStatus('Void.gen'),2000);
+    return;
+  }
+
+  newEntries.sort((a,b) => a._lm - b._lm);
+  const syncTs = Date.now();
+  setStatus(`IMPORTING ${newEntries.length} NEW IMAGES FROM OUTPUT FOLDER…`);
   let done = 0;
   const BATCH = 8;
-  for (let i = 0; i < fileEntries.length; i += BATCH) {
-    const batch = fileEntries.slice(i, i+BATCH);
+  for (let i = 0; i < newEntries.length; i += BATCH) {
+    const batch = newEntries.slice(i, i+BATCH);
     await Promise.all(batch.map(async entry => {
       try {
         const file   = await entry.getFile();
@@ -1532,15 +1829,124 @@ async function syncOutputFolder(handle) {
         const dbId = await _dbSaveDiskFile(entry.name, thumbUrl, meta).catch(() => null);
         _addToGalleryInternal(thumbUrl, dataUrl, entry.name, meta, dbId, true);
         done++;
-        if (done % 20 === 0) setStatus(`IMPORTING… ${done}/${fileEntries.length}`);
+        if (done % 20 === 0) setStatus(`IMPORTING… ${done}/${newEntries.length}`);
       } catch(e) { console.warn('[void.gen] skip', entry.name, e); }
     }));
     // yield to keep UI responsive
     await new Promise(r => setTimeout(r, 0));
   }
-  setStatus(`OUTPUT FOLDER SYNCED — ${done} IMAGES`,'ok');
+  localStorage.setItem(_folderSyncKey(handle.name), String(syncTs));
+  setStatus(`OUTPUT FOLDER SYNCED — ${done} NEW IMAGES`,'ok');
   setTimeout(()=>setStatus('Void.gen'),3000);
   renderStorageBar();
+}
+
+// ── GALLERY DELETE (DB + output folder file) ──────────────────────
+const _DELETE_CONFIRM_MSG = '確定刪除此圖片？\n\n作品集紀錄與輸出資料夾內的原始檔案都會被刪除，此操作無法復原。';
+const _DELETE_CONFIRM_MULTI = n => `確定刪除 ${n} 張圖片？\n\n作品集紀錄與輸出資料夾內的原始檔案都會被刪除，此操作無法復原。`;
+
+async function _getCardDeleteInfo(card) {
+  const meta = _metaFromCard(card);
+  let filename = meta.filename || '';
+  let subfolder = meta.subfolder || '';
+  const id = parseInt(card.dataset.dbId);
+  if (id) {
+    try {
+      const rec = await dbLoadById(id);
+      if (rec?.filename) filename = rec.filename;
+      if (rec?.meta?.filename && !filename) filename = rec.meta.filename;
+      if (rec?.meta?.subfolder) subfolder = rec.meta.subfolder || '';
+      const t = rec?.title || '';
+      if (!filename && /\.(png|jpe?g|webp)$/i.test(t)) filename = t;
+    } catch {}
+  }
+  const cardTitle = card.dataset.title || '';
+  if (!filename && /\.(png|jpe?g|webp)$/i.test(cardTitle)) filename = cardTitle;
+  if (!filename) {
+    const resolved = await _resolveFilenameFromFolder('', subfolder, parseInt(card.dataset.ts || meta.ts || 0));
+    if (resolved.filename) {
+      filename = resolved.filename;
+      subfolder = resolved.subfolder || subfolder;
+      if (id) {
+        const patched = { ...meta, filename, subfolder };
+        card.dataset.metaJson = JSON.stringify(patched);
+        dbUpdate(id, { meta: patched, filename }).catch(() => {});
+      }
+    }
+  }
+  return { filename, subfolder, favKey: card.dataset.favKey || '', dbId: id || null };
+}
+
+async function _deleteOutputFile(filename, subfolder = '') {
+  if (!filename) return { ok: false, reason: 'no_filename' };
+  const handle = await _getFolderHandle();
+  if (!handle) return { ok: false, reason: 'no_folder' };
+  try {
+    const perm = await handle.requestPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') return { ok: false, reason: 'no_permission' };
+    let dir = handle;
+    const parts = (subfolder || '').split(/[/\\]/).filter(Boolean);
+    for (const part of parts) dir = await dir.getDirectoryHandle(part);
+    await dir.removeEntry(filename);
+    return { ok: true };
+  } catch (e) {
+    console.warn('[void.gen] delete output file failed', filename, e);
+    return { ok: false, reason: e?.message || 'delete_failed' };
+  }
+}
+
+function _purgeCardSideData(favKey) {
+  if (!favKey) return;
+  if (_favorites.has(favKey)) {
+    _favorites.delete(favKey);
+    localStorage.setItem('void-gen-favs', JSON.stringify([..._favorites]));
+  }
+  const ratings = getCardRatings();
+  if (ratings[favKey]) { delete ratings[favKey]; saveCardRatings(ratings); }
+  const tags = getCardTags();
+  if (tags[favKey]) { delete tags[favKey]; saveCardTags(tags); }
+  const albums = getAlbums().map(a => ({
+    ...a,
+    cards: (a.cards || []).filter(k => k !== favKey)
+  }));
+  saveAlbums(albums);
+  renderAlbumChips();
+  refreshTagFilterRow();
+}
+
+function _afterGalleryCardRemoved() {
+  const grid = document.getElementById('gallery-grid');
+  if (!grid?.querySelectorAll('.gallery-card').length) {
+    grid.style.display = 'none';
+    _setGalleryEmptyVisible(true);
+  } else {
+    filterGallery();
+  }
+  renderStorageBar();
+}
+
+async function _deleteGalleryCard(card) {
+  if (!card) return { ok: false };
+  const info = await _getCardDeleteInfo(card);
+  if (info.dbId) await dbDelete(info.dbId).catch(() => {});
+  const fileResult = await _deleteOutputFile(info.filename, info.subfolder);
+  _purgeCardSideData(info.favKey);
+  const wasInLb = _lbCards.includes(card);
+  card.remove();
+  _afterGalleryCardRemoved();
+  if (wasInLb) {
+    _lbCards = _lbCards.filter(c => c.isConnected);
+    if (!_lbCards.length) closeLightbox();
+    else {
+      _lbIdx = Math.min(_lbIdx, _lbCards.length - 1);
+      const nc = _lbCards[_lbIdx];
+      const meta = _metaFromCard(nc);
+      const url = nc.querySelector('img')?.src || '';
+      _setLightboxContent(url, nc.dataset.title || '', meta);
+      _updateLbNavBtns();
+    }
+  }
+  return { ok: true, fileDeleted: fileResult.ok, fileResult };
 }
 
 // ── SETTINGS PERSISTENCE ──────────────────────────────────────────
@@ -1548,7 +1954,6 @@ const SETTINGS_KEY = 'void-gen-settings';
 function getSavedSettings() {
   try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null'); } catch { return null; }
 }
-let _saveTimer = null;
 function saveSettings() {
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(() => {
@@ -1562,7 +1967,6 @@ function saveSettings() {
       seedLocked,
       sampler:   document.getElementById('sampler-select').value,
       scheduler: document.getElementById('scheduler-select').value,
-      denoise:   document.getElementById('denoise-slider').value,
       hiresEn:   document.getElementById('hires-enable').checked,
       hiresScale:document.getElementById('hires-scale').value,
       hiresSteps:document.getElementById('hires-steps-slider').value,
@@ -1599,15 +2003,13 @@ function restoreImmediateSettings() {
       b.classList.toggle('active', parseInt(b.textContent.replace('×','')) === currentBatch));
   }
   if (s.seedVal !== undefined) document.getElementById('seed-input').value = s.seedVal;
-  if (s.seedLocked) {
-    seedLocked = true;
-    const btn = document.getElementById('seed-lock-btn');
-    btn.textContent = '🔒'; btn.classList.add('locked');
-    document.getElementById('seed-status').textContent = 'SEED LOCKED';
-  }
+  seedLocked = false;
+  const seedBtn = document.getElementById('seed-lock-btn');
+  if (seedBtn) { seedBtn.textContent = '🎲'; seedBtn.classList.remove('locked'); }
+  const seedSt = document.getElementById('seed-status');
+  if (seedSt) seedSt.textContent = 'RANDOM SEED EACH RUN';
   if (s.sampler)   document.getElementById('sampler-select').value   = s.sampler;
   if (s.scheduler) document.getElementById('scheduler-select').value = s.scheduler;
-  if (s.denoise) { document.getElementById('denoise-slider').value = s.denoise; document.getElementById('denoise-val').textContent = parseFloat(s.denoise).toFixed(2); }
   if (s.hiresEn)  { document.getElementById('hires-enable').checked = true;  document.getElementById('hires-settings').style.display = 'block'; }
   if (s.hiresScale) document.getElementById('hires-scale').value = s.hiresScale;
   if (s.hiresSteps) { const v = s.hiresSteps; document.getElementById('hires-steps-slider').value = v; document.getElementById('hires-steps-num').value = v; document.getElementById('hires-steps-val').textContent = v; }
@@ -1635,6 +2037,7 @@ function restoreImmediateSettings() {
   // Restore folder button label from last session (syncOutputFolder will verify permission)
   const _savedFolderName = localStorage.getItem('void-folder-name');
   if (_savedFolderName) _setFolderBtn(_savedFolderName, true);
+  initGalleryOpen();
   loadSavedGallery().then(() => syncOutputFolder());
   setTimeout(initMasonry, 100);
   initTheme();
@@ -1644,7 +2047,7 @@ function restoreImmediateSettings() {
   // defer non-critical startup tasks
   setTimeout(renderStorageBar, 2000);
   checkApi();
-  _initHealthWs();
+  _initComfyWs();
   setInterval(pollVRAM, 20000);
   updateModelBadge();
   requestAnimationFrame(fitGalleryView);
@@ -1689,18 +2092,64 @@ async function checkApiSilent() {
   } catch { setApiOnline(false); }
 }
 
-// ── WS HEALTH MONITOR (replaces setInterval polling) ─────────────
-let _healthWs = null, _healthWsRetry = null;
-function _initHealthWs() {
-  clearTimeout(_healthWsRetry);
-  if (_healthWs) { try { _healthWs.close(); } catch {} _healthWs = null; }
+// ── PERSISTENT COMFY WS (health + generation) ─────────────────────
+function _routeComfyWsMessage(event) {
+  if (event.data instanceof Blob) {
+    if (_comfyPreviewHandler) _comfyPreviewHandler(event);
+    return;
+  }
+  try {
+    const msg = JSON.parse(event.data);
+    const pid = msg.data?.prompt_id;
+    if (pid && _comfyWsListeners[pid]) {
+      _comfyWsListeners[pid](event);
+      return;
+    }
+    Object.keys(_comfyWsListeners).forEach(key => {
+      if (key.startsWith('__pre_')) _comfyWsListeners[key](event);
+    });
+  } catch {}
+}
+
+function _initComfyWs() {
+  clearTimeout(_comfyWsRetry);
+  if (_comfyWs?.readyState === WebSocket.OPEN || _comfyWs?.readyState === WebSocket.CONNECTING) return;
+  if (_comfyWs) { try { _comfyWs.close(); } catch {} _comfyWs = null; }
+  _comfyWsReady = null;
   const wsBase = COMFY_API.replace(/^http/, 'ws');
   try {
-    const ws = new WebSocket(`${wsBase}/ws?clientId=void-health`);
-    ws.onopen  = () => { _healthWs = ws; setApiOnline(true); };
-    ws.onclose = () => { _healthWs = null; setApiOnline(false); _healthWsRetry = setTimeout(_initHealthWs, 6000); };
-    ws.onerror = () => { ws.close(); };
-  } catch { _healthWsRetry = setTimeout(_initHealthWs, 6000); }
+    const ws = new WebSocket(`${wsBase}/ws?clientId=${_COMFY_CLIENT_ID}`);
+    _comfyWs = ws;
+    _comfyWsReady = new Promise((res, rej) => {
+      const tid = setTimeout(() => rej(new Error('WebSocket connection timeout')), 5000);
+      ws.onopen = () => { clearTimeout(tid); setApiOnline(true); res(ws); };
+      ws.onerror = () => { clearTimeout(tid); rej(new Error('WebSocket connection failed')); };
+    }).catch(err => {
+      _comfyWsReady = null;
+      try { ws.close(); } catch {}
+      if (_comfyWs === ws) _comfyWs = null;
+      throw err;
+    });
+    ws.onclose = () => {
+      _comfyWs = null;
+      _comfyWsReady = null;
+      _comfyWsListeners = {};
+      _comfyPreviewHandler = null;
+      setApiOnline(false);
+      _comfyWsRetry = setTimeout(_initComfyWs, 6000);
+    };
+    ws.onmessage = _routeComfyWsMessage;
+  } catch {
+    _comfyWsRetry = setTimeout(_initComfyWs, 6000);
+  }
+}
+
+async function _ensureComfyWs() {
+  if (_comfyWs?.readyState === WebSocket.OPEN) return _comfyWs;
+  if (!_comfyWsReady) _initComfyWs();
+  if (_comfyWsReady) await _comfyWsReady;
+  if (_comfyWs?.readyState !== WebSocket.OPEN) throw new Error('WebSocket connection failed');
+  return _comfyWs;
 }
 function setApiOnline(ok) {
   document.getElementById('api-dot').className = 'status-dot ' + (ok ? 'online' : 'error');
@@ -1717,19 +2166,36 @@ function findOption(sel, name) {
 }
 
 // ── MODELS ────────────────────────────────────────────────────────
-async function _fetchModelList() {
-  const r = await fetch(`${COMFY_API}/object_info/CheckpointLoaderSimple`);
+async function _fetchModelList(force = false) {
+  if (!force) {
+    try {
+      const cached = JSON.parse(sessionStorage.getItem(_MODEL_CACHE_KEY) || 'null');
+      if (cached?.ts && Date.now() - cached.ts < _MODEL_CACHE_TTL && cached.models?.length)
+        return cached.models;
+    } catch {}
+  }
+  const r = await _fetchWithTimeout(`${COMFY_API}/object_info/CheckpointLoaderSimple`, 8000);
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   const d = await r.json();
-  return d?.CheckpointLoaderSimple?.input?.required?.ckpt_name?.[0] || [];
+  const models = d?.CheckpointLoaderSimple?.input?.required?.ckpt_name?.[0] || [];
+  if (models.length) {
+    try { sessionStorage.setItem(_MODEL_CACHE_KEY, JSON.stringify({ ts: Date.now(), models })); } catch {}
+  }
+  return models;
 }
-async function loadComfyModels() {
+async function _getModelList(force = false) {
+  if (force) _modelListPromise = null;
+  if (!_modelListPromise) _modelListPromise = _fetchModelList(force);
+  try { return await _modelListPromise; }
+  catch (e) { _modelListPromise = null; throw e; }
+}
+async function loadComfyModels(force = false) {
   const selM = document.getElementById('model-select');
   let models = [];
   // retry up to 3 times
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      models = await _fetchModelList();
+      models = await _getModelList(force && attempt === 0);
       if (models.length) break;
     } catch(e) {
       const msg = e?.message || String(e);
@@ -1757,7 +2223,7 @@ async function loadComfyModels() {
 async function loadRefinerModels() {
   const selR = document.getElementById('refiner-select');
   let models = [];
-  try { models = await _fetchModelList(); } catch {}
+  try { models = await _getModelList(); } catch {}
   if (!models.length) return;
   selR.innerHTML = '<option value="">NONE</option>' + models.map(m => `<option value="${m}">${m}</option>`).join('');
   const saved = getSavedSettings();
@@ -1931,14 +2397,9 @@ function renderTaskEditor() {
   });
 }
 function renderTagGroups() {
-  const groups = [
-    { label:'Quality', tags:['masterpiece','best quality','ultra-detailed','8k','photorealistic','RAW photo'] },
-    { label:'Style',   tags:['anime style','cinematic','oil painting','cyberpunk','watercolor','fantasy','concept art'] },
-    { label:'Light',   tags:['golden hour','studio lighting','neon lights','dramatic lighting','soft light'] },
-  ];
-  return groups.map(g =>
-    `<div class="tag-group"><div class="tag-group-label">${g.label}</div><div class="tag-chips">`+
-    g.tags.map(tag=>`<span class="tag-chip" data-tag="${escHtml(tag)}">${tag}</span>`).join('')+
+  return PROMPT_TAG_GROUPS.map(g =>
+    `<div class="tag-group${g.spicy ? ' spicy' : ''}"><div class="tag-group-label">${g.label}</div><div class="tag-chips">`+
+    g.tags.map(tag=>`<span class="tag-chip${g.spicy ? ' spicy' : ''}" data-tag="${escHtml(tag)}">${tag}</span>`).join('')+
     `</div></div>`).join('');
 }
 function bindTagChips(wrap) {
@@ -1949,6 +2410,7 @@ function bindTagChips(wrap) {
       el.value = el.value.trim() ? el.value.trim()+', '+chip.dataset.tag : chip.dataset.tag;
       tasks[activeTask].prompt = el.value;
       _autoResize(el);
+      updateTokenCount();
     });
   });
 }
@@ -1957,8 +2419,8 @@ function bindTagChips(wrap) {
 function _mkDebounce(fn, ms) {
   let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
 }
-const _debouncedTokenCount    = _mkDebounce(() => updateTokenCount(),    280);
-const _debouncedNegTokenCount = _mkDebounce(() => updateNegTokenCount(), 280);
+window._debouncedTokenCount    = _mkDebounce(() => updateTokenCount(),    280);
+window._debouncedNegTokenCount = _mkDebounce(() => updateNegTokenCount(), 280);
 
 // ── TOKEN COUNTER ─────────────────────────────────────────────────
 function countClipTokens(text) {
@@ -2045,20 +2507,56 @@ function setMode(mode, el) {
   currentMode = mode;
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('img2img-section').style.display = mode==='img2img' ? 'block' : 'none';
+  document.getElementById('char-rng-section').style.display = mode==='char' ? 'block' : 'none';
   document.getElementById('img2txt-section').style.display = mode==='img2txt' ? 'block' : 'none';
 }
-function triggerUpload() { document.getElementById('file-input').click(); }
-function handleUpload(input) {
-  const file = input.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    img2imgBase64 = e.target.result.split(',')[1];
-    const up = document.getElementById('img-upload');
-    up.classList.add('has-img');
-    up.innerHTML = `<img src="${e.target.result}"><span class="ul" style="color:var(--text)">✓ LOADED</span>`;
-  };
-  reader.readAsDataURL(file);
+function sendCharRngToPrompt() {
+  const frame = document.getElementById('char-rng-frame');
+  if (frame?.contentWindow) frame.contentWindow.postMessage({ type: 'void-gen-request-prompt' }, '*');
+}
+function _syncCharRngGenBtn(pending) {
+  const btn = document.getElementById('char-rng-gen-btn');
+  if (!btn) return;
+  const busy = pending || isGenerating;
+  btn.disabled = busy;
+  btn.textContent = pending ? '讀取中…' : (isGenerating ? 'GENERATING…' : 'GENERATE');
+}
+function sendCharRngToGenerate() {
+  if (isGenerating || _charRngGenPending) return;
+  const frame = document.getElementById('char-rng-frame');
+  if (!frame?.contentWindow) { setStatus('角色生成器未載入', 'warn'); return; }
+  _charRngGenPending = true;
+  _syncCharRngGenBtn(true);
+  clearTimeout(_charRngGenTimer);
+  _charRngGenTimer = setTimeout(() => {
+    _charRngGenPending = false;
+    _syncCharRngGenBtn(false);
+    setStatus('角色 PROMPT 讀取逾時', 'warn');
+  }, 8000);
+  frame.contentWindow.postMessage({ type: 'void-gen-request-generate' }, '*');
+}
+function applyCharRngPrompt(prompt, opts = {}) {
+  const { switchMode = true, autoGenerate = false } = opts;
+  prompt = (prompt || '').trim();
+  if (!prompt) { setStatus('角色 PROMPT 為空', 'warn'); return false; }
+  if (activeTask < 0 && tasks.length) { activeTask = 0; renderTaskTabs(); }
+  if (activeTask < 0) addTask();
+  tasks[activeTask].prompt = prompt;
+  const ta = document.getElementById('te-prompt');
+  if (ta) { ta.value = prompt; _autoResize(ta); updateTokenCount(); }
+  saveTasks();
+  if (autoGenerate) {
+    setStatus('角色 PROMPT 已套用 · 生成中…', 'ok');
+    startGenerate(false, { fromCharRng: true });
+    return true;
+  }
+  if (switchMode) {
+    const txtBtn = document.querySelector('.mode-btn[onclick*="txt2img"]');
+    if (txtBtn) setMode('txt2img', txtBtn);
+  }
+  setStatus('角色 PROMPT 已套用', 'ok');
+  setTimeout(() => setStatus('Void.gen'), 2000);
+  return true;
 }
 function triggerUpload2txt() { document.getElementById('file-input-2txt').click(); }
 function handleUpload2txt(input) {
@@ -2231,7 +2729,9 @@ function renderQueue() {
       </div>
       <div class="q-badge ${st}">${st.toUpperCase()}</div>
     </div>`;
-  }).join('');
+  }).join('') + (tasks.filter(t=>t.prompt.trim()).length > 1
+    ? `<div style="margin-top:10px;text-align:center"><button class="add-task-btn" style="width:100%;padding:8px" onclick="startGenerate(true)">RUN ALL ${tasks.filter(t=>t.prompt.trim()).length} TASKS</button></div>`
+    : '');
   const running = Object.values(queueStatuses).filter(s=>s==='running').length;
   cnt.textContent = running || tasks.length;
   cnt.style.display = 'inline';
@@ -2267,18 +2767,17 @@ async function downloadFromCard(card, name) {
   const url = await _cardFullDataUrl(card);
   if (url) downloadImg(url, name);
 }
-async function i2iFromCard(card) {
-  const url = await _cardFullDataUrl(card);
-  if (url) sendToI2IFromGallery(url);
-}
-
 // ── GALLERY ───────────────────────────────────────────────────────
 function _addToGalleryInternal(thumbUrl, fullDataUrl, title, meta={}, dbId=null, appendMode=false) {
-  document.getElementById('gallery-empty').style.display = 'none';
+  _setGalleryEmptyVisible(false);
   const grid = document.getElementById('gallery-grid');
-  grid.style.display = 'block';
+  grid.style.display = 'flex';
+  initGalleryOpen();
   const card = document.createElement('div');
   card.className = 'gallery-card';
+  card.tabIndex = 0;
+  card.setAttribute('role', 'button');
+  card.setAttribute('aria-label', title || 'Gallery image');
   if (dbId !== null) card.dataset.dbId = dbId;
   card.dataset.ts    = meta.ts    || Date.now();
   card.dataset.model = (meta.model || '').replace(/\.(safetensors|ckpt|pt)$/i,'');
@@ -2292,9 +2791,9 @@ function _addToGalleryInternal(thumbUrl, fullDataUrl, title, meta={}, dbId=null,
   const _initTags = getCardTags()[favKey] || [];
   card.innerHTML = `
     <div class="card-img-wrap">
-      <div class="card-star" onclick="event.stopPropagation();toggleFav(this.closest('.gallery-card'))">${_favorites.has(favKey)?'★':'☆'}</div>
+      <div class="card-star" data-gallery-action="fav" title="Favorite">${_favorites.has(favKey)?'★':'☆'}</div>
       <div class="card-check">✓</div>
-      <img src="${thumbUrl}" loading="lazy">
+      <img src="${thumbUrl}" loading="lazy" alt="">
       <div class="card-overlay">
         <div class="card-meta-wrap">
           ${meta.model ? `<div class="card-model-badge">${escHtml(meta.model.replace(/\.(safetensors|ckpt|pt)$/i,'').slice(0,28))}</div>` : ''}
@@ -2304,47 +2803,23 @@ function _addToGalleryInternal(thumbUrl, fullDataUrl, title, meta={}, dbId=null,
       </div>
       <div class="card-tags">${_initTags.map(t=>`<span class="card-tag-badge">${escHtml(t)}</span>`).join('')}</div>
       <div class="card-actions">
-        <div class="card-action-btn" title="Apply model + LoRA + all settings" onclick="event.stopPropagation();applyAllFromCard(this.closest('.gallery-card'))">⚡</div>
-        <div class="card-action-btn" title="Copy prompt to editor" onclick="event.stopPropagation();copyPromptToEditor(this.closest('.gallery-card'))">✎</div>
-        <div class="card-action-btn" title="Download" onclick="event.stopPropagation();downloadFromCard(this.closest('.gallery-card'),this.closest('.gallery-card').dataset.title)">↓</div>
-        <div class="card-action-btn" title="Send to i2i" onclick="event.stopPropagation();i2iFromCard(this.closest('.gallery-card'))">→</div>
-        <div class="card-action-btn" title="Delete" onclick="event.stopPropagation();deleteFromGallery(this.closest('.gallery-card'))">×</div>
+        <div class="card-action-btn" data-gallery-action="apply" title="Apply model + LoRA + all settings">⚡</div>
+        <div class="card-action-btn" data-gallery-action="copy" title="Copy prompt to editor">✎</div>
+        <div class="card-action-btn" data-gallery-action="download" title="Download">↓</div>
+        <div class="card-action-btn" data-gallery-action="delete" title="Delete image and file in output folder">×</div>
       </div>
     </div>
-    <div class="card-rating">${[1,2,3,4,5].map(i=>`<span class="rating-star ${i<=_initRating?'on':''}" onclick="event.stopPropagation();setCardRating('${favKey}',${i})">${i<=_initRating?'★':'☆'}</span>`).join('')}</div>`;
-  card.querySelector('img').onclick = null;
-  card.onclick = () => {
-    if (gallerySelectMode) {
-      card.classList.toggle('selected');
-      const n = document.getElementById('gallery-grid').querySelectorAll('.selected').length;
-      const zipBtn = document.getElementById('zip-btn');
-      zipBtn.style.display = n > 0 ? 'inline-block' : 'none';
-      if (n > 0) zipBtn.textContent = `ZIP (${n})`;
-    } else {
-      const id = parseInt(card.dataset.dbId);
-      if (id) {
-        dbLoadById(id).then(async rec => {
-          const url = await _cardFullDataUrl(card);
-          openModal(url || fullDataUrl, title, rec?.meta || meta, card);
-        }).catch(() => openModal(fullDataUrl, title, meta, card));
-      } else {
-        openModal(fullDataUrl, title, meta, card);
-      }
-    }
-  };
+    <div class="card-rating">${[1,2,3,4,5].map(i=>`<span class="rating-star ${i<=_initRating?'on':''}" data-rating="${i}" title="Rate ${i}">${i<=_initRating?'★':'☆'}</span>`).join('')}</div>`;
   card.oncontextmenu = e => showCtxMenu(e, fullDataUrl, title, meta);
-  // Date group + insert position
-  const dateLabel = getDateLabel(meta.ts || Date.now());
   if (appendMode) {
-    ensureDateGroup(dateLabel, grid, true);
-    grid.appendChild(card);
+    appendCardToGroup(card, grid, getGalleryGroupLabel(card, 'time'));
+    requestAnimationFrame(fitGalleryView);
   } else {
     const _gv = document.getElementById('gallery-view');
     const _savedScroll = _gv ? _gv.scrollTop : 0;
-    const todayHdr = ensureDateGroup('TODAY', grid, false);
-    todayHdr.after ? todayHdr.after(card) : grid.prepend(card);
-    // Restore scroll so prepend doesn't reset user's position
+    prependCardToGroup(card, grid, getDateLabel(meta.ts || Date.now()));
     if (_gv && _savedScroll > 0) requestAnimationFrame(() => { _gv.scrollTop = _savedScroll; });
+    requestAnimationFrame(fitGalleryView);
   }
   // Update model filter dropdown
   const modelVal = card.dataset.model;
@@ -2357,19 +2832,29 @@ function _addToGalleryInternal(thumbUrl, fullDataUrl, title, meta={}, dbId=null,
     }
   }
 }
-function deleteFromGallery(card) {
-  const id = parseInt(card.dataset.dbId);
-  if (id) dbDelete(id).catch(()=>{});
-  card.remove();
-  const grid = document.getElementById('gallery-grid');
-  if (!grid.children.length) { grid.style.display='none'; document.getElementById('gallery-empty').style.display='flex'; }
-  renderStorageBar();
+async function deleteFromGallery(card) {
+  if (!card) return;
+  if (!confirm(_DELETE_CONFIRM_MSG)) return;
+  setStatus('DELETING…');
+  const result = await _deleteGalleryCard(card);
+  if (result.fileResult?.reason === 'no_folder') {
+    setStatus('REMOVED FROM GALLERY · NO FOLDER LINKED', 'warn');
+  } else if (result.fileResult?.reason === 'no_permission') {
+    setStatus('REMOVED FROM GALLERY · FOLDER WRITE DENIED', 'warn');
+  } else if (result.fileResult?.reason === 'no_filename') {
+    setStatus('REMOVED FROM GALLERY · FILE NAME UNKNOWN', 'warn');
+  } else if (result.fileDeleted) {
+    setStatus('DELETED · GALLERY + DISK FILE', 'ok');
+  } else {
+    setStatus('REMOVED FROM GALLERY · DISK FILE NOT FOUND', 'warn');
+  }
+  setTimeout(() => setStatus('Void.gen'), 2200);
 }
 function clearGallery() {
   const grid = document.getElementById('gallery-grid');
   grid.innerHTML = ''; grid.style.display = 'none';
-  document.getElementById('gallery-empty').style.display = 'flex';
-  _dateGroups.clear(); _galleryBuffer = [];
+  _setGalleryEmptyVisible(true);
+  _galleryBuffer = [];
   dbClear().catch(()=>{});
   renderStorageBar();
   setStatus('GALLERY CLEARED','ok'); setTimeout(()=>setStatus('Void.gen'),1500);
@@ -2381,13 +2866,21 @@ function switchCenterTab(tab, el) {
   const qv = document.getElementById('queue-view');
   const sw = document.getElementById('gallery-search-wrap');
   const tb = document.getElementById('gallery-toolbar');
-  gv.style.display = tab==='gallery' ? 'block' : 'none';
-  gv.style.flex     = tab==='gallery' ? '1' : '';
-  qv.style.display = tab==='queue' ? 'block' : 'none';
-  qv.style.flex     = tab==='queue' ? '1' : '';
-  if (sw) sw.style.display = tab==='gallery' ? '' : 'none';
-  if (tb) tb.style.display = tab==='gallery' ? '' : 'none';
-  // double-rAF: first frame commits display change, second frame measures correct offsetHeight
+  const showGallery = tab === 'gallery';
+  if (gv) {
+    gv.style.display = showGallery ? '' : 'none';
+    gv.style.flex = '';
+    gv.style.height = '';
+    gv.style.maxHeight = '';
+  }
+  if (qv) {
+    qv.style.display = tab === 'queue' ? '' : 'none';
+    qv.style.flex = '';
+    qv.style.height = '';
+    qv.style.maxHeight = '';
+  }
+  if (sw) sw.style.display = showGallery ? '' : 'none';
+  if (tb) tb.style.display = showGallery ? '' : 'none';
   requestAnimationFrame(() => requestAnimationFrame(fitGalleryView));
 }
 
@@ -2421,14 +2914,37 @@ function clearLivePreview() {
 }
 
 // ── LIGHTBOX ──────────────────────────────────────────────────────
-let _lbCards = [], _lbIdx = -1, _lbMeta = {};
+function _metaFromCard(card) {
+  try { return JSON.parse(card.dataset.metaJson || '{}'); } catch { return {}; }
+}
+
+function openGalleryCard(card) {
+  if (!card) return;
+  let thumb = '';
+  try {
+    const meta = _metaFromCard(card);
+    const title = card.dataset.title || meta.prompt || '';
+    thumb = card.querySelector('img')?.src || '';
+    openModal(thumb, title, meta, card);
+  } catch (err) {
+    console.error('[gallery] open failed', err);
+    return;
+  }
+  _cardFullDataUrl(card).then(url => {
+    if (!url || url === thumb) return;
+    const modal = document.getElementById('modal-bg');
+    if (!modal?.classList.contains('open')) return;
+    const lbImg = document.getElementById('modal-img');
+    if (lbImg && lbImg.src === thumb) lbImg.src = url;
+  }).catch(() => {});
+}
 
 function openModal(dataUrl, title, meta, srcCard) {
   _lbCards = [...document.querySelectorAll('#gallery-grid .gallery-card')].filter(c => c.style.display !== 'none');
   _lbIdx = srcCard ? _lbCards.indexOf(srcCard) : -1;
   try { _setLightboxContent(dataUrl, title, meta); } catch(e) { console.error('[lb] setContent error', e); }
   _updateLbNavBtns();
-  document.getElementById('modal-bg').classList.add('open'); // always open even if sidebar fails
+  document.getElementById('modal-bg')?.classList.add('open');
 }
 function _setLightboxContent(dataUrl, title, meta) {
   _lbMeta = meta || {};
@@ -2491,9 +3007,15 @@ function lbDownload() {
   const title = document.getElementById('modal-title').textContent || 'void-gen';
   if (url && url !== window.location.href) downloadImg(url, title);
 }
-function lbSendI2I() {
-  const url = document.getElementById('modal-img').src;
-  if (url && url !== window.location.href) { sendToI2IFromGallery(url); closeLightbox(); }
+async function lbDelete() {
+  const card = _lbIdx >= 0 ? _lbCards[_lbIdx] : null;
+  if (!card) return;
+  if (!confirm(_DELETE_CONFIRM_MSG)) return;
+  setStatus('DELETING…');
+  const result = await _deleteGalleryCard(card);
+  if (result.fileDeleted) setStatus('DELETED · GALLERY + DISK FILE', 'ok');
+  else setStatus('REMOVED FROM GALLERY', 'warn');
+  setTimeout(() => setStatus('Void.gen'), 2200);
 }
 function lbApplyAll() {
   const applied = restoreFromMeta(_lbMeta);
@@ -2530,10 +3052,10 @@ async function lightboxNav(dir) {
   _updateLbNavBtns();
 }
 function closeLightbox() {
-  document.getElementById('modal-bg').classList.remove('open');
-  document.getElementById('lb-sidebar').classList.remove('open');
+  document.getElementById('modal-bg')?.classList.remove('open');
+  document.getElementById('lb-sidebar')?.classList.remove('open');
   document.getElementById('lb-info-btn')?.classList.remove('active');
-  setTimeout(() => { document.getElementById('modal-img').src = ''; }, 200);
+  setTimeout(() => { const img = document.getElementById('modal-img'); if (img) img.src = ''; }, 200);
   _lbCards = []; _lbIdx = -1; _lbMeta = {};
 }
 function closeModal() { closeLightbox(); }
@@ -2542,21 +3064,6 @@ function closeModal() { closeLightbox(); }
 function saveLastImg() { if (lastResult) downloadImg(lastResult.dataUrl, 'void-gen-'+Date.now()); }
 function downloadImg(dataUrl, name) {
   const a = document.createElement('a'); a.href = dataUrl; a.download = (name||'void-gen')+'.png'; a.click();
-}
-function sendToImg2Img() {
-  if (!lastResult) return;
-  img2imgBase64 = lastResult.dataUrl.split(',')[1];
-  setMode('img2img', document.querySelectorAll('.mode-btn')[1]);
-  const up = document.getElementById('img-upload');
-  up.classList.add('has-img','vis');
-  up.innerHTML = `<img src="${lastResult.dataUrl}"><span class="ul" style="color:var(--text)">✓ LOADED</span>`;
-}
-function sendToI2IFromGallery(dataUrl) {
-  img2imgBase64 = dataUrl.split(',')[1];
-  setMode('img2img', document.querySelectorAll('.mode-btn')[1]);
-  const up = document.getElementById('img-upload');
-  up.classList.add('has-img','vis');
-  up.innerHTML = `<img src="${dataUrl}"><span class="ul" style="color:var(--text)">✓ LOADED</span>`;
 }
 function copyPromptToEditor(card) {
   let meta = {};
@@ -2632,11 +3139,6 @@ function hideCtxMenu() {
   document.getElementById('ctx-menu').style.display = 'none';
   _ctxData = null;
 }
-function ctxSendToI2I() {
-  if (!_ctxData) return;
-  sendToI2IFromGallery(_ctxData.dataUrl);
-  hideCtxMenu();
-}
 function ctxRestoreSettings() {
   if (!_ctxData?.meta) return;
   restoreFromMeta(_ctxData.meta);
@@ -2646,6 +3148,14 @@ function ctxDownload() {
   if (!_ctxData) return;
   downloadImg(_ctxData.dataUrl, _ctxData.title);
   hideCtxMenu();
+}
+async function ctxDeleteFromGallery() {
+  if (!_ctxData?.favKey) { hideCtxMenu(); return; }
+  const card = document.querySelector(`.gallery-card[data-fav-key="${_ctxData.favKey}"]`)
+    || [...document.querySelectorAll('.gallery-card')].find(c => c.dataset.favKey === _ctxData.favKey);
+  hideCtxMenu();
+  if (!card) return;
+  await deleteFromGallery(card);
 }
 function restoreFromMeta(meta) {
   if (!meta || activeTask < 0) return [];
@@ -2658,12 +3168,6 @@ function restoreFromMeta(meta) {
   }
   if (meta.seed !== undefined) {
     document.getElementById('seed-input').value = meta.seed;
-    if (!seedLocked) {
-      seedLocked = true;
-      const btn = document.getElementById('seed-lock-btn');
-      btn.textContent = '🔒'; btn.classList.add('locked');
-      document.getElementById('seed-status').textContent = 'SEED LOCKED';
-    }
     applied.push('SEED');
   }
   if (meta.model) {
@@ -2783,7 +3287,7 @@ function buildWorkflow(task, modelName, seed) {
   const scheduler = document.getElementById('scheduler-select').value || 'karras';
   const steps     = parseInt(document.getElementById('steps-num').value) || 20;
   const cfg       = parseFloat(document.getElementById('cfg-num').value) || 7;
-  const batchSize = task.batch || currentBatch || 1;
+  const batchSize = Math.max(1, parseInt(task.batch || currentBatch || 1, 10) || 1);
   const loras = [0,1,2,3,4,5].map(i => ({
     name: document.getElementById(`lora-sel-${i}`)?.value || '',
     strength: parseFloat(document.getElementById(`lora-sldr-${i}`)?.value || 0.8)
@@ -2791,12 +3295,7 @@ function buildWorkflow(task, modelName, seed) {
 
   const wf = { "1": { class_type:"CheckpointLoaderSimple", inputs:{ ckpt_name: modelName } } };
 
-  if (currentMode === 'img2img' && img2imgBase64) {
-    wf["8"] = { class_type:"ETN_LoadImageBase64", inputs:{ image: img2imgBase64 } };
-    wf["4"] = { class_type:"VAEEncode", inputs:{ pixels:["8",0], vae:["1",2] } };
-  } else {
-    wf["4"] = { class_type:"EmptyLatentImage", inputs:{ width:w, height:h, batch_size:batchSize } };
-  }
+  wf["4"] = { class_type:"EmptyLatentImage", inputs:{ width:w, height:h, batch_size:batchSize } };
 
   let modelRef = ["1",0], clipRef = ["1",1];
   loras.forEach((lora, i) => {
@@ -2811,8 +3310,6 @@ function buildWorkflow(task, modelName, seed) {
   const refinerName = document.getElementById('refiner-select')?.value;
   const switchPct   = parseInt(document.getElementById('switch-slider')?.value || 80) / 100;
   const switchStep  = Math.round(steps * switchPct);
-  const denoise     = currentMode==='img2img' ? parseFloat(document.getElementById('denoise-slider')?.value||0.75) : 1;
-
   if (refinerName) {
     wf["5"] = { class_type:"KSamplerAdvanced", inputs:{ add_noise:"enable", noise_seed:seed, steps, cfg, sampler_name:sampler, scheduler, start_at_step:0, end_at_step:switchStep, return_with_leftover_noise:"enable", model:modelRef, positive:["2",0], negative:["3",0], latent_image:["4",0] } };
     wf["30"] = { class_type:"CheckpointLoaderSimple", inputs:{ ckpt_name:refinerName } };
@@ -2820,7 +3317,7 @@ function buildWorkflow(task, modelName, seed) {
     wf["32"] = { class_type:"CLIPTextEncode", inputs:{ text:task.negative||'low quality', clip:["30",1] } };
     wf["33"] = { class_type:"KSamplerAdvanced", inputs:{ add_noise:"disable", noise_seed:seed, steps, cfg, sampler_name:sampler, scheduler, start_at_step:switchStep, end_at_step:steps, return_with_leftover_noise:"disable", model:["30",0], positive:["31",0], negative:["32",0], latent_image:["5",0] } };
   } else {
-    wf["5"] = { class_type:"KSampler", inputs:{ seed, steps, cfg, sampler_name:sampler, scheduler, denoise, model:modelRef, positive:["2",0], negative:["3",0], latent_image:["4",0] } };
+    wf["5"] = { class_type:"KSampler", inputs:{ seed, steps, cfg, sampler_name:sampler, scheduler, denoise:1, model:modelRef, positive:["2",0], negative:["3",0], latent_image:["4",0] } };
   }
 
   const vaeRef = vaeName ? (wf["9"] = { class_type:"VAELoader", inputs:{ vae_name:vaeName } }, ["9",0]) : ["1",2];
@@ -2855,7 +3352,36 @@ function buildWorkflow(task, modelName, seed) {
   } else {
     wf["7"] = { class_type:"SaveImage", inputs:{ filename_prefix:"void-gen", images:["6",0] } };
   }
-  return wf;
+  return { wf, saveNodeId: '7' };
+}
+
+const _VOID_SAVE_NODE = '7';
+
+function _dedupeImages(images) {
+  const seen = new Set();
+  return (images || []).filter(img => {
+    const key = `${img.subfolder || ''}/${img.filename || ''}`;
+    if (!img.filename || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function _imagesFromHistoryOutputs(outputs, saveNodeId = _VOID_SAVE_NODE) {
+  if (!outputs) return [];
+  const fromSave = outputs[saveNodeId]?.images;
+  if (fromSave?.length) return _dedupeImages(fromSave);
+  return _dedupeImages(Object.values(outputs).flatMap(o => o.images || []));
+}
+
+function _getGenerateTaskIndices(allTasks = false) {
+  const indexed = tasks.map((t, i) => ({ t, i })).filter(({ t }) => t.prompt.trim());
+  if (!indexed.length) return [];
+  if (allTasks) return indexed.map(x => x.i);
+  const idx = activeTask >= 0 && tasks[activeTask]?.prompt?.trim()
+    ? activeTask
+    : indexed[0].i;
+  return [idx];
 }
 
 // ── COMFY GENERATE ────────────────────────────────────────────────
@@ -2863,46 +3389,74 @@ async function comfyuiGenerate(task) {
   const modelName = document.getElementById('model-select').value;
   if (!modelName) throw new Error('Please select a model');
   const seed = getEffectiveSeed();
-  const workflow = buildWorkflow(task, modelName, seed);
+  const { wf: workflow, saveNodeId } = buildWorkflow(task, modelName, seed);
   const stagesInTask = Math.max(1, Object.values(workflow).filter(n =>
     ['KSampler','KSamplerAdvanced'].includes(n.class_type)
   ).length);
   let currentStage = 0, lastStepVal = -1;
 
-  const clientId = crypto.randomUUID();
-  const wsBase = COMFY_API.replace(/^http/, 'ws');
-  const ws = new WebSocket(`${wsBase}/ws?clientId=${clientId}`);
-  await new Promise((res,rej) => {
-    ws.onopen = res;
-    ws.onerror = () => rej(new Error('WebSocket connection failed'));
-    setTimeout(() => rej(new Error('WebSocket connection timeout')), 5000);
-  });
-
-  // Buffer messages that arrive before prompt_id is known (race condition with --fast mode)
-  const _msgQueue = [];
-  let _msgReady = false;
-  ws.onmessage = (e) => { if (_msgReady) _dispatchMsg(e); else _msgQueue.push(e); };
-
-  const r = await fetch(`${COMFY_API}/prompt`, {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ prompt: workflow, client_id: clientId })
-  });
-  if (!r.ok) { ws.close(); throw new Error(`HTTP ${r.status}`); }
-  const { prompt_id } = await r.json();
+  const promptBody = JSON.stringify({ prompt: workflow, client_id: _COMFY_CLIENT_ID });
+  const preQueue = [];
+  const preKey = '__pre_' + Date.now();
+  _comfyWsListeners[preKey] = (e) => preQueue.push(e);
+  let promptResp;
+  try {
+    [, promptResp] = await Promise.all([
+      _ensureComfyWs(),
+      fetch(`${COMFY_API}/prompt`, {
+        method:'POST', headers:{'Content-Type':'application/json'}, body: promptBody
+      })
+    ]);
+  } finally {
+    delete _comfyWsListeners[preKey];
+  }
+  if (!promptResp.ok) throw new Error(`HTTP ${promptResp.status}`);
+  const { prompt_id } = await promptResp.json();
 
   return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => { ws.close(); clearLivePreview(); reject(new Error('Generation timeout (4 min)')); }, 4*60*1000);
+    let settled = false;
+    const finish = (fn, val) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      delete _comfyWsListeners[prompt_id];
+      if (_comfyPreviewHandler === previewHandler) _comfyPreviewHandler = null;
+      clearLivePreview();
+      fn(val);
+    };
+
+    const timeout = setTimeout(() => {
+      finish(reject, new Error('Generation timeout (4 min)'));
+    }, 4*60*1000);
+
+    const previewHandler = async (event) => {
+      try {
+        const buf = await event.data.arrayBuffer();
+        const view = new DataView(buf);
+        if (view.getUint32(0) === 1) {
+          showLivePreview(URL.createObjectURL(new Blob([buf.slice(8)], {type:'image/jpeg'})));
+        }
+      } catch {}
+    };
+    _comfyPreviewHandler = previewHandler;
+
+    async function _fetchResultImages(images) {
+      images = _dedupeImages(images);
+      if (!images.length) return;
+      const dataUrls = await Promise.all(images.map(async img => {
+        const url = `${COMFY_API}/view?filename=${encodeURIComponent(img.filename)}&subfolder=${encodeURIComponent(img.subfolder)}&type=${img.type}`;
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error(`fetch /view ${resp.status}`);
+        const blob = await resp.blob();
+        return new Promise((res,rej) => { const rd=new FileReader(); rd.onload=()=>res(rd.result); rd.onerror=rej; rd.readAsDataURL(blob); });
+      }));
+      const files = images.map(img => ({ filename: img.filename, subfolder: img.subfolder || '', type: img.type || 'output' }));
+      finish(resolve, { dataUrls, files, seed, model: modelName });
+    }
 
     async function _dispatchMsg(event) {
       try {
-        if (event.data instanceof Blob) {
-          const buf = await event.data.arrayBuffer();
-          const view = new DataView(buf);
-          if (view.getUint32(0) === 1) {
-            showLivePreview(URL.createObjectURL(new Blob([buf.slice(8)], {type:'image/jpeg'})));
-          }
-          return;
-        }
+        if (event.data instanceof Blob) return;
         const msg = JSON.parse(event.data);
         if (msg.type==='progress' && msg.data.prompt_id===prompt_id) {
           if (msg.data.value <= lastStepVal && lastStepVal > 0)
@@ -2916,65 +3470,37 @@ async function comfyuiGenerate(task) {
           document.getElementById('progress-wrap').style.display = 'flex';
         }
         if (msg.type==='execution_success' && msg.data.prompt_id===prompt_id) {
-          // Fallback: executed message might have been missed; poll history for images
           setTimeout(async () => {
+            if (settled) return;
             try {
               const hr = await fetch(`${COMFY_API}/history/${prompt_id}`);
-              if (!hr.ok) return;
+              if (!hr.ok || settled) return;
               const hist = await hr.json();
               const outputs = hist[prompt_id]?.outputs;
               if (!outputs) return;
-              const images = Object.values(outputs).flatMap(o => o.images || []);
-              if (images.length) {
-                clearTimeout(timeout); clearLivePreview();
-                const dataUrls = await Promise.all(images.map(async img => {
-                  const url = `${COMFY_API}/view?filename=${encodeURIComponent(img.filename)}&subfolder=${encodeURIComponent(img.subfolder)}&type=${img.type}`;
-                  const resp = await fetch(url); if (!resp.ok) throw new Error(`/view ${resp.status}`);
-                  const blob = await resp.blob();
-                  return new Promise((res,rej) => { const rd=new FileReader(); rd.onload=()=>res(rd.result); rd.onerror=rej; rd.readAsDataURL(blob); });
-                }));
-                ws.close(); resolve({ dataUrls, seed, model: modelName });
-              }
+              const images = _imagesFromHistoryOutputs(outputs, saveNodeId);
+              if (images.length) await _fetchResultImages(images);
             } catch(_) {}
           }, 300);
         }
-        if (msg.type==='executed' && msg.data.prompt_id===prompt_id) {
+        if (msg.type==='executed' && msg.data.prompt_id===prompt_id && msg.data.node===saveNodeId) {
           const images = msg.data.output?.images;
-          console.log('[void.gen] executed msg, node=', msg.data.node, 'images=', images);
           if (images?.length) {
-            clearTimeout(timeout); clearLivePreview();
-            try {
-              const dataUrls = await Promise.all(images.map(async img => {
-                const url = `${COMFY_API}/view?filename=${encodeURIComponent(img.filename)}&subfolder=${encodeURIComponent(img.subfolder)}&type=${img.type}`;
-                console.log('[void.gen] fetching image from', url);
-                const resp = await fetch(url);
-                if (!resp.ok) throw new Error(`fetch /view ${resp.status}`);
-                const blob = await resp.blob();
-                return new Promise((res,rej) => { const rd=new FileReader(); rd.onload=()=>res(rd.result); rd.onerror=rej; rd.readAsDataURL(blob); });
-              }));
-              console.log('[void.gen] all images fetched, resolving');
-              ws.close();
-              resolve({ dataUrls, seed, model: modelName });
-            } catch(fetchErr) {
-              console.error('[void.gen] image fetch failed:', fetchErr);
-              ws.close();
-              reject(new Error('圖片讀取失敗: ' + fetchErr.message));
-            }
+            try { await _fetchResultImages(images); }
+            catch(fetchErr) { finish(reject, new Error('圖片讀取失敗: ' + fetchErr.message)); }
           }
         }
         if (msg.type==='execution_error' && msg.data.prompt_id===prompt_id) {
-          clearTimeout(timeout); ws.close(); clearLivePreview();
-          reject(new Error(msg.data.exception_message || 'ComfyUI error'));
+          finish(reject, new Error(msg.data.exception_message || 'ComfyUI error'));
         }
       } catch(e) { /* ignore parse errors */ }
     }
 
-    ws.onmessage = _dispatchMsg;
-    ws.onerror = () => { clearTimeout(timeout); clearLivePreview(); reject(new Error('WebSocket disconnected')); };
-
-    // Drain any messages that arrived before prompt_id was known
-    _msgReady = true;
-    _msgQueue.splice(0).forEach(_dispatchMsg);
+    _comfyWsListeners[prompt_id] = (event) => {
+      if (settled) return;
+      _dispatchMsg(event);
+    };
+    preQueue.forEach(_dispatchMsg);
   });
 }
 
@@ -2983,12 +3509,23 @@ function stopGenerate() {
   stopRequested = true;
   fetch(`${COMFY_API}/interrupt`, {method:'POST'}).catch(()=>{});
   setStatus('STOPPING…','warn');
+  document.querySelectorAll('.center-tab')[1]?.classList.remove('generating');
   _syncMobileGenBtn(false);
 }
-async function startGenerate() {
+async function startGenerate(allTasks = false, opts = {}) {
   if (isGenerating) return;
+  if (currentMode === 'char' && !opts.fromCharRng) {
+    sendCharRngToGenerate();
+    return;
+  }
   if (!tasks.length) { setStatus('ADD A TASK FIRST','warn'); return; }
-  if (!tasks.some(t => t.prompt.trim())) { setStatus('ADD A PROMPT','warn'); return; }
+  const runIndices = _getGenerateTaskIndices(allTasks);
+  if (!runIndices.length) { setStatus('ADD A PROMPT','warn'); return; }
+  const promptTaskCount = tasks.filter(t => t.prompt.trim()).length;
+  if (!allTasks && promptTaskCount > 1) {
+    setStatus(`ACTIVE TASK ONLY · ${promptTaskCount} tasks have prompts (QUEUE → RUN ALL)`, 'warn');
+    setTimeout(() => setStatus('Void.gen'), 2800);
+  }
   closeMobileDrawer();
   saveTasks();
   isGenerating = true; stopRequested = false;
@@ -3000,29 +3537,35 @@ async function startGenerate() {
   document.getElementById('preview-loading').style.display = 'flex';
   document.getElementById('preview-ph').style.display = 'none';
   queueStatuses = {};
-  tasks.forEach((_,i) => queueStatuses[i]='pending');
+  tasks.forEach((t, i) => {
+    if (!t.prompt.trim()) queueStatuses[i] = 'skipped';
+    else if (runIndices.includes(i)) queueStatuses[i] = 'pending';
+    else queueStatuses[i] = 'skipped';
+  });
   renderQueue();
-  switchCenterTab('queue', document.querySelectorAll('.center-tab')[1]);
+  document.querySelectorAll('.center-tab')[1]?.classList.add('generating');
 
-  const activeTasks = tasks.filter(t => t.prompt.trim());
-  _progressTotal = activeTasks.length || 1;
+  _progressTotal = runIndices.length || 1;
   _progressCompleted = 0;
   const t0 = Date.now(); let ok = 0, fail = 0, lastErr = '';
-  for (let i = 0; i < tasks.length; i++) {
+  try {
+  for (const i of runIndices) {
     if (stopRequested) { setStatus(`STOPPED · ${ok} done`,'warn'); break; }
     if (!tasks[i].prompt.trim()) { queueStatuses[i]='error'; renderQueue(); continue; }
     saveToHistory(tasks[i].prompt);
     queueStatuses[i] = 'running'; renderQueue();
     setStatus(`GENERATING ${i+1}/${tasks.length} · ${tasks[i].title}`);
     try {
-      const { dataUrls, seed, model } = await comfyuiGenerate(tasks[i]);
+      const { dataUrls, files, seed, model } = await comfyuiGenerate(tasks[i]);
       console.log('[void.gen] comfyuiGenerate resolved, dataUrls.length=', dataUrls.length, 'seed=', seed);
       const elapsed = ((Date.now()-t0)/1000).toFixed(1)+'s';
       await Promise.all(dataUrls.map(async (dataUrl, j) => {
         const title = tasks[i].title + (dataUrls.length>1 ? ` #${j+1}` : '');
+        const imgFile = files?.[j];
         const meta = { prompt:tasks[i].prompt, negative:tasks[i].negative, seed, model,
           steps:document.getElementById('steps-num').value, cfg:document.getElementById('cfg-num').value,
           sampler:document.getElementById('sampler-select').value, time:elapsed,
+          filename: imgFile?.filename || '', subfolder: imgFile?.subfolder || '', outputType: imgFile?.type || 'output',
           loras:[0,1,2,3,4,5].map(k=>({ name:document.getElementById(`lora-sel-${k}`)?.value||'', strength:parseFloat(document.getElementById(`lora-sldr-${k}`)?.value||0.8) })).filter(l=>l.name) };
         console.log('[void.gen] calling saveAndAddToGallery for', title, 'dataUrl starts:', dataUrl?.slice(0,30));
         await saveAndAddToGallery(dataUrl, title, meta);
@@ -3040,19 +3583,15 @@ async function startGenerate() {
     }
     renderQueue();
   }
+  } finally {
   isGenerating = false;
+  document.querySelectorAll('.center-tab')[1]?.classList.remove('generating');
   _syncMobileGenBtn(false);
   btn.classList.remove('running');
   document.getElementById('gen-label').textContent = 'GENERATE';
   document.getElementById('stop-btn').style.display = 'none';
   document.getElementById('progress-wrap').style.display = 'none';
   document.getElementById('preview-loading').style.display = 'none';
-  if (!stopRequested && ok > 0 && !seedLocked) {
-    seedLocked = true;
-    const lbtn = document.getElementById('seed-lock-btn');
-    lbtn.textContent = '🔒'; lbtn.classList.add('locked');
-    document.getElementById('seed-status').textContent = 'AUTO-LOCKED';
-    saveSettings();
   }
   if (!stopRequested) {
     if (fail > 0 && ok === 0) {
@@ -3070,37 +3609,36 @@ function stepSeed(delta) {
   const input = document.getElementById('seed-input');
   const next = Math.max(0, Math.min(4294967295, (parseInt(input.value)||0) + delta));
   input.value = next;
-  if (!seedLocked) {
-    seedLocked = true;
-    const btn = document.getElementById('seed-lock-btn');
-    btn.textContent = '🔒'; btn.classList.add('locked');
-    document.getElementById('seed-status').textContent = 'SEED LOCKED';
-  }
   saveSettings();
 }
 
 // ── GALLERY SORT / SELECT / ZIP ───────────────────────────────────
-let gallerySelectMode = false;
-
 function sortGallery(by) {
+  _gallerySortMode = by;
   const grid = document.getElementById('gallery-grid');
-  // Remove date headers temporarily
   grid.querySelectorAll('.date-group-hdr').forEach(h => h.remove());
-  _dateGroups.clear();
-  const cards = [...grid.children].filter(c => c.classList.contains('gallery-card'));
+  const cards = [...grid.querySelectorAll('.gallery-card')];
   const _ratings = by === 'rating' ? getCardRatings() : null;
   cards.sort((a, b) => {
-    if (by === 'time')   return parseInt(b.dataset.ts||0) - parseInt(a.dataset.ts||0);
-    if (by === 'model')  return (a.dataset.model||'').localeCompare(b.dataset.model||'');
-    if (by === 'rating') return (_ratings[b.dataset.favKey]||0) - (_ratings[a.dataset.favKey]||0);
+    if (by === 'time') return parseInt(b.dataset.ts || 0) - parseInt(a.dataset.ts || 0);
+    if (by === 'model') {
+      const mc = (a.dataset.model || '').localeCompare(b.dataset.model || '');
+      return mc !== 0 ? mc : parseInt(b.dataset.ts || 0) - parseInt(a.dataset.ts || 0);
+    }
+    if (by === 'rating') {
+      const dr = (_ratings[b.dataset.favKey] || 0) - (_ratings[a.dataset.favKey] || 0);
+      return dr !== 0 ? dr : parseInt(b.dataset.ts || 0) - parseInt(a.dataset.ts || 0);
+    }
     return 0;
   });
-  grid.innerHTML = '';
-  cards.forEach(card => {
-    const label = getDateLabel(parseInt(card.dataset.ts||0));
-    ensureDateGroup(label, grid, true);
-    grid.appendChild(card);
+  cards.forEach(card => appendCardToGroup(card, grid, getGalleryGroupLabel(card, by)));
+  document.querySelectorAll('#gallery-toolbar .tb-btn[data-sort]').forEach(btn => {
+    const on = btn.dataset.sort === by;
+    btn.style.color = on ? 'var(--text)' : '';
+    btn.style.borderColor = on ? 'var(--muted)' : '';
   });
+  filterGallery();
+  requestAnimationFrame(fitGalleryView);
 }
 
 function toggleSelectMode() {
@@ -3196,7 +3734,6 @@ function filterGallery() {
     if (show) visible++;
   });
   const grid = document.getElementById('gallery-grid');
-  const empty = document.getElementById('gallery-empty');
   // Hide date headers if no visible cards follow them
   grid.querySelectorAll('.date-group-hdr').forEach(hdr => {
     let sib = hdr.nextElementSibling, hasVisible = false;
@@ -3207,8 +3744,8 @@ function filterGallery() {
     hdr.style.display = hasVisible ? '' : 'none';
   });
   if (grid.children.length > 0) {
-    grid.style.display = visible ? 'block' : 'none';
-    empty.style.display = visible ? 'none' : 'flex';
+    grid.style.display = visible ? 'flex' : 'none';
+    _setGalleryEmptyVisible(!visible);
     if (!visible) document.querySelector('#gallery-empty .empty-text').textContent = 'NO RESULTS';
   }
 }
@@ -3279,6 +3816,7 @@ function _syncMobileGenBtn(running) {
   btn.classList.toggle('running', running);
   btn.disabled = running;
   btn.textContent = running ? 'GENERATING…' : 'GENERATE';
+  _syncCharRngGenBtn(_charRngGenPending);
 }
 
 // ── VRAM DISPLAY ──────────────────────────────────────────────────
@@ -3345,26 +3883,24 @@ document.body.addEventListener('drop', e => {
   e.preventDefault();
   const file = e.dataTransfer.files[0];
   if (!file || !file.type.startsWith('image/')) return;
-  if (currentMode === 'img2txt') {
-    _load2txtFile(file);
-    return;
-  }
-  // Always load as img2img source
-  const reader = new FileReader();
-  reader.onload = ev => {
-    img2imgBase64 = ev.target.result.split(',')[1];
-    setMode('img2img', document.querySelectorAll('.mode-btn')[1]);
-    const up = document.getElementById('img-upload');
-    up.classList.add('has-img','vis');
-    up.innerHTML = `<img src="${ev.target.result}"><span class="ul" style="color:var(--text)">✓ LOADED</span>`;
-  };
-  reader.readAsDataURL(file);
-  // Also try to extract PNG metadata and restore settings
+  const img2txtBtn = document.querySelector('.mode-btn[onclick*="img2txt"]');
+  if (img2txtBtn) setMode('img2txt', img2txtBtn);
+  _load2txtFile(file);
   if (file.name.toLowerCase().endsWith('.png') || file.type === 'image/png') {
     file.arrayBuffer().then(buf => parsePngMeta(buf)).then(meta => {
       if (meta && meta.prompt) restoreFromMetaPng(meta);
     }).catch(() => {});
   }
+});
+window.addEventListener('message', (e) => {
+  if (e.data?.type !== 'void-rng-char-prompt') return;
+  clearTimeout(_charRngGenTimer);
+  _charRngGenPending = false;
+  _syncCharRngGenBtn(false);
+  applyCharRngPrompt(e.data.prompt, {
+    switchMode: !e.data.generate,
+    autoGenerate: !!e.data.generate
+  });
 });
 
 // ── PROMPT SNIPPETS ───────────────────────────────────────────────
@@ -3453,60 +3989,6 @@ function deletePreset(i) {
   presets.splice(i, 1);
   localStorage.setItem(PRESETS_KEY, JSON.stringify(presets));
   renderPresetsList();
-}
-
-// ── GALLERY DATE GROUPS ───────────────────────────────────────────
-const _dateGroups = new Set();
-function getDateLabel(ts) {
-  const d = new Date(ts);
-  const today = new Date();
-  const yest = new Date(today); yest.setDate(today.getDate() - 1);
-  if (d.toDateString() === today.toDateString()) return 'TODAY';
-  if (d.toDateString() === yest.toDateString()) return 'YESTERDAY';
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
-function ensureDateGroup(label, grid, append) {
-  const existing = [...grid.querySelectorAll('.date-group-hdr')].find(h => h.textContent === label);
-  if (existing) return existing;
-  const hdr = document.createElement('div');
-  hdr.className = 'date-group-hdr';
-  hdr.textContent = label;
-  if (append) grid.appendChild(hdr);
-  else grid.prepend(hdr);
-  _dateGroups.add(label);
-  return hdr;
-}
-
-// ── GALLERY VIEW HEIGHT FIT ───────────────────────────────────────
-function fitGalleryView() {
-  const center = document.querySelector('.center');
-  const gv = document.getElementById('gallery-view');
-  if (!center || !gv || gv.style.display === 'none') return;
-  let usedH = 0;
-  for (let s = gv.previousElementSibling; s; s = s.previousElementSibling) {
-    usedH += s.getBoundingClientRect().height; // getBoundingClientRect reflects post-layout values
-  }
-  const h = Math.max(center.clientHeight - usedH, 60);
-  const prev = gv.scrollTop;
-  gv.style.flex = 'none';
-  gv.style.height = h + 'px';
-  if (gv.scrollTop !== prev) gv.scrollTop = prev; // preserve scroll after height change
-  const qv = document.getElementById('queue-view');
-  if (qv && qv.style.display !== 'none') { qv.style.flex = 'none'; qv.style.height = h + 'px'; }
-}
-
-// ── GALLERY INFINITE SCROLL ───────────────────────────────────────
-function setupGalleryObserver() {
-  const sentinel = document.getElementById('gallery-sentinel');
-  if (!sentinel) return;
-  if (_galleryObserver) _galleryObserver.disconnect();
-  _galleryObserver = new IntersectionObserver(entries => {
-    if (entries[0].isIntersecting && _galleryBuffer.length) {
-      const batch = _galleryBuffer.splice(0, GALLERY_PAGE);
-      batch.forEach(item => _addToGalleryInternal(item.thumbUrl || item.dataUrl, item.dataUrl, item.title, item.meta, item.id, true));
-    }
-  }, { root: document.getElementById('gallery-view'), threshold: 0.1 });
-  _galleryObserver.observe(sentinel);
 }
 
 // ── GALLERY CARD HOVER TOOLTIP ────────────────────────────────────
@@ -3839,23 +4321,22 @@ function restoreFromMetaPng(meta) {
 async function deleteSelected() {
   const selected = [...document.querySelectorAll('.gallery-card.selected')];
   if (!selected.length) return;
-  if (!confirm(`Delete ${selected.length} image${selected.length>1?'s':''}?`)) return;
+  if (!confirm(_DELETE_CONFIRM_MULTI(selected.length))) return;
+  setStatus(`DELETING ${selected.length}…`);
+  let diskOk = 0, diskMiss = 0;
   for (const card of selected) {
-    const id = parseInt(card.dataset.dbId);
-    if (id) await dbDelete(id).catch(()=>{});
-    card.remove();
-  }
-  const grid = document.getElementById('gallery-grid');
-  if (!grid.querySelectorAll('.gallery-card').length) {
-    grid.style.display = 'none';
-    document.getElementById('gallery-empty').style.display = 'flex';
+    const r = await _deleteGalleryCard(card);
+    if (r.fileDeleted) diskOk++;
+    else diskMiss++;
   }
   document.getElementById('del-btn').style.display = 'none';
   document.getElementById('zip-btn').style.display = 'none';
   toggleSelectMode();
-  renderStorageBar();
-  setStatus(`DELETED ${selected.length} IMAGE${selected.length>1?'S':''}`, 'ok');
-  setTimeout(() => setStatus('Void.gen'), 2000);
+  const msg = diskMiss
+    ? `DELETED ${selected.length} · ${diskOk} DISK FILES`
+    : `DELETED ${selected.length} · GALLERY + DISK`;
+  setStatus(msg, diskMiss ? 'warn' : 'ok');
+  setTimeout(() => setStatus('Void.gen'), 2500);
 }
 
 // ── THEME PRESETS ─────────────────────────────────────────────────
@@ -4132,8 +4613,8 @@ function openEnhancePanel() {
   const inner = document.getElementById('enhance-inner');
   if (!panel || !inner) return;
   inner.innerHTML = ENHANCE_GROUPS.map(g =>
-    `<div class="enhance-group"><div class="enhance-group-label">${g.label}</div><div class="enhance-chips">` +
-    g.chips.map(c => `<span class="enhance-chip" onclick="insertEnhanceChip(${JSON.stringify(c)})">+ ${c}</span>`).join('') +
+    `<div class="enhance-group${g.spicy ? ' spicy' : ''}"><div class="enhance-group-label">${g.label}</div><div class="enhance-chips">` +
+    g.chips.map(c => `<span class="enhance-chip${g.spicy ? ' spicy' : ''}" onclick="insertEnhanceChip(${JSON.stringify(c)})">+ ${c}</span>`).join('') +
     `</div></div>`
   ).join('');
   const ta = document.getElementById('te-prompt');
@@ -4164,7 +4645,8 @@ document.addEventListener('change', saveSettings, { passive: true });
 
 // dismiss context menu & history dropdown & theme panel on outside click
 document.addEventListener('click', e => {
-  if (!document.getElementById('ctx-menu').contains(e.target)) hideCtxMenu();
+  const ctx = document.getElementById('ctx-menu');
+  if (ctx && !ctx.contains(e.target)) hideCtxMenu();
   const drop = document.getElementById('prompt-hist-drop');
   if (drop && !drop.contains(e.target) && e.target.id !== 'hist-btn')
     drop.style.display = 'none';
@@ -4176,6 +4658,12 @@ document.addEventListener('click', e => {
 document.addEventListener('contextmenu', e => {
   if (!e.target.closest('.gallery-card')) hideCtxMenu();
 });
+
+window.openGalleryCard = openGalleryCard;
+window.closeLightbox = closeLightbox;
+window.toggleFav = toggleFav;
+window.setCardRating = setCardRating;
+window.deleteFromGallery = deleteFromGallery;
 </script>
 </body>
 </html>
