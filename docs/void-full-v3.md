@@ -10,7 +10,7 @@
 
 - VOID.RNG fully separated into standalone `void-rng/` project (port 8787)
 - Full panel modes: TXT→IMG + IMG→TXT only (no embedded character PROMPT)
-- PWA cache `sd-panel-v25`
+- PWA cache `sd-panel-v26`
 
 ## Architecture
 
@@ -35,7 +35,7 @@
 
 ## PWA
 
-- `sw.js` cache key `sd-panel-v25`
+- `sw.js` cache key `sd-panel-v26`
 - ComfyUI API requests bypass cache (network-only)
 
 ## Deprecated

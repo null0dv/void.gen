@@ -1970,7 +1970,6 @@ function restoreImmediateSettings() {
     if (!btn) return;
     setMode(btn.dataset.mode, btn);
   });
-  mountCharRngIframe();
   checkApi();
   _initComfyWs();
   setInterval(pollVRAM, 20000);

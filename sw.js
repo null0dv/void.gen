@@ -1,5 +1,5 @@
 // Bump CACHE when static assets change (Full V3 panel)
-const CACHE = "sd-panel-v25";
+const CACHE = "sd-panel-v26";
 const PRECACHE = [
   "./sd-dashboard.full.html",
   "./sd-dashboard.html",
