@@ -1,0 +1,30 @@
+[
+  {
+    "id": "none",
+    "label": "不篩選"
+  },
+  {
+    "id": "slim_waist",
+    "label": "細腰"
+  },
+  {
+    "id": "wide_hips",
+    "label": "寬臀"
+  },
+  {
+    "id": "long_legs",
+    "label": "長腿"
+  },
+  {
+    "id": "thick_thighs",
+    "label": "肉腿"
+  },
+  {
+    "id": "hourglass",
+    "label": "沙漏"
+  },
+  {
+    "id": "girlish",
+    "label": "少女感"
+  }
+]

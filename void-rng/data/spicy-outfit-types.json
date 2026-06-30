@@ -1,0 +1,154 @@
+[
+  {
+    "id": "all",
+    "label": "全部"
+  },
+  {
+    "id": "none",
+    "label": "不篩選"
+  },
+  {
+    "id": "wet",
+    "label": "濕身"
+  },
+  {
+    "id": "sheer",
+    "label": "透明"
+  },
+  {
+    "id": "lingerie",
+    "label": "內衣"
+  },
+  {
+    "id": "garter",
+    "label": "吊帶襪"
+  },
+  {
+    "id": "stockings",
+    "label": "絲襪"
+  },
+  {
+    "id": "miniskirt",
+    "label": "迷你裙"
+  },
+  {
+    "id": "dress",
+    "label": "連身裙"
+  },
+  {
+    "id": "bodycon",
+    "label": "包臀"
+  },
+  {
+    "id": "keyhole",
+    "label": "開胸"
+  },
+  {
+    "id": "crop_top",
+    "label": "短上衣"
+  },
+  {
+    "id": "off_shoulder",
+    "label": "露肩"
+  },
+  {
+    "id": "fishnet",
+    "label": "網襪"
+  },
+  {
+    "id": "latex",
+    "label": "膠衣"
+  },
+  {
+    "id": "leather",
+    "label": "皮革"
+  },
+  {
+    "id": "school",
+    "label": "校服"
+  },
+  {
+    "id": "maid",
+    "label": "女僕"
+  },
+  {
+    "id": "nurse",
+    "label": "護士"
+  },
+  {
+    "id": "bunny",
+    "label": "兔女郎"
+  },
+  {
+    "id": "bikini",
+    "label": "比基尼"
+  },
+  {
+    "id": "one_piece_swim",
+    "label": "連身泳裝"
+  },
+  {
+    "id": "qipao",
+    "label": "旗袍"
+  },
+  {
+    "id": "ol",
+    "label": "OL"
+  },
+  {
+    "id": "gothic",
+    "label": "哥德"
+  },
+  {
+    "id": "idol",
+    "label": "偶像"
+  },
+  {
+    "id": "yukata",
+    "label": "浴衣"
+  },
+  {
+    "id": "kimono",
+    "label": "和服"
+  },
+  {
+    "id": "witch",
+    "label": "魔女"
+  },
+  {
+    "id": "gym",
+    "label": "運動"
+  },
+  {
+    "id": "sweater",
+    "label": "毛衣"
+  },
+  {
+    "id": "hoodie",
+    "label": "帽T"
+  },
+  {
+    "id": "pajama",
+    "label": "睡衣"
+  },
+  {
+    "id": "apron",
+    "label": "圍裙"
+  },
+  {
+    "id": "nun",
+    "label": "修女"
+  },
+  {
+    "id": "police",
+    "label": "警察"
+  },
+  {
+    "id": "teacher",
+    "label": "教師"
+  },
+  {
+    "id": "cosplay",
+    "label": "cos"
+  }
+]

@@ -1,0 +1,14 @@
+[
+  {
+    "label": "身材",
+    "ids": [
+      "none",
+      "slim_waist",
+      "wide_hips",
+      "long_legs",
+      "thick_thighs",
+      "hourglass",
+      "girlish"
+    ]
+  }
+]

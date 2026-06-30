@@ -1,0 +1,13 @@
+[
+  {
+    "label": "胸部",
+    "ids": [
+      "none",
+      "flat",
+      "small",
+      "medium",
+      "large",
+      "huge"
+    ]
+  }
+]

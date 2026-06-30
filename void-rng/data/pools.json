@@ -1,0 +1,30 @@
+[
+  {
+    "id": "all",
+    "label": "全部"
+  },
+  {
+    "id": "null",
+    "label": "Null"
+  },
+  {
+    "id": "psy",
+    "label": "迷幻"
+  },
+  {
+    "id": "geo",
+    "label": "幾何"
+  },
+  {
+    "id": "glitch",
+    "label": "錯層"
+  },
+  {
+    "id": "light",
+    "label": "光波"
+  },
+  {
+    "id": "char",
+    "label": "角色"
+  }
+]

@@ -1,0 +1,50 @@
+{
+  "full": {
+    "quality": 1,
+    "product": 1,
+    "material": 1,
+    "form": 1,
+    "craft": 1,
+    "surface": 1,
+    "scene": 1,
+    "light": 1,
+    "style": 1,
+    "detail": 1
+  },
+  "product": {
+    "quality": 1,
+    "product": 1,
+    "material": 1,
+    "form": 1,
+    "craft": 1,
+    "surface": 1,
+    "scene": 0,
+    "light": 1,
+    "style": 1,
+    "detail": 1
+  },
+  "interior": {
+    "quality": 1,
+    "product": 1,
+    "material": 1,
+    "form": 1,
+    "craft": 0,
+    "surface": 1,
+    "scene": 1,
+    "light": 1,
+    "style": 1,
+    "detail": 1
+  },
+  "studio": {
+    "quality": 1,
+    "product": 1,
+    "material": 1,
+    "form": 1,
+    "craft": 1,
+    "surface": 1,
+    "scene": 1,
+    "light": 1,
+    "style": 0,
+    "detail": 0
+  }
+}

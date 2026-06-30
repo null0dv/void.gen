@@ -1,0 +1,39 @@
+{
+  "version": 3,
+  "char": [
+    "char-sections.json",
+    "char-banks.json",
+    "body-combos.json",
+    "body-frame-types.json",
+    "body-breast-types.json",
+    "body-figure-types.json",
+    "body-frame-groups.json",
+    "body-breast-groups.json",
+    "body-figure-groups.json",
+    "job-types.json",
+    "pose-presets.json",
+    "spicy-outfit-types.json",
+    "spicy-action-types.json",
+    "preset-body-map.json",
+    "tone-markers.json",
+    "pix-formula-templates.json"
+  ],
+  "style": [
+    "style-codes.json",
+    "pools.json",
+    "style-banks.json",
+    "slot-keys.json",
+    "slot-labels.json"
+  ],
+  "jewel": [
+    "jewel-categories.json",
+    "jewel-sections.json",
+    "jewel-banks.json",
+    "jewel-mode-presets.json"
+  ],
+  "search": [
+    "prompt-search-rules.json",
+    "theme-kw.json",
+    "char-tag-library.json"
+  ]
+}

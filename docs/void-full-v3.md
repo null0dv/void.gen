@@ -23,9 +23,9 @@
 | `js/void-pwa.js` | Service worker registration |
 | `sd-dashboard.full.html` | UI shell + ComfyUI + gallery UI |
 
-## VOID.RNG（獨立專案）
+## VOID.RNG V3（獨立專案）
 
-見 **`void-rng/README.md`**。與 Full 分離，port **8787**。
+見 **`void-rng/README.md`**。與 Full 分離，port **8787**。辭庫僅保留 `void-rng/data/`（已移除 rng2 實驗目錄）。
 
 ## IndexedDB
 

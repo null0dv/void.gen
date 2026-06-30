@@ -1,0 +1,90 @@
+[
+  {
+    "id": "all",
+    "label": "全部"
+  },
+  {
+    "id": "cute_outfit_normal",
+    "label": "清純日常"
+  },
+  {
+    "id": "cute_outfit_underwear",
+    "label": "內衣自拍"
+  },
+  {
+    "id": "cute_outfit_sleepwear",
+    "label": "睡衣慵懶"
+  },
+  {
+    "id": "mirror_selfie",
+    "label": "鏡子自拍"
+  },
+  {
+    "id": "overhead_selfie",
+    "label": "高角度俯拍"
+  },
+  {
+    "id": "tempt_high_collar",
+    "label": "俯拍·開領"
+  },
+  {
+    "id": "tempt_low_upskirt",
+    "label": "仰拍·裙底"
+  },
+  {
+    "id": "tempt_sit_legs",
+    "label": "坐姿露腿"
+  },
+  {
+    "id": "tempt_jump_skirt",
+    "label": "跳躍裙飛"
+  },
+  {
+    "id": "wall_lean_selfie",
+    "label": "靠牆自拍"
+  },
+  {
+    "id": "portrait_clean",
+    "label": "肖像特寫"
+  },
+  {
+    "id": "full_body_stand",
+    "label": "全身站立"
+  },
+  {
+    "id": "dutch_angle",
+    "label": "荷蘭角"
+  },
+  {
+    "id": "dynamic_motion",
+    "label": "動態抓拍"
+  },
+  {
+    "id": "lying_relaxed",
+    "label": "躺姿放鬆"
+  },
+  {
+    "id": "from_behind",
+    "label": "回眸背影"
+  },
+  {
+    "id": "sitting_casual",
+    "label": "坐姿生活"
+  },
+  {
+    "id": "kneeling_pose",
+    "label": "跪姿"
+  },
+  {
+    "id": "squat_cute",
+    "label": "深蹲可愛"
+  },
+  {
+    "id": "back_arch",
+    "label": "拱背曲線"
+  },
+  {
+    "id": "cosplay_stage",
+    "label": "cos舞台"
+  }
+]

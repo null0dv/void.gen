@@ -1,0 +1,34 @@
+[
+  {
+    "id": "none",
+    "label": "不篩選"
+  },
+  {
+    "id": "petite",
+    "label": "嬌小"
+  },
+  {
+    "id": "slim",
+    "label": "纖細"
+  },
+  {
+    "id": "average",
+    "label": "標準"
+  },
+  {
+    "id": "tall",
+    "label": "高挑"
+  },
+  {
+    "id": "curvy",
+    "label": "豐滿"
+  },
+  {
+    "id": "athletic",
+    "label": "運動"
+  },
+  {
+    "id": "chubby",
+    "label": "微胖"
+  }
+]

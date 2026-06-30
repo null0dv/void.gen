@@ -1,0 +1,32 @@
+{
+  "cute": {
+    "subject": "1girl, solo, looking at viewer, cute girl, fair skin, youthful charm",
+    "face": "gentle smile, slight blush, sparkling eyes, looking at viewer",
+    "details": "long hair, soft hair strands, delicate collarbone, clean feminine silhouette",
+    "outfit": "casual dress, pastel colors, modest cute outfit, daily wear",
+    "pose": "standing, upper body, slight smile, looking at viewer, soft natural posture",
+    "env": "outdoors, soft lighting, depth of field, bokeh background, gentle atmosphere",
+    "styleRef": "anime style, soft illustration, delicate linework",
+    "quality": "masterpiece, best quality, high detail"
+  },
+  "tempt": {
+    "subject": "1girl, solo, looking at viewer, seductive woman, alluring feminine presence",
+    "face": "bedroom eyes, parted lips, faint blush, looking at viewer",
+    "details": "messy hair strands, exposed collarbone, glossy skin highlight, heated flush",
+    "outfit": "lingerie, lace trim, garter belt, thigh-high stockings",
+    "pose": "high angle selfie, from above, leaning toward viewer, teasing smile, intimate framing",
+    "env": "bedroom, dim ambient light, rim light, soft bokeh, intimate mood",
+    "styleRef": "game CG, glossy highlights, polished anime render, fan-service composition",
+    "quality": "masterpiece, best quality, ultra-detailed"
+  },
+  "cinematic": {
+    "subject": "1girl, solo, looking at viewer, elegant woman, cinematic portrait subject",
+    "face": "soft expression, detailed eyes, subtle smile, looking at viewer",
+    "details": "wind-swept hair, fine fabric texture, subtle sweat sheen, refined skin detail",
+    "outfit": "evening dress, silk fabric, elegant silhouette, refined fashion",
+    "pose": "cowboy shot, standing, hand on hip, looking at viewer, confident composed stance",
+    "env": "city night, neon bokeh, cinematic lighting, depth of field, backlit atmosphere",
+    "styleRef": "semi-realistic, cinematic color grading, soft skin rendering, film still aesthetic",
+    "quality": "masterpiece, best quality, sharp focus"
+  }
+}

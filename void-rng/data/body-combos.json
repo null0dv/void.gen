@@ -1,0 +1,116 @@
+{
+  "petite_cute": {
+    "label": "嬌小可愛",
+    "frame": [
+      "petite",
+      "slim"
+    ],
+    "breast": [
+      "small"
+    ],
+    "figure": [
+      "slim_waist",
+      "girlish"
+    ]
+  },
+  "model_slim": {
+    "label": "纖細長腿",
+    "frame": [
+      "slim",
+      "tall"
+    ],
+    "breast": [
+      "medium"
+    ],
+    "figure": [
+      "long_legs",
+      "slim_waist"
+    ]
+  },
+  "curvy_sexy": {
+    "label": "豐滿色氣",
+    "frame": [
+      "curvy"
+    ],
+    "breast": [
+      "large"
+    ],
+    "figure": [
+      "wide_hips",
+      "hourglass"
+    ]
+  },
+  "athletic_fit": {
+    "label": "運動健美",
+    "frame": [
+      "athletic",
+      "slim"
+    ],
+    "breast": [
+      "medium"
+    ],
+    "figure": [
+      "slim_waist",
+      "long_legs"
+    ]
+  },
+  "plush_soft": {
+    "label": "肉感豐腴",
+    "frame": [
+      "chubby",
+      "curvy"
+    ],
+    "breast": [
+      "large"
+    ],
+    "figure": [
+      "thick_thighs",
+      "wide_hips"
+    ]
+  },
+  "petite_flat": {
+    "label": "清純貧乳",
+    "frame": [
+      "petite",
+      "slim"
+    ],
+    "breast": [
+      "flat",
+      "small"
+    ],
+    "figure": [
+      "girlish",
+      "slim_waist"
+    ]
+  },
+  "busty_nsfw": {
+    "label": "巨乳色氣",
+    "frame": [
+      "curvy"
+    ],
+    "breast": [
+      "huge",
+      "large"
+    ],
+    "figure": [
+      "hourglass",
+      "wide_hips",
+      "slim_waist"
+    ]
+  },
+  "mature_onee": {
+    "label": "御姐高挑",
+    "frame": [
+      "tall",
+      "curvy"
+    ],
+    "breast": [
+      "large"
+    ],
+    "figure": [
+      "long_legs",
+      "hourglass",
+      "slim_waist"
+    ]
+  }
+}

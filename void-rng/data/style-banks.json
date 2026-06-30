@@ -1,0 +1,78 @@
+{
+  "quality": {
+    "zh": [
+      "傑作",
+      "最高品質",
+      "超精細",
+      "8K"
+    ],
+    "en": [
+      "masterpiece",
+      "best quality",
+      "ultra-detailed",
+      "8k"
+    ]
+  },
+  "subject": {
+    "zh": [
+      "孤獨少女",
+      "機械天使",
+      "貓耳插畫少女"
+    ],
+    "en": [
+      "lone girl",
+      "mechanical angel",
+      "cat-ear illustration girl"
+    ]
+  },
+  "scene": {
+    "zh": [
+      "深夜空房",
+      "霓虹都市屋頂"
+    ],
+    "en": [
+      "midnight empty room",
+      "neon city rooftop"
+    ]
+  },
+  "comp": {
+    "zh": [
+      "極低角度仰拍",
+      "特寫半身"
+    ],
+    "en": [
+      "extreme low angle",
+      "close-up bust"
+    ]
+  },
+  "light": {
+    "zh": [
+      "黃金時刻柔光",
+      "霓虹邊緣光"
+    ],
+    "en": [
+      "golden hour soft light",
+      "neon rim light"
+    ]
+  },
+  "mood": {
+    "zh": [
+      "空靈夢幻",
+      "神秘壓抑"
+    ],
+    "en": [
+      "ethereal dreamlike",
+      "mysterious oppressive"
+    ]
+  },
+  "detail": {
+    "zh": [
+      "晶體裂紋細節",
+      "油畫筆觸質感"
+    ],
+    "en": [
+      "crystal fracture details",
+      "oil painting brush texture"
+    ]
+  }
+}

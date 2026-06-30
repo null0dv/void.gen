@@ -1,0 +1,857 @@
+{
+  "quality": [
+    {
+      "zh": "傑作，最高品質，超精細，8K 產品攝影",
+      "en": "masterpiece, best quality, ultra detailed, 8k product photography",
+      "cats": [
+        "*"
+      ]
+    },
+    {
+      "zh": "商業級產品照，銳利對焦，無浮水印",
+      "en": "commercial product shot, sharp focus, no watermark, clean background",
+      "cats": [
+        "*"
+      ]
+    },
+    {
+      "zh": "微距特寫，材質紋理清晰，專業棚拍",
+      "en": "macro close-up, material texture visible, professional studio shot",
+      "cats": [
+        "silver",
+        "ring",
+        "necklace",
+        "wood_pendant"
+      ]
+    },
+    {
+      "zh": "室內設計攝影，高動態範圍，真實比例",
+      "en": "interior design photography, high dynamic range, accurate scale",
+      "cats": [
+        "home_acc",
+        "decor",
+        "furniture",
+        "designer_furniture"
+      ]
+    },
+    {
+      "zh": "設計師目錄級影像，完美構圖，雜誌質感",
+      "en": "designer catalog imagery, perfect composition, editorial quality",
+      "cats": [
+        "designer_furniture",
+        "furniture",
+        "decor"
+      ]
+    }
+  ],
+  "product": [
+    {
+      "zh": "925 純銀手作飾品，單品展示",
+      "en": "925 sterling silver handmade jewelry, single piece display",
+      "cats": [
+        "silver"
+      ]
+    },
+    {
+      "zh": "手工銀飾，氧化做舊質感，藝匠風格",
+      "en": "handcrafted silver jewelry, oxidized patina, artisan style",
+      "cats": [
+        "silver"
+      ]
+    },
+    {
+      "zh": "手工雕刻木質墜子，吊飾單品",
+      "en": "hand-carved wooden pendant charm, single pendant piece",
+      "cats": [
+        "wood_pendant"
+      ]
+    },
+    {
+      "zh": "胡桃木／楓木墜飾，繩鍊搭配",
+      "en": "walnut or maple wood pendant with cord necklace",
+      "cats": [
+        "wood_pendant"
+      ]
+    },
+    {
+      "zh": "極簡銀戒指，單枚戒台特寫",
+      "en": "minimalist silver ring, single band close-up",
+      "cats": [
+        "ring"
+      ]
+    },
+    {
+      "zh": "寬版手工銀戒，鑲石或無鑲設計",
+      "en": "wide handcrafted silver ring, with or without stone setting",
+      "cats": [
+        "ring"
+      ]
+    },
+    {
+      "zh": "純銀項鍊，吊墜居中構圖",
+      "en": "sterling silver necklace, centered pendant composition",
+      "cats": [
+        "necklace"
+      ]
+    },
+    {
+      "zh": "層疊式銀鍊＋木質墜子項鍊",
+      "en": "layered silver chain necklace with wooden pendant",
+      "cats": [
+        "necklace",
+        "wood_pendant"
+      ]
+    },
+    {
+      "zh": "家飾擺件，桌面陳列小物",
+      "en": "home accessory decor object, tabletop display piece",
+      "cats": [
+        "home_acc"
+      ]
+    },
+    {
+      "zh": "陶瓷／金屬家飾，玄關或邊桌擺飾",
+      "en": "ceramic or metal home accent, entryway or side table decor",
+      "cats": [
+        "home_acc",
+        "decor"
+      ]
+    },
+    {
+      "zh": "雕塑感擺設，靜物陳列",
+      "en": "sculptural decor object, still life arrangement",
+      "cats": [
+        "decor"
+      ]
+    },
+    {
+      "zh": "北歐風擺件，幾何或有機造型",
+      "en": "Scandinavian decor piece, geometric or organic form",
+      "cats": [
+        "decor",
+        "home_acc"
+      ]
+    },
+    {
+      "zh": "單件家具，椅／邊桌／層架",
+      "en": "single furniture piece, chair side table or shelving unit",
+      "cats": [
+        "furniture"
+      ]
+    },
+    {
+      "zh": "實木＋金屬結構家具，功能單品",
+      "en": "wood and metal structure furniture, functional single piece",
+      "cats": [
+        "furniture"
+      ]
+    },
+    {
+      "zh": "設計師家具，限量概念單椅",
+      "en": "designer furniture, limited edition concept chair",
+      "cats": [
+        "designer_furniture"
+      ]
+    },
+    {
+      "zh": "建築感設計師邊桌，雕塑線條",
+      "en": "architectural designer side table, sculptural lines",
+      "cats": [
+        "designer_furniture",
+        "furniture"
+      ]
+    },
+    {
+      "zh": "當代設計師沙發單元，模組家具",
+      "en": "contemporary designer sofa module, modular furniture",
+      "cats": [
+        "designer_furniture"
+      ]
+    }
+  ],
+  "material": [
+    {
+      "zh": "925 純銀，亮面拋光",
+      "en": "925 sterling silver, polished mirror finish",
+      "cats": [
+        "silver",
+        "ring",
+        "necklace"
+      ]
+    },
+    {
+      "zh": "霧面銀，手工捶紋",
+      "en": "matte silver, hand-hammered texture",
+      "cats": [
+        "silver",
+        "ring"
+      ]
+    },
+    {
+      "zh": "氧化黑銀，復古銀飾質感",
+      "en": "oxidized blackened silver, vintage silver jewelry look",
+      "cats": [
+        "silver",
+        "necklace"
+      ]
+    },
+    {
+      "zh": "實木：胡桃木紋理，天然木節",
+      "en": "solid walnut wood grain, natural burl and knots",
+      "cats": [
+        "wood_pendant",
+        "home_acc"
+      ]
+    },
+    {
+      "zh": "楓木／梣木，淺色木質墜子",
+      "en": "maple or ash wood, light tone wooden pendant",
+      "cats": [
+        "wood_pendant"
+      ]
+    },
+    {
+      "zh": "銀＋木複合：銀框包鑲木墜",
+      "en": "silver and wood composite, silver bezel holding wood insert",
+      "cats": [
+        "wood_pendant",
+        "necklace",
+        "silver"
+      ]
+    },
+    {
+      "zh": "鍍銀＋天然石（月光石／拉長石）",
+      "en": "silver plated with natural stone, moonstone or labradorite",
+      "cats": [
+        "ring",
+        "necklace",
+        "silver"
+      ]
+    },
+    {
+      "zh": "黃銅點綴銀飾，雙色金屬",
+      "en": "brass accent on silver jewelry, two-tone metal",
+      "cats": [
+        "silver",
+        "ring"
+      ]
+    },
+    {
+      "zh": "陶瓷釉面家飾，粗陶質感",
+      "en": "glazed ceramic home decor, stoneware texture",
+      "cats": [
+        "home_acc",
+        "decor"
+      ]
+    },
+    {
+      "zh": "吹製玻璃擺設，透明折射",
+      "en": "blown glass decor object, transparent refraction",
+      "cats": [
+        "decor",
+        "home_acc"
+      ]
+    },
+    {
+      "zh": "橡木實木家具，開放漆面",
+      "en": "oak solid wood furniture, open pore finish",
+      "cats": [
+        "furniture",
+        "designer_furniture"
+      ]
+    },
+    {
+      "zh": "胡桃木＋不鏽鋼腳架，設計師材質",
+      "en": "walnut and stainless steel legs, designer material combo",
+      "cats": [
+        "designer_furniture",
+        "furniture"
+      ]
+    },
+    {
+      "zh": "皮革軟包＋金屬骨架",
+      "en": "leather upholstery with metal frame",
+      "cats": [
+        "designer_furniture",
+        "furniture"
+      ]
+    }
+  ],
+  "form": [
+    {
+      "zh": "極簡幾何圓環，細線條銀飾",
+      "en": "minimal geometric circle ring, fine line silver jewelry",
+      "cats": [
+        "silver",
+        "ring"
+      ]
+    },
+    {
+      "zh": "流動有機曲線，手工鍛造造型",
+      "en": "flowing organic curves, hand-forged sculptural form",
+      "cats": [
+        "silver",
+        "necklace"
+      ]
+    },
+    {
+      "zh": "圓形木墜，雷射雕刻圖騰",
+      "en": "round wood pendant, laser engraved motif",
+      "cats": [
+        "wood_pendant"
+      ]
+    },
+    {
+      "zh": "水滴形木質吊墜，手工削磨",
+      "en": "teardrop wooden pendant, hand-carved and sanded",
+      "cats": [
+        "wood_pendant"
+      ]
+    },
+    {
+      "zh": "開口戒，可調式銀戒",
+      "en": "open band ring, adjustable silver ring",
+      "cats": [
+        "ring"
+      ]
+    },
+    {
+      "zh": "印章戒面，平面刻字區",
+      "en": "signet ring face, flat engraved surface",
+      "cats": [
+        "ring"
+      ]
+    },
+    {
+      "zh": "Y 字鍊＋單墜，鎖骨鍊構圖",
+      "en": "Y-chain necklace with single pendant, collarbone length",
+      "cats": [
+        "necklace"
+      ]
+    },
+    {
+      "zh": "多層次鍊條，長短混搭項鍊",
+      "en": "multi-layer chain necklace, mixed length strands",
+      "cats": [
+        "necklace"
+      ]
+    },
+    {
+      "zh": "不對稱耳環式墜飾（項鍊墜）",
+      "en": "asymmetric drop pendant design for necklace",
+      "cats": [
+        "necklace",
+        "wood_pendant"
+      ]
+    },
+    {
+      "zh": "圓形托盤擺飾，淺皿家飾",
+      "en": "round tray decor, shallow dish home accent",
+      "cats": [
+        "home_acc",
+        "decor"
+      ]
+    },
+    {
+      "zh": "拱門造型擺件，建築隱喻",
+      "en": "arch-shaped decor object, architectural metaphor",
+      "cats": [
+        "decor"
+      ]
+    },
+    {
+      "zh": "細腳邊桌，懸浮感桌面",
+      "en": "slim leg side table, floating tabletop feel",
+      "cats": [
+        "furniture",
+        "designer_furniture"
+      ]
+    },
+    {
+      "zh": "曲線單椅，包覆式椅背",
+      "en": "curved lounge chair, enveloping backrest",
+      "cats": [
+        "designer_furniture",
+        "furniture"
+      ]
+    },
+    {
+      "zh": "模組層架，格柵結構",
+      "en": "modular shelving unit, grid structure",
+      "cats": [
+        "furniture"
+      ]
+    },
+    {
+      "zh": "雕塑底座＋台面，展示型家具",
+      "en": "sculptural base with top surface, display furniture",
+      "cats": [
+        "designer_furniture",
+        "decor"
+      ]
+    }
+  ],
+  "craft": [
+    {
+      "zh": "手工鍛造銀飾，捶痕可見",
+      "en": "hand-forged silver, visible hammer marks",
+      "cats": [
+        "silver",
+        "ring"
+      ]
+    },
+    {
+      "zh": "失蠟鑄造，精緻銀飾細節",
+      "en": "lost-wax casting, refined silver jewelry detail",
+      "cats": [
+        "silver",
+        "necklace"
+      ]
+    },
+    {
+      "zh": "手工鋸切木墜，邊緣圓角打磨",
+      "en": "hand-sawn wood pendant, rounded edge sanding",
+      "cats": [
+        "wood_pendant"
+      ]
+    },
+    {
+      "zh": "木墜燙金／烙刻圖案",
+      "en": "wood pendant with gold foil or brand engraving",
+      "cats": [
+        "wood_pendant"
+      ]
+    },
+    {
+      "zh": "銀戒手工鑲石，爪鑲工藝",
+      "en": "hand-set stone on silver ring, prong setting",
+      "cats": [
+        "ring"
+      ]
+    },
+    {
+      "zh": "鍊條手工焊接，一環一環編織",
+      "en": "hand-linked chain, link by link soldering",
+      "cats": [
+        "necklace",
+        "silver"
+      ]
+    },
+    {
+      "zh": "手工編織皮繩搭配銀墜",
+      "en": "hand-braided leather cord with silver charm",
+      "cats": [
+        "necklace",
+        "wood_pendant"
+      ]
+    },
+    {
+      "zh": "陶藝手捏家飾，不規則手作感",
+      "en": "hand-pinched ceramic home decor, irregular handmade feel",
+      "cats": [
+        "home_acc"
+      ]
+    },
+    {
+      "zh": "吹玻璃手工擺設，氣泡紋理",
+      "en": "hand-blown glass decor, bubble texture",
+      "cats": [
+        "decor"
+      ]
+    },
+    {
+      "zh": "榫接木工家具，無釘結構",
+      "en": "mortise tenon wood furniture, no-nail joinery",
+      "cats": [
+        "furniture"
+      ]
+    },
+    {
+      "zh": "設計師限量打樣，原型家具",
+      "en": "designer limited prototype furniture piece",
+      "cats": [
+        "designer_furniture"
+      ]
+    },
+    {
+      "zh": "CNC 精密切割＋手工組裝",
+      "en": "CNC precision cut with hand assembly",
+      "cats": [
+        "designer_furniture",
+        "furniture"
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "zh": "鏡面拋光銀，高光反射",
+      "en": "mirror polished silver, high specular reflection",
+      "cats": [
+        "silver",
+        "ring"
+      ]
+    },
+    {
+      "zh": "拉絲霧銀，方向性紋理",
+      "en": "brushed matte silver, directional grain texture",
+      "cats": [
+        "silver",
+        "necklace"
+      ]
+    },
+    {
+      "zh": "氧化層保護，深灰銀色",
+      "en": "oxidized protective layer, dark grey silver tone",
+      "cats": [
+        "silver"
+      ]
+    },
+    {
+      "zh": "木質上油保護，溫潤光澤",
+      "en": "oiled wood protection, warm satin sheen",
+      "cats": [
+        "wood_pendant",
+        "furniture"
+      ]
+    },
+    {
+      "zh": "原木粗磨木墜，觸感木紋",
+      "en": "raw sanded wood pendant, tactile grain",
+      "cats": [
+        "wood_pendant"
+      ]
+    },
+    {
+      "zh": "霧面噴砂銀飾，柔光漫射",
+      "en": "sandblasted matte silver, soft diffuse light",
+      "cats": [
+        "ring",
+        "silver"
+      ]
+    },
+    {
+      "zh": "釉面光滑陶瓷，細膩反光",
+      "en": "smooth glazed ceramic, subtle glossy reflection",
+      "cats": [
+        "home_acc",
+        "decor"
+      ]
+    },
+    {
+      "zh": "皮革自然褶皺，使用痕跡",
+      "en": "natural leather creases, lived-in patina",
+      "cats": [
+        "designer_furniture",
+        "furniture"
+      ]
+    },
+    {
+      "zh": "木蜡油塗裝，開放毛孔質感",
+      "en": "hardwax oil finish, open pore wood texture",
+      "cats": [
+        "furniture",
+        "designer_furniture"
+      ]
+    }
+  ],
+  "scene": [
+    {
+      "zh": "白色無縫棚拍背景，電商產品照",
+      "en": "white seamless studio backdrop, e-commerce product photo",
+      "cats": [
+        "silver",
+        "ring",
+        "necklace",
+        "wood_pendant"
+      ]
+    },
+    {
+      "zh": "亚麻布＋石材台面，自然質感靜物",
+      "en": "linen and stone surface, natural still life staging",
+      "cats": [
+        "silver",
+        "home_acc",
+        "decor"
+      ]
+    },
+    {
+      "zh": "深色絲絨襯底，珠寶攝影氛圍",
+      "en": "dark velvet backdrop, jewelry photography mood",
+      "cats": [
+        "silver",
+        "ring",
+        "necklace"
+      ]
+    },
+    {
+      "zh": "木質桌面＋綠植點綴，生活風家飾",
+      "en": "wooden table with green plant accent, lifestyle home decor",
+      "cats": [
+        "home_acc",
+        "decor",
+        "wood_pendant"
+      ]
+    },
+    {
+      "zh": "北歐客廳一角，淺色木地板",
+      "en": "Scandinavian living room corner, light wood floor",
+      "cats": [
+        "furniture",
+        "designer_furniture",
+        "home_acc"
+      ]
+    },
+    {
+      "zh": "設計師工作室空間，水泥牆背景",
+      "en": "designer studio space, concrete wall background",
+      "cats": [
+        "designer_furniture",
+        "furniture"
+      ]
+    },
+    {
+      "zh": "藝廊白牆陳列，博物館式擺設",
+      "en": "gallery white wall display, museum-like staging",
+      "cats": [
+        "decor",
+        "designer_furniture"
+      ]
+    },
+    {
+      "zh": "窗邊自然光場景，居家生活感",
+      "en": "window-side natural light scene, domestic lifestyle",
+      "cats": [
+        "home_acc",
+        "furniture",
+        "necklace"
+      ]
+    },
+    {
+      "zh": "玄關置物台，入口陳列",
+      "en": "entryway console staging, entrance vignette",
+      "cats": [
+        "home_acc",
+        "decor"
+      ]
+    }
+  ],
+  "light": [
+    {
+      "zh": "柔光箱均勻照明，無硬影",
+      "en": "softbox even lighting, no harsh shadows",
+      "cats": [
+        "*"
+      ]
+    },
+    {
+      "zh": "側光強調金屬高光，立體輪廓",
+      "en": "side light emphasizing metal highlights, dimensional contour",
+      "cats": [
+        "silver",
+        "ring",
+        "necklace"
+      ]
+    },
+    {
+      "zh": "頂光微距，材質紋理清晰",
+      "en": "top light macro setup, clear material texture",
+      "cats": [
+        "wood_pendant",
+        "silver"
+      ]
+    },
+    {
+      "zh": "窗光漫射，溫暖午後色溫",
+      "en": "diffused window light, warm afternoon color temperature",
+      "cats": [
+        "home_acc",
+        "furniture",
+        "decor"
+      ]
+    },
+    {
+      "zh": "低角度氛圍光，室內設計攝影",
+      "en": "low angle ambient light, interior design photography",
+      "cats": [
+        "furniture",
+        "designer_furniture"
+      ]
+    },
+    {
+      "zh": "冷調設計師光，高對比陰影",
+      "en": "cool designer lighting, high contrast shadows",
+      "cats": [
+        "designer_furniture",
+        "decor"
+      ]
+    },
+    {
+      "zh": "金色輪廓光，飾品邊緣高光",
+      "en": "golden rim light, jewelry edge highlight",
+      "cats": [
+        "silver",
+        "necklace",
+        "ring"
+      ]
+    }
+  ],
+  "style": [
+    {
+      "zh": "北歐極簡，克制線條",
+      "en": "Scandinavian minimalism, restrained lines",
+      "cats": [
+        "*"
+      ]
+    },
+    {
+      "zh": "日式侘寂，不完美之美",
+      "en": "Japanese wabi-sabi, imperfect beauty",
+      "cats": [
+        "wood_pendant",
+        "home_acc",
+        "decor"
+      ]
+    },
+    {
+      "zh": "手工藝匠風，獨一無二",
+      "en": "artisan craft style, one-of-a-kind",
+      "cats": [
+        "silver",
+        "wood_pendant",
+        "ring"
+      ]
+    },
+    {
+      "zh": "當代珠寶設計，雕塑感",
+      "en": "contemporary jewelry design, sculptural",
+      "cats": [
+        "silver",
+        "necklace",
+        "ring"
+      ]
+    },
+    {
+      "zh": "波希米亞自然風，編織與木質",
+      "en": "bohemian natural style, woven and wooden elements",
+      "cats": [
+        "wood_pendant",
+        "necklace",
+        "home_acc"
+      ]
+    },
+    {
+      "zh": "現代主義家具，功能主義",
+      "en": "modernist furniture, functionalism",
+      "cats": [
+        "furniture",
+        "designer_furniture"
+      ]
+    },
+    {
+      "zh": "中古世紀現代 MCM，復古設計師風",
+      "en": "mid-century modern MCM, retro designer aesthetic",
+      "cats": [
+        "designer_furniture",
+        "furniture"
+      ]
+    },
+    {
+      "zh": "工業風家飾，金屬與粗獷",
+      "en": "industrial home decor, metal and raw aesthetic",
+      "cats": [
+        "home_acc",
+        "decor",
+        "furniture"
+      ]
+    },
+    {
+      "zh": "精品珠寶目錄風，奢雅克制",
+      "en": "fine jewelry catalog style, refined luxury restraint",
+      "cats": [
+        "silver",
+        "ring",
+        "necklace"
+      ]
+    },
+    {
+      "zh": "設計週展場風，概念家具展示",
+      "en": "design week exhibition style, concept furniture showcase",
+      "cats": [
+        "designer_furniture"
+      ]
+    }
+  ],
+  "detail": [
+    {
+      "zh": "細節對焦銀飾扣頭與鍊節",
+      "en": "detail focus on silver clasp and chain links",
+      "cats": [
+        "necklace",
+        "silver"
+      ]
+    },
+    {
+      "zh": "木墜繩結特寫，手工編織",
+      "en": "close-up wood pendant cord knot, hand braided",
+      "cats": [
+        "wood_pendant",
+        "necklace"
+      ]
+    },
+    {
+      "zh": "戒台內側刻字細節",
+      "en": "inner band engraving detail on ring",
+      "cats": [
+        "ring"
+      ]
+    },
+    {
+      "zh": "木紋年輪特寫，自然紋理",
+      "en": "wood grain growth ring close-up, natural pattern",
+      "cats": [
+        "wood_pendant",
+        "furniture"
+      ]
+    },
+    {
+      "zh": "家具接合處特寫，工藝節點",
+      "en": "furniture joint close-up, craftsmanship node",
+      "cats": [
+        "furniture",
+        "designer_furniture"
+      ]
+    },
+    {
+      "zh": "擺設與書本／花器搭配，生活場景",
+      "en": "decor styled with books and vase, lifestyle scene",
+      "cats": [
+        "home_acc",
+        "decor"
+      ]
+    },
+    {
+      "zh": "銀飾與肌膚對比，佩戴示意",
+      "en": "silver jewelry against skin contrast, wear reference",
+      "cats": [
+        "ring",
+        "necklace",
+        "silver"
+      ]
+    },
+    {
+      "zh": "設計師標籤與比例尺，目錄細節",
+      "en": "designer label and scale reference, catalog detail",
+      "cats": [
+        "designer_furniture",
+        "furniture"
+      ]
+    },
+    {
+      "zh": "陰影層次豐富，靜物深度感",
+      "en": "rich shadow layers, still life depth",
+      "cats": [
+        "*"
+      ]
+    }
+  ]
+}

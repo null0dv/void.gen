@@ -9,11 +9,13 @@
 雙擊 **`VOID-GEN-FULL.cmd`** 或 **`啟動 VOID.GEN FULL.bat`** → 瀏覽器開啟  
 **http://localhost:8080/sd-dashboard.full.html**（TXT→IMG、IMG→TXT、圖庫）
 
-### VOID.RNG（獨立專案）
+### VOID.RNG V3（獨立專案）
 
 Prompt 亂數生成器已與 Full 分離，請到 **`void-rng/`** 目錄啟動：
 
 雙擊 **`void-rng/VOID-RNG.cmd`** 或根目錄 **`啟動 VOID.RNG.bat`** → **http://127.0.0.1:8787/**
+
+辭庫整合於 `void-rng/data/`（manifest v3），已移除 RNG2 實驗版。
 
 架構說明見 **[docs/void-full-v3.md](docs/void-full-v3.md)**。
 

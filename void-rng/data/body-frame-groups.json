@@ -1,0 +1,15 @@
+[
+  {
+    "label": "體型",
+    "ids": [
+      "none",
+      "petite",
+      "slim",
+      "average",
+      "tall",
+      "curvy",
+      "athletic",
+      "chubby"
+    ]
+  }
+]

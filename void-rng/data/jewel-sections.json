@@ -1,0 +1,52 @@
+[
+  {
+    "key": "quality",
+    "label": "QUALITY / TECHNICAL",
+    "zh": "品質標籤"
+  },
+  {
+    "key": "product",
+    "label": "Product Type",
+    "zh": "產品類型"
+  },
+  {
+    "key": "material",
+    "label": "Material & Craft",
+    "zh": "材質工藝"
+  },
+  {
+    "key": "form",
+    "label": "Form & Design",
+    "zh": "造型設計"
+  },
+  {
+    "key": "craft",
+    "label": "Craftsmanship",
+    "zh": "工藝細節"
+  },
+  {
+    "key": "surface",
+    "label": "Surface & Texture",
+    "zh": "表面質感"
+  },
+  {
+    "key": "scene",
+    "label": "Scene & Staging",
+    "zh": "場景佈置"
+  },
+  {
+    "key": "light",
+    "label": "Lighting",
+    "zh": "光線氛圍"
+  },
+  {
+    "key": "style",
+    "label": "Style Reference",
+    "zh": "風格調性"
+  },
+  {
+    "key": "detail",
+    "label": "Detail Tags",
+    "zh": "細節修飾"
+  }
+]

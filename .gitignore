@@ -18,9 +18,9 @@
 !VOID-GEN-FULL.cmd
 !啟動 VOID.GEN FULL.bat
 !VOID-RNG.cmd
-!VOID-RNG2.cmd
 !啟動 VOID.RNG.bat
-!啟動 VOID.RNG2.bat
+!void-rng/
+!void-rng/**
 !sd-dashboard.html
 !sd-dashboard.full.html
 !sd-dashboard.full.v2.html

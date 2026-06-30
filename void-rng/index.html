@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VOID.RNG V3 — Prompt · 角色 · 飾品生成器</title>
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/search.css">
+</head>
+<body>
+<div id="boot-error" role="alert"></div>
+<div class="topbar">
+  <div class="logo">VOID<span>.RNG</span></div>
+  <button class="tb-btn session-pill" id="session-pill" onclick="openSessionPanel()" title="切換工作階段">SESSION 1</button>
+  <div class="page-tabs" id="page-tabs">
+    <div class="page-tab on" data-page="style" onclick="switchPage('style',this)">風格 Prompt</div>
+    <div class="page-tab" data-page="char" onclick="switchPage('char',this)">角色 PROMPT</div>
+    <div class="page-tab" data-page="jewel" onclick="switchPage('jewel',this)">飾品 Prompt</div>
+  </div>
+  <div class="topbar-actions" id="topbar-style">
+    <button class="tb-btn" onclick="VoidSearch.focusSearch()">🔍 搜尋</button>
+    <button class="tb-btn" onclick="exportStyleConfig()">匯出</button>
+    <button class="tb-btn" onclick="importStyleConfig()">匯入</button>
+    <button class="tb-btn primary" onclick="generateAll()">🎲 全部重抽</button>
+  </div>
+  <div class="topbar-actions" id="topbar-char" style="display:none">
+    <button class="tb-btn" onclick="VoidSearch.focusSearch()">🔍 搜尋</button>
+    <button class="tb-btn" onclick="openLearnPanel()">📚 學習對話窗</button>
+    <button class="tb-btn" onclick="exportCharBanks()">匯出辭庫</button>
+    <button class="tb-btn" onclick="importCharBanks()">匯入辭庫</button>
+    <button class="tb-btn primary" onclick="generateChar()">🎲 亂數生成</button>
+  </div>
+  <div class="topbar-actions" id="topbar-jewel" style="display:none">
+    <button class="tb-btn" onclick="VoidSearch.focusSearch()">🔍 搜尋</button>
+    <button class="tb-btn" onclick="exportJewelConfig()">匯出</button>
+    <button class="tb-btn" onclick="importJewelConfig()">匯入</button>
+    <button class="tb-btn primary" onclick="generateJewel()">🎲 亂數生成</button>
+  </div>
+</div>
+
+<!-- ═══ 全域關鍵字搜尋 ═══ -->
+<div class="global-search-wrap" id="global-search-wrap">
+  <div class="search-panel search-body">
+    <div class="search-toolbar">
+      <div class="search-toolbar-left">
+        <span class="search-collapse-btn" onclick="VoidSearch.toggleCollapse()" title="收合搜尋列">▼</span>
+        <span class="sec-label" style="margin:0">🔍 關鍵字</span>
+        <span class="search-page-badge" id="search-page-badge">風格</span>
+      </div>
+      <div class="search-fill-row search-fill-inline">
+        <span class="chip compact" data-fill-mode="hit" onclick="VoidSearch.setFillMode('hit')">僅命中</span>
+        <span class="chip compact on" data-fill-mode="smart" onclick="VoidSearch.setFillMode('smart')">智慧</span>
+        <span class="chip compact" data-fill-mode="full" onclick="VoidSearch.setFillMode('full')">全抽</span>
+      </div>
+    </div>
+    <div class="search-input-row">
+      <input class="search-input" id="prompt-search-input" type="text" placeholder="關鍵字或中文… / 聚焦 · Enter 套用" autocomplete="off">
+      <button class="search-btn ghost" onclick="VoidSearch.previewSearch()">預覽</button>
+      <button class="search-btn" onclick="VoidSearch.translateToBank()" title="中文翻譯為英文標籤並加入辭庫">翻譯</button>
+      <button class="search-btn primary" onclick="VoidSearch.applySearch()">套用</button>
+    </div>
+    <div class="search-extra">
+    <div class="search-translate-preview empty" id="prompt-search-translate">輸入中文後顯示英文標籤預覽…</div>
+    <div class="search-status" id="prompt-search-status">輸入關鍵字，自動比對並補齊完整 Prompt</div>
+    <div class="search-plan empty" id="prompt-search-plan">輸入關鍵字後顯示將更新的區塊…</div>
+    <div class="search-hits" id="prompt-search-hits"></div>
+    <div class="search-quick" id="prompt-search-quick"></div>
+    <div class="search-preview empty" id="prompt-search-preview">套用後將顯示完整 Prompt 預覽…</div>
+    <details class="search-custom-fold">
+      <summary><span class="sec-label" style="display:inline">＋ Grok 翻譯（選填）</span></summary>
+      <div class="search-custom-grid">
+        <input class="settings-input" id="search-grok-api-key" type="password" placeholder="xAI API Key" style="grid-column:1/-1" autocomplete="off">
+        <button class="search-btn ghost" onclick="VoidSearch.saveApiKeyFromInput()">儲存 Key</button>
+        <button class="search-btn" onclick="VoidSearch.translateToBank({ forceGrok: true })">Grok 翻譯入庫</button>
+      </div>
+    </details>
+    <details class="search-custom-fold">
+      <summary><span class="sec-label" style="display:inline">＋ 自訂規則</span></summary>
+      <div class="search-custom-grid">
+        <input class="settings-input" id="custom-rule-keys" placeholder="關鍵字（逗號分隔）">
+        <select class="sel-sm" id="custom-rule-section">
+          <option value="outfit">服裝</option>
+          <option value="pose">姿勢</option>
+          <option value="subject">角色</option>
+          <option value="env">場景</option>
+          <option value="styleRef">畫風</option>
+          <option value="quality">品質</option>
+          <option value="negative">負向</option>
+          <option value="jewel">飾品</option>
+        </select>
+        <input class="settings-input" id="custom-rule-hints" placeholder="英文標籤提示（逗號分隔）" style="grid-column:1/-1">
+        <button class="search-btn primary" style="grid-column:1/-1" onclick="VoidSearch.addCustomFromForm()">新增規則</button>
+      </div>
+    </details>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 風格 PROMPT 頁 ═══ -->
+<div class="view active" id="view-style">
+  <div class="main">
+    <aside class="sidebar">
+      <div class="block ">
+        <div class="sec-label">生成模式</div>
+        <div class="chip-grid" id="mode-chips">
+          <span class="chip on" data-mode="full" onclick="setMode('full',this)">完整組合</span>
+          <span class="chip" data-mode="style" onclick="setMode('style',this)">僅風格代號</span>
+          <span class="chip" data-mode="scene" onclick="setMode('scene',this)">場景敘事</span>
+          <span class="chip" data-mode="chaos" onclick="setMode('chaos',this)">混沌混合</span>
+        </div>
+      </div>
+      <div class="block">
+        <div class="sec-label">風格代號數量</div>
+        <div class="param-row">
+          <span class="param-name">STYLE</span>
+          <input type="range" class="slider" id="style-count" min="1" max="4" value="2" oninput="syncSlider('style-count')">
+          <span class="param-val" id="style-count-val">2</span>
+        </div>
+      </div>
+      <div class="block">
+        <div class="sec-label">語言</div>
+        <div class="chip-grid">
+          <span class="chip on" data-lang="zh" onclick="setLang('zh',this)">中文</span>
+          <span class="chip" data-lang="en" onclick="setLang('en',this)">English</span>
+          <span class="chip" data-lang="mix" onclick="setLang('mix',this)">混合</span>
+        </div>
+      </div>
+      <div class="block ">
+        <div class="sec-label">包含區塊</div>
+        <label class="chk-row"><input type="checkbox" id="inc-quality" checked> 品質標籤</label>
+        <label class="chk-row"><input type="checkbox" id="inc-style" checked> 風格代號</label>
+        <label class="chk-row"><input type="checkbox" id="inc-subject" checked> 主題／角色</label>
+        <label class="chk-row"><input type="checkbox" id="inc-scene" checked> 場景</label>
+        <label class="chk-row"><input type="checkbox" id="inc-comp" checked> 構圖／鏡位</label>
+        <label class="chk-row"><input type="checkbox" id="inc-light" checked> 光線／氛圍</label>
+        <label class="chk-row"><input type="checkbox" id="inc-mood" checked> 情緒</label>
+        <label class="chk-row"><input type="checkbox" id="inc-detail" checked> 細節修飾</label>
+      </div>
+      <div class="block">
+        <div class="sec-label">風格池篩選</div>
+        <div class="chip-grid" id="pool-chips"></div>
+      </div>
+      <button class="gen-btn" onclick="generateAll()">🎲 隨機生成 Prompt</button>
+    </aside>
+    <section class="panel">
+      <div>
+        <div class="sec-label" style="display:flex;justify-content:space-between">
+          <span>輸出結果 <span class="meta">（可直接編輯）</span></span>
+          <span class="meta" id="gen-meta">—</span>
+        </div>
+        <textarea class="output-box output-edit empty" id="output" placeholder="點擊「隨機生成」或按空白鍵開始…" onblur="commitStyleOutputEdit()"></textarea>
+      </div>
+      <div class="actions-row">
+        <button class="tb-btn primary" onclick="copyStyleOutput()">複製 Prompt</button>
+        <button class="tb-btn" onclick="generateAll()">重抽全部</button>
+        <button class="tb-btn" onclick="addStyleHistory()">加入歷史</button>
+        <button class="tb-btn" onclick="clearStyleHistory()">清空歷史</button>
+      </div>
+      <div>
+        <div class="sec-label">各區塊（可直接編輯 · ↻ 重抽 · 雙擊鎖定）</div>
+        <div class="slot-grid" id="slots"></div>
+      </div>
+      <div>
+        <div class="sec-label">歷史紀錄</div>
+        <div class="hist-list" id="hist-list"><div class="meta">尚無紀錄</div></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ═══ 角色生成表頁 ═══ -->
+<div class="view" id="view-char">
+  <div class="main">
+    <aside class="sidebar">
+      
+      <div class="standalone-char-sidebar">
+      <details class="sidebar-fold embed-char-quick" open><summary><span class="sec-label">快速</span></summary>
+      <div class="block">
+        <div class="sec-label">風格調性</div>
+        <div class="chip-grid">
+          <span class="chip" id="char-tone-balance" onclick="setCharTone('balance')">均衡</span>
+          <span class="chip on" id="char-tone-cute" onclick="setCharTone('cute')">可愛</span>
+          <span class="chip" id="char-tone-spicy" onclick="setCharTone('spicy')">色氣</span>
+          <span class="chip" id="char-tone-tempt" onclick="setCharTone('tempt')">誘惑</span>
+          <span class="chip" id="char-tone-sex" onclick="setCharTone('sex')">SEX</span>
+        </div>
+        <div class="param-row" style="margin-top:10px;margin-bottom:0">
+          <span class="param-name" id="char-tone-intensity-name">調性強度</span>
+          <input type="range" class="slider" id="char-tone-intensity" min="1" max="5" value="3" oninput="syncCharIntensity()">
+          <span class="param-val" id="char-tone-intensity-val">3</span>
+        </div>
+        <div class="meta" id="char-tone-level-hint" style="margin-top:4px">Lv3 · 中等色氣</div>
+      </div>
+      <div class="block ">
+        <div class="sec-label">生成模式</div>
+        <div class="chip-grid">
+          <span class="chip on" id="char-mode-mix" onclick="setCharMode('mix')">混合亂數</span>
+          <span class="chip" id="char-mode-learn" onclick="setCharMode('learn')">學習迭代</span>
+          <span class="chip" id="char-mode-template" onclick="setCharMode('template')">完整範本</span>
+        </div>
+      </div>
+      <div class="block ">
+        <div class="sec-label">輸出格式</div>
+        <div class="chip-grid">
+          <span class="chip on" id="char-fmt-structured" onclick="setCharFmt('structured')">分段註解</span>
+          <span class="chip" id="char-fmt-flat" onclick="setCharFmt('flat')">純標籤串</span>
+        </div>
+      </div>
+      <div class="block" style="margin-bottom:10px">
+        <div class="sec-label">一鍵預設</div>
+        <div class="chip-grid">
+          <span class="chip preset" onclick="applyQuickPreset('pure_selfie')">✦ 清純自拍</span>
+          <span class="chip preset" onclick="applyQuickPreset('spicy_selfie')">✦ 色氣撩人</span>
+          <span class="chip preset preset-hot" onclick="applyQuickPreset('super_spicy')">✦ 超級色氣</span>
+          <span class="chip preset" onclick="applyQuickPreset('full_nsfw')">✦ 成人全開</span>
+          <span class="chip preset preset-extreme " onclick="applyQuickPreset('sex_lover')">✦ 超愛做愛的寶貝</span>
+          <span class="chip preset " onclick="applyQuickPreset('pix_cute')">◆ PIX·清純式</span>
+          <span class="chip preset " onclick="applyQuickPreset('pix_tempt')">◆ PIX·誘惑式</span>
+          <span class="chip preset " onclick="applyQuickPreset('pix_cinematic')">◆ PIX·電影光</span>
+        </div>
+      </div>
+      </details>
+      <details class="sidebar-fold body-fold" open>
+        <summary><span class="sec-label">身材・體型</span></summary>
+        <div class="chip-group">
+          <div class="chip-group-lbl">一鍵搭配</div>
+          <div class="chip-grid" id="char-body-combo-chips"></div>
+        </div>
+        <div id="char-body-frame-chips"></div>
+        <div id="char-body-breast-chips"></div>
+        <div id="char-body-figure-chips"></div>
+        <div class="meta" style="margin-top:6px">三欄 AND 篩選 · 連動主體/細節/服裝 · 一鍵預設自動配身材</div>
+      </details>
+      <details class="sidebar-fold" open>
+        <summary><span class="sec-label">JOB 類型</span></summary>
+        <div id="char-job-chips"></div>
+        <div class="meta" style="margin-top:6px">「無」= 無色情 · 外陰夾 = 陰唇夾弄（可穿內褲）</div>
+      </details>
+      <details class="sidebar-fold" open>
+        <summary><span class="sec-label">姿勢預設</span></summary>
+        <div id="char-pose-chips"></div>
+        <div class="meta" style="margin-top:6px">正常可愛自拍自動排除性交 · 可連動服裝類型</div>
+      </details>
+      <details class="sidebar-fold" open>
+        <summary><span class="sec-label">色氣服裝</span></summary>
+        <div id="char-spicy-outfit-chips"></div>
+        <div class="meta" style="margin-top:6px">可多選 · 「不篩選」= 不限制服裝類型</div>
+      </details>
+      <details class="sidebar-fold spicy-fold" open>
+        <summary><span class="sec-label sec-label-spicy">瑟瑟動作</span></summary>
+        <div id="char-spicy-action-chips"></div>
+        <div class="meta" style="margin-top:6px">影響姿勢與表情 · 可多選</div>
+      </details>
+      <div class="block ">
+        <div class="sec-label">包含區塊</div>
+        <div id="char-inc-checks"></div>
+      </div>
+      <div class="block ">
+        <div class="sec-label">辭庫統計</div>
+        <div class="bank-stats" id="bank-stats"></div>
+      </div>
+      <button type="button" class="gen-btn " onclick="generateChar()">🎲 亂數生成角色</button>
+      <button class="gen-btn " style="margin-top:8px;background:transparent" onclick="openLearnPanel()">📚 學習＋自動分類</button>
+      <div class="block " style="margin-top:12px;margin-bottom:0">
+        <div class="sec-label">快速學習</div>
+        <textarea class="learn-textarea" id="quick-learn-input" style="min-height:72px;font-size:10px" placeholder="貼上 prompt，自動分類詞彙…" oninput="debouncedQuickLearn()"></textarea>
+        <div class="learn-stats" id="quick-learn-stats"></div>
+        <div class="quick-learn-preview learn-tag-grid" id="quick-learn-preview"></div>
+        <div style="display:flex;gap:4px;margin-top:6px">
+          <button class="tb-btn primary" style="flex:1" onclick="quickLearnCommit()">自動分類並加入</button>
+          <button class="tb-btn" onclick="openLearnPanel()">詳細</button>
+        </div>
+      </div>
+      </div><!-- /standalone-char-sidebar -->
+    </aside>
+    <section class="panel">
+      <div class="char-prompt-compact">
+        <div class="sec-label" style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span>Prompt</span>
+          <span class="meta" id="char-meta">—</span>
+        </div>
+        <div class="status-bar" id="char-status-bar"></div>
+        <textarea class="output-box output-edit empty" id="char-output" placeholder="🎲 重抽後可編輯…" onblur="commitCharOutputEdit()"></textarea>
+      </div>
+      <div class="actions-row ">
+        <button class="tb-btn primary" onclick="copyCharOutput()">複製 Prompt</button>
+        <button class="tb-btn" onclick="generateChar()">重抽全部</button>
+        <button class="tb-btn" onclick="copyCharTagsOnly()">僅複製標籤</button>
+        <button class="tb-btn" onclick="addCharHistory()">加入歷史</button>
+      </div>
+      <details class="embed-char-slots-fold" open>
+        <summary><span class="sec-label">進階 · 各區塊細調（可捲動）</span></summary>
+        <div class="embed-char-slots-scroll">
+          <div class="char-table-wrap">
+            <div class="sec-label">角色欄位 · ↻ 重抽 · 雙擊鎖定</div>
+            <table class="char-table">
+              <thead><tr><th>區塊</th><th>內容</th><th style="width:56px">操作</th></tr></thead>
+              <tbody id="char-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+      <div class="">
+        <div class="sec-label">角色歷史</div>
+        <div class="hist-list" id="char-hist-list"><div class="meta">尚無紀錄</div></div>
+      </div>
+    </section>
+</div>
+</div>
+
+<!-- ═══ 飾品 PROMPT 頁 ═══ -->
+<div class="view" id="view-jewel">
+  <div class="main">
+    <aside class="sidebar">
+      <div class="block">
+        <div class="sec-label">產品類別</div>
+        <div class="chip-grid" id="jewel-cat-chips"></div>
+      </div>
+      <div class="block">
+        <div class="sec-label">生成模式</div>
+        <div class="chip-grid" id="jewel-mode-chips">
+          <span class="chip on" data-jmode="full" onclick="setJewelMode('full',this)">完整組合</span>
+          <span class="chip" data-jmode="product" onclick="setJewelMode('product',this)">產品特寫</span>
+          <span class="chip" data-jmode="interior" onclick="setJewelMode('interior',this)">室內情境</span>
+          <span class="chip" data-jmode="studio" onclick="setJewelMode('studio',this)">電商棚拍</span>
+        </div>
+      </div>
+      <div class="block">
+        <div class="sec-label">語言</div>
+        <div class="chip-grid">
+          <span class="chip on" data-jlang="zh" onclick="setJewelLang('zh',this)">中文</span>
+          <span class="chip" data-jlang="en" onclick="setJewelLang('en',this)">English</span>
+          <span class="chip" data-jlang="mix" onclick="setJewelLang('mix',this)">混合</span>
+        </div>
+      </div>
+      <div class="block">
+        <div class="sec-label">輸出格式</div>
+        <div class="chip-grid">
+          <span class="chip on" id="jewel-fmt-structured" onclick="setJewelFmt('structured')">分段註解</span>
+          <span class="chip" id="jewel-fmt-flat" onclick="setJewelFmt('flat')">純標籤串</span>
+        </div>
+      </div>
+      <div class="block">
+        <div class="sec-label">包含區塊</div>
+        <div id="jewel-inc-checks"></div>
+      </div>
+      <button class="gen-btn" onclick="generateJewel()">🎲 隨機生成飾品 Prompt</button>
+    </aside>
+    <section class="panel">
+      <div>
+        <div class="sec-label" style="display:flex;justify-content:space-between">
+          <span>輸出 Prompt <span class="meta">（可直接編輯）</span></span>
+          <span class="meta" id="jewel-meta">—</span>
+        </div>
+        <textarea class="output-box output-edit empty" id="jewel-output" placeholder="選擇類別後點「隨機生成」或按空白鍵…" onblur="commitJewelOutputEdit()"></textarea>
+      </div>
+      <div class="actions-row">
+        <button class="tb-btn primary" onclick="copyJewelOutput()">複製 Prompt</button>
+        <button class="tb-btn" onclick="generateJewel()">重抽全部</button>
+        <button class="tb-btn" onclick="copyJewelTagsOnly()">僅複製標籤</button>
+        <button class="tb-btn" onclick="addJewelHistory()">加入歷史</button>
+      </div>
+      <div>
+        <div class="sec-label">各區塊（可直接編輯 · ↻ 重抽 · 雙擊鎖定）</div>
+        <div class="slot-grid" id="jewel-slots"></div>
+      </div>
+      <div>
+        <div class="sec-label">歷史紀錄</div>
+        <div class="hist-list" id="jewel-hist-list"><div class="meta">尚無紀錄</div></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- Session 管理 -->
+<div class="learn-overlay" id="session-overlay" onclick="if(event.target===this)closeSessionPanel()">
+  <div class="learn-panel" onclick="event.stopPropagation()">
+    <div class="learn-header">
+      <span class="learn-title">📂 工作階段 Session</span>
+      <span class="learn-close" onclick="closeSessionPanel()">×</span>
+    </div>
+    <div class="learn-body">
+      <div class="learn-hint" style="margin-bottom:8px">
+        每個 Session 獨立保存：角色 Prompt、搜尋紀錄、鎖定狀態、歷史。<br>
+        辭庫為全域共用。
+      </div>
+      <div class="session-list" id="session-list"></div>
+      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+        <button class="tb-btn primary" onclick="createNewSession()">＋ 新 Session</button>
+        <button class="tb-btn" onclick="duplicateCurrentSession()">複製目前</button>
+        <button class="tb-btn" onclick="renameCurrentSession()">重新命名</button>
+      </div>
+    </div>
+    <div class="learn-footer">
+      <span class="learn-hint">切換時會自動儲存目前 Session</span>
+      <button class="tb-btn" onclick="closeSessionPanel()">關閉</button>
+    </div>
+  </div>
+</div>
+
+<!-- 學習對話窗 -->
+<div class="learn-overlay" id="learn-overlay" onclick="if(event.target===this)closeLearnPanel()">
+  <div class="learn-panel" onclick="event.stopPropagation()">
+    <div class="learn-header">
+      <span class="learn-title">📚 學習辭庫 — 自動分類</span>
+      <span class="learn-close" onclick="closeLearnPanel()">×</span>
+    </div>
+    <div class="learn-body">
+      <div class="sec-label">輸入 Prompt（支援 // ❖ 分段 或 純逗號標籤，貼上即自動分類）</div>
+      <textarea class="learn-textarea" id="learn-input" placeholder="貼上任意 prompt…&#10;&#10;· 有 // ❖ 標題 → 依標題分段&#10;· 純標籤串 → 自動分到 8 個區塊&#10;· 點標籤可移到其他區塊" oninput="debouncedAutoLearn()"></textarea>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="chip on" id="learn-auto-on" onclick="setLearnAuto(true)">自動分類</span>
+        <span class="chip" id="learn-auto-off" onclick="setLearnAuto(false)">手動區塊</span>
+        <select class="sel-sm" id="learn-fallback-sec" style="display:none"></select>
+        <button class="tb-btn" onclick="previewLearn()">重新分析</button>
+        <button class="tb-btn" onclick="fillLearnExample(1)">範本1</button>
+        <button class="tb-btn" onclick="fillLearnExample(2)">範本2</button>
+        <button class="tb-btn" onclick="importCurrentPrompt()">匯入目前</button>
+      </div>
+      <div class="learn-stats" id="learn-stats"></div>
+      <div>
+        <div class="sec-label">自動分類結果（點標籤 → 移到其他區塊）</div>
+        <div class="learn-tag-grid" id="learn-preview"><span class="meta">貼上 prompt 後自動顯示分類</span></div>
+      </div>
+    </div>
+    <div class="learn-footer">
+      <span class="learn-hint">分類後存入辭庫（整段＋單詞）並自動切換「學習迭代」亂數生成。點標籤可手動調整歸類。</span>
+      <button class="tb-btn primary" onclick="commitLearn()">✓ 加入辭庫</button>
+      <button class="tb-btn" onclick="applyLearnToCurrent()">套用到目前角色</button>
+      <button class="tb-btn" onclick="closeLearnPanel()">取消</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="toast" id="toast"></div>
+<script src="js/translate.js"></script>
+<script src="js/search.js"></script>
+<script src="js/data-loader.js"></script>
+<script src="js/rng-engine.js" id="rng-engine-script"></script>
+<script src="js/apply-latest-data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+[
+  {
+    "key": "quality",
+    "label": "QUALITY / TECHNICAL TAGS",
+    "zh": "品質標籤"
+  },
+  {
+    "key": "subject",
+    "label": "Subject & Character",
+    "zh": "主體與角色"
+  },
+  {
+    "key": "face",
+    "label": "Facial Features",
+    "zh": "臉部特徵"
+  },
+  {
+    "key": "details",
+    "label": "Character Details",
+    "zh": "角色細節"
+  },
+  {
+    "key": "outfit",
+    "label": "Outfit",
+    "zh": "服裝"
+  },
+  {
+    "key": "pose",
+    "label": "Pose / Composition",
+    "zh": "姿勢／構圖"
+  },
+  {
+    "key": "job",
+    "label": "JOB / Act",
+    "zh": "JOB"
+  },
+  {
+    "key": "env",
+    "label": "Environment & Lighting",
+    "zh": "環境與光線"
+  },
+  {
+    "key": "styleRef",
+    "label": "STYLE REFERENCES",
+    "zh": "風格參考"
+  }
+]

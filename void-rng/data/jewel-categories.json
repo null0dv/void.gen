@@ -1,0 +1,38 @@
+[
+  {
+    "id": "all",
+    "label": "全部"
+  },
+  {
+    "id": "silver",
+    "label": "銀飾"
+  },
+  {
+    "id": "wood_pendant",
+    "label": "木質墜子"
+  },
+  {
+    "id": "ring",
+    "label": "戒指"
+  },
+  {
+    "id": "necklace",
+    "label": "項鍊"
+  },
+  {
+    "id": "home_acc",
+    "label": "家飾品"
+  },
+  {
+    "id": "decor",
+    "label": "擺設"
+  },
+  {
+    "id": "furniture",
+    "label": "家具"
+  },
+  {
+    "id": "designer_furniture",
+    "label": "設計師家具"
+  }
+]
