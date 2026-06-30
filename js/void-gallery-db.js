@@ -6,18 +6,30 @@
   const _DB_STORE = 'gallery';
   const _LORA_THUMB_STORE = 'lora-thumbs';
   const _FOLDER_STORE = 'folder-handle';
+  const _DB_VERSION = 4;
   let _idb = null;
   let _idbPromise = null;
+
+  function _ensureGalleryIndexes(store) {
+    if (!store.indexNames.contains('ts')) store.createIndex('ts', 'ts', { unique: false });
+    if (!store.indexNames.contains('source')) store.createIndex('source', 'source', { unique: false });
+    if (!store.indexNames.contains('filename')) store.createIndex('filename', 'filename', { unique: false });
+  }
 
   function _openDB() {
     if (_idb) return Promise.resolve(_idb);
     if (_idbPromise) return _idbPromise;
     _idbPromise = new Promise((res, rej) => {
-      const req = indexedDB.open(_DB_NAME, 3);
+      const req = indexedDB.open(_DB_NAME, _DB_VERSION);
       req.onupgradeneeded = e => {
         const db = e.target.result;
-        if (!db.objectStoreNames.contains(_DB_STORE))
-          db.createObjectStore(_DB_STORE, { keyPath: 'id', autoIncrement: true });
+        let gallery;
+        if (!db.objectStoreNames.contains(_DB_STORE)) {
+          gallery = db.createObjectStore(_DB_STORE, { keyPath: 'id', autoIncrement: true });
+        } else if (e.oldVersion < _DB_VERSION) {
+          gallery = e.target.transaction.objectStore(_DB_STORE);
+        }
+        if (gallery) _ensureGalleryIndexes(gallery);
         if (!db.objectStoreNames.contains(_LORA_THUMB_STORE))
           db.createObjectStore(_LORA_THUMB_STORE, { keyPath: 'name' });
         if (!db.objectStoreNames.contains(_FOLDER_STORE))
@@ -27,6 +39,18 @@
       req.onerror = () => { _idbPromise = null; rej(req.error); };
     });
     return _idbPromise;
+  }
+
+  function _toListItem(rec) {
+    return {
+      id: rec.id,
+      thumbUrl: rec.thumbUrl || null,
+      title: rec.title,
+      meta: rec.meta,
+      ts: rec.ts,
+      filename: rec.filename,
+      source: rec.source,
+    };
   }
 
   async function dbSave(dataUrl, thumbUrl, title, meta) {
@@ -68,6 +92,18 @@
     });
   }
 
+  async function dbBatchPut(records) {
+    if (!records.length) return 0;
+    const db = await _openDB();
+    return new Promise((res, rej) => {
+      const tx = db.transaction(_DB_STORE, 'readwrite');
+      const store = tx.objectStore(_DB_STORE);
+      records.forEach(rec => store.put(rec));
+      tx.oncomplete = () => res(records.length);
+      tx.onerror = () => rej(tx.error);
+    });
+  }
+
   async function dbClear() {
     const db = await _openDB();
     return new Promise(res => {
@@ -84,13 +120,45 @@
     });
   }
 
+  /** Lightweight list for gallery grid — omits dataUrl from returned objects. */
+  async function dbLoadGalleryList() {
+    const db = await _openDB();
+    return new Promise((res, rej) => {
+      const out = [];
+      const store = db.transaction(_DB_STORE, 'readonly').objectStore(_DB_STORE);
+      const src = store.indexNames.contains('ts') ? store.index('ts') : store;
+      const req = src.openCursor(null, 'prev');
+      req.onsuccess = e => {
+        const cur = e.target.result;
+        if (!cur) return res(out);
+        const r = cur.value;
+        if (r.source !== 'disk') out.push(_toListItem(r));
+        cur.continue();
+      };
+      req.onerror = () => rej(req.error);
+    });
+  }
+
   async function dbDeleteDiskEntries() {
     const db = await _openDB();
-    const all = await dbLoadAll();
-    const tx = db.transaction(_DB_STORE, 'readwrite');
-    const store = tx.objectStore(_DB_STORE);
-    all.filter(r => r.source === 'disk').forEach(r => store.delete(r.id));
-    return new Promise(res => { tx.oncomplete = res; tx.onerror = res; });
+    return new Promise((res, rej) => {
+      const tx = db.transaction(_DB_STORE, 'readwrite');
+      const store = tx.objectStore(_DB_STORE);
+      const useIndex = store.indexNames.contains('source');
+      const req = useIndex
+        ? store.index('source').openCursor(IDBKeyRange.only('disk'))
+        : store.openCursor();
+      req.onsuccess = e => {
+        const cur = e.target.result;
+        if (!cur) return;
+        if (!useIndex && cur.value.source !== 'disk') { cur.continue(); return; }
+        cur.delete();
+        cur.continue();
+      };
+      req.onerror = () => rej(req.error);
+      tx.oncomplete = () => res();
+      tx.onerror = () => rej(tx.error);
+    });
   }
 
   global._DB_NAME = _DB_NAME;
@@ -102,7 +170,9 @@
   global.dbLoadById = dbLoadById;
   global.dbDelete = dbDelete;
   global.dbUpdate = dbUpdate;
+  global.dbBatchPut = dbBatchPut;
   global.dbClear = dbClear;
   global.dbLoadAll = dbLoadAll;
+  global.dbLoadGalleryList = dbLoadGalleryList;
   global.dbDeleteDiskEntries = dbDeleteDiskEntries;
 })(typeof window !== 'undefined' ? window : globalThis);

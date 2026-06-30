@@ -1015,7 +1015,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
       </div>
     </div>
     <div id="gallery-search-wrap">
-      <input class="gallery-search-input" id="gallery-search" type="text" placeholder="Search prompts…" oninput="filterGallery()">
+      <input class="gallery-search-input" id="gallery-search" type="text" placeholder="Search prompts…" oninput="_filterGalleryDebounced && _filterGalleryDebounced()">
       <select id="gallery-model-filter" onchange="filterGallery()"><option value="">ALL MODELS</option></select>
       <button class="tb-btn" id="fav-filter-btn" onclick="toggleFavFilter()" title="Show favorites">⭐</button>
     </div>
@@ -1253,6 +1253,10 @@ const _COMFY_CLIENT_ID = 'void-gen-' + crypto.randomUUID().slice(0, 12);
 const _MODEL_CACHE_KEY = 'void-model-list-cache';
 const _MODEL_CACHE_TTL = 5 * 60 * 1000;
 const _FOLDER_SYNC_PREFIX = 'void-folder-sync-';
+const _FOLDER_MANIFEST_PREFIX = 'void-folder-manifest-';
+const _GALLERY_BACKFILL_KEY = 'void-gallery-backfill-v3';
+let _folderFileIndex = null;
+let _filterGalleryDebounced = null;
 const _LOCAL_API = 'http://127.0.0.1:8188';
 const GALLERY_PAGE = 40;
 const HIST_KEY      = 'void-gen-prompt-hist';
@@ -1370,6 +1374,58 @@ function _makeThumbnail(dataUrl, maxPx=800) {
     img.src = dataUrl;
   });
 }
+async function _makeThumbnailFromFile(file, maxPx = 800) {
+  try {
+    const bmp = await createImageBitmap(file);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const cap = maxPx * dpr;
+    const s = Math.min(1, cap / bmp.width, cap / bmp.height);
+    const c = document.createElement('canvas');
+    c.width = Math.round(bmp.width * s);
+    c.height = Math.round(bmp.height * s);
+    const ctx = c.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(bmp, 0, 0, c.width, c.height);
+    if (bmp.close) bmp.close();
+    return c.toDataURL('image/jpeg', 0.88);
+  } catch {
+    const dataUrl = await new Promise((res, rej) => {
+      const rd = new FileReader();
+      rd.onload = () => res(rd.result);
+      rd.onerror = rej;
+      rd.readAsDataURL(file);
+    });
+    return _makeThumbnail(dataUrl, maxPx);
+  }
+}
+function _folderManifestKey(name) { return _FOLDER_MANIFEST_PREFIX + (name || ''); }
+function _gallerySearchBlob(meta, title, tags) {
+  const prompt = String(meta?.prompt || title || '').toLowerCase();
+  const model = String(meta?.model || '').replace(/\.(safetensors|ckpt|pt)$/i, '').toLowerCase();
+  const tagStr = (tags || []).join(' ').toLowerCase();
+  return `${prompt} ${model} ${tagStr}`.trim();
+}
+function _syncCardSearchBlob(card) {
+  const meta = _metaFromCard(card);
+  const tags = getCardTags()[card.dataset.favKey] || [];
+  card.dataset.searchBlob = _gallerySearchBlob(meta, card.dataset.title, tags);
+}
+async function _buildFolderFileIndex(handle) {
+  if (!handle) return [];
+  if (_folderFileIndex?.name === handle.name && _folderFileIndex.entries?.length) {
+    return _folderFileIndex.entries;
+  }
+  const entries = [];
+  for await (const entry of handle.values()) {
+    if (entry.kind !== 'file' || !/\.(png|jpe?g|webp)$/i.test(entry.name)) continue;
+    const file = await entry.getFile();
+    entries.push({ name: entry.name, lm: file.lastModified });
+  }
+  entries.sort((a, b) => b.lm - a.lm);
+  _folderFileIndex = { name: handle.name, entries, byName: new Map(entries.map(e => [e.name, e])) };
+  return entries;
+}
 
 // ── GALLERY INDEXEDDB → js/void-gallery-db.js ─────────────────────
 
@@ -1460,7 +1516,7 @@ function setupGalleryObserver() {
   _galleryObserver = new IntersectionObserver(entries => {
     if (entries[0].isIntersecting && _galleryBuffer.length) {
       const batch = _galleryBuffer.splice(0, GALLERY_PAGE);
-      batch.forEach(item => _addToGalleryInternal(item.thumbUrl || item.dataUrl, item.dataUrl, item.title, item.meta, item.id, true));
+      batch.forEach(item => _addToGalleryInternal(item.thumbUrl, item.dataUrl || null, item.title, item.meta, item.id, true));
     }
   }, { root: document.getElementById('gallery-view'), threshold: 0.1 });
   _galleryObserver.observe(sentinel);
@@ -1532,25 +1588,36 @@ function _initGalleryEvents() {
 function initGalleryOpen() { _initGalleryEvents(); }
 
 async function _backfillGalleryRecords(records) {
-  let updated = 0;
+  if (localStorage.getItem(_GALLERY_BACKFILL_KEY) === '1') return records;
+  const dirty = [];
   for (const rec of records) {
     if (rec.source === 'disk') continue;
     const meta = { ...(rec.meta || {}) };
-    let dirty = false;
-    if (!meta.filename && rec.filename) { meta.filename = rec.filename; dirty = true; }
+    let changed = false;
+    if (!meta.filename && rec.filename) { meta.filename = rec.filename; changed = true; }
     if (!meta.filename && /\.(png|jpe?g|webp)$/i.test(rec.title || '')) {
       meta.filename = rec.title;
-      dirty = true;
+      changed = true;
     }
-    if (!meta.ts && rec.ts) { meta.ts = rec.ts; dirty = true; }
-    if (dirty) {
-      await dbUpdate(rec.id, { meta, filename: meta.filename || rec.filename || '' }).catch(() => {});
+    if (!meta.ts && rec.ts) { meta.ts = rec.ts; changed = true; }
+    if (changed) {
       rec.meta = meta;
       if (meta.filename) rec.filename = meta.filename;
-      updated++;
+      dirty.push(rec);
     }
   }
-  if (updated) console.log('[void.gen] backfilled filename meta:', updated);
+  if (dirty.length) {
+    const full = await Promise.all(dirty.map(async r => {
+      const rec = await dbLoadById(r.id);
+      if (!rec) return null;
+      rec.meta = r.meta;
+      rec.filename = r.filename || rec.filename || '';
+      return rec;
+    }));
+    await dbBatchPut(full.filter(Boolean)).catch(() => {});
+    console.log('[void.gen] backfilled filename meta:', full.filter(Boolean).length);
+  }
+  localStorage.setItem(_GALLERY_BACKFILL_KEY, '1');
   return records;
 }
 async function _resolveFilenameFromFolder(filename, subfolder, ts) {
@@ -1560,31 +1627,30 @@ async function _resolveFilenameFromFolder(filename, subfolder, ts) {
   try {
     const perm = await handle.queryPermission({ mode: 'read' });
     if (perm !== 'granted') return { filename: '', subfolder };
-    const candidates = [];
-    for await (const entry of handle.values()) {
-      if (entry.kind !== 'file') continue;
-      if (!/\.(png|jpe?g|webp)$/i.test(entry.name)) continue;
-      const file = await entry.getFile();
-      const diff = Math.abs(file.lastModified - ts);
-      if (diff <= 5000) candidates.push({ name: entry.name, diff });
+    const entries = await _buildFolderFileIndex(handle);
+    let best = null;
+    for (const e of entries) {
+      const diff = Math.abs(e.lm - ts);
+      if (diff <= 5000 && (!best || diff < best.diff)) best = { name: e.name, diff };
     }
-    if (!candidates.length) return { filename: '', subfolder };
-    candidates.sort((a, b) => a.diff - b.diff);
-    return { filename: candidates[0].name, subfolder: '' };
+    return best ? { filename: best.name, subfolder: '' } : { filename: '', subfolder };
   } catch {
     return { filename: '', subfolder };
   }
 }
 async function loadSavedGallery() {
   try {
-    const all = await _backfillGalleryRecords(await dbLoadAll());
+    const loader = typeof dbLoadGalleryList === 'function' ? dbLoadGalleryList : dbLoadAll;
+    const all = await _backfillGalleryRecords(await loader());
     const imgs = all.filter(r => r.source !== 'disk');
-    imgs.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+    if (loader === dbLoadAll) imgs.sort((a, b) => (b.ts || 0) - (a.ts || 0));
     const first = imgs.splice(0, GALLERY_PAGE);
     _galleryBuffer = imgs.map(img => ({
-      thumbUrl: img.thumbUrl || img.dataUrl,
-      dataUrl: img.dataUrl, title: img.title,
-      meta: {...(img.meta||{}), ts: img.ts}, id: img.id
+      thumbUrl: img.thumbUrl,
+      dataUrl: null,
+      title: img.title,
+      meta: { ...(img.meta || {}), ts: img.ts },
+      id: img.id,
     }));
     const grid = document.getElementById('gallery-grid');
     grid.innerHTML = '';
@@ -1592,8 +1658,8 @@ async function loadSavedGallery() {
       _setGalleryEmptyVisible(false);
       grid.style.display = 'flex';
       first.slice().reverse().forEach(img => _addToGalleryInternal(
-        img.thumbUrl || img.dataUrl, img.dataUrl,
-        img.title, {...(img.meta||{}), ts: img.ts}, img.id, false
+        img.thumbUrl, null,
+        img.title, { ...(img.meta || {}), ts: img.ts }, img.id, false
       ));
     } else {
       grid.style.display = 'none';
@@ -1697,9 +1763,12 @@ async function syncOutputFolder(handle, options = {}) {
   _setFolderBtn(handle.name, true);
   localStorage.setItem('void-folder-name', handle.name);
 
-  if (force) await dbDeleteDiskEntries();
+  if (force) {
+    await dbDeleteDiskEntries();
+    localStorage.removeItem(_folderManifestKey(handle.name));
+    _folderFileIndex = null;
+  }
 
-  // Collect all image file handles from folder
   const fileEntries = [];
   for await (const entry of handle.values()) {
     if (entry.kind !== 'file') continue;
@@ -1711,10 +1780,17 @@ async function syncOutputFolder(handle, options = {}) {
     setTimeout(()=>setStatus('Void.gen'),2000); return;
   }
 
-  await Promise.all(fileEntries.map(e => e.getFile().then(f => { e._lm = f.lastModified; })));
+  await Promise.all(fileEntries.map(e => e.getFile().then(f => { e._lm = f.lastModified; e._file = f; })));
+  _folderFileIndex = {
+    name: handle.name,
+    entries: fileEntries.map(e => ({ name: e.name, lm: e._lm })).sort((a, b) => b.lm - a.lm),
+    byName: new Map(fileEntries.map(e => [e.name, { name: e.name, lm: e._lm }])),
+  };
 
-  const lastSync = force ? 0 : parseInt(localStorage.getItem(_folderSyncKey(handle.name)) || '0', 10);
-  const newEntries = fileEntries.filter(e => e._lm > lastSync);
+  const manifestKey = _folderManifestKey(handle.name);
+  const manifest = force ? {} : JSON.parse(localStorage.getItem(manifestKey) || '{}');
+  const newManifest = { ...manifest };
+  const newEntries = fileEntries.filter(e => !manifest[e.name] || manifest[e.name] < e._lm);
   if (!newEntries.length) {
     setStatus('OUTPUT FOLDER UP TO DATE','ok');
     setTimeout(()=>setStatus('Void.gen'),2000);
@@ -1725,35 +1801,31 @@ async function syncOutputFolder(handle, options = {}) {
   const syncTs = Date.now();
   setStatus(`IMPORTING ${newEntries.length} NEW IMAGES FROM OUTPUT FOLDER…`);
   let done = 0;
-  const BATCH = 8;
+  const BATCH = 12;
   for (let i = 0; i < newEntries.length; i += BATCH) {
     const batch = newEntries.slice(i, i+BATCH);
     await Promise.all(batch.map(async entry => {
       try {
-        const file   = await entry.getFile();
-        const dataUrl = await new Promise((res,rej) => {
-          const rd = new FileReader(); rd.onload = ()=>res(rd.result); rd.onerror = rej;
-          rd.readAsDataURL(file);
-        });
-        const thumbUrl = await _makeThumbnail(dataUrl).catch(() => dataUrl);
+        const file = entry._file || await entry.getFile();
+        const thumbUrl = await _makeThumbnailFromFile(file).catch(() => '');
         let meta = { filename: entry.name, ts: file.lastModified, source:'disk' };
-        // Parse embedded PNG metadata (prompt, seed, etc.)
         if (/\.png$/i.test(entry.name)) {
           try {
-            const buf = await file.arrayBuffer();
-            const parsed = await parsePngMeta(buf);
+            const head = await file.slice(0, 262144).arrayBuffer();
+            const parsed = await parsePngMeta(head);
             if (parsed) Object.assign(meta, parsed);
           } catch {}
         }
         const dbId = await _dbSaveDiskFile(entry.name, thumbUrl, meta).catch(() => null);
-        _addToGalleryInternal(thumbUrl, dataUrl, entry.name, meta, dbId, true);
+        _addToGalleryInternal(thumbUrl, null, entry.name, meta, dbId, true);
+        newManifest[entry.name] = file.lastModified;
         done++;
         if (done % 20 === 0) setStatus(`IMPORTING… ${done}/${newEntries.length}`);
       } catch(e) { console.warn('[void.gen] skip', entry.name, e); }
     }));
-    // yield to keep UI responsive
     await new Promise(r => setTimeout(r, 0));
   }
+  localStorage.setItem(manifestKey, JSON.stringify(newManifest));
   localStorage.setItem(_folderSyncKey(handle.name), String(syncTs));
   setStatus(`OUTPUT FOLDER SYNCED — ${done} NEW IMAGES`,'ok');
   setTimeout(()=>setStatus('Void.gen'),3000);
@@ -1781,6 +1853,7 @@ async function _getCardDeleteInfo(card) {
   }
   const cardTitle = card.dataset.title || '';
   if (!filename && /\.(png|jpe?g|webp)$/i.test(cardTitle)) filename = cardTitle;
+  if (!filename && _folderFileIndex?.byName?.has(cardTitle)) filename = cardTitle;
   if (!filename) {
     const resolved = await _resolveFilenameFromFolder('', subfolder, parseInt(card.dataset.ts || meta.ts || 0));
     if (resolved.filename) {
@@ -2349,6 +2422,7 @@ function _mkDebounce(fn, ms) {
 }
 window._debouncedTokenCount    = _mkDebounce(() => updateTokenCount(),    280);
 window._debouncedNegTokenCount = _mkDebounce(() => updateNegTokenCount(), 280);
+_filterGalleryDebounced = _mkDebounce(() => filterGallery(), 120);
 
 // ── TOKEN COUNTER ─────────────────────────────────────────────────
 function countClipTokens(text) {
@@ -2671,11 +2745,12 @@ function _addToGalleryInternal(thumbUrl, fullDataUrl, title, meta={}, dbId=null,
   const _initRating = getCardRatings()[favKey] || 0;
   if (_initRating > 0) card.classList.add('rated');
   const _initTags = getCardTags()[favKey] || [];
+  card.dataset.searchBlob = _gallerySearchBlob(meta, title, _initTags);
   card.innerHTML = `
     <div class="card-img-wrap">
       <div class="card-star" data-gallery-action="fav" title="Favorite">${_favorites.has(favKey)?'★':'☆'}</div>
       <div class="card-check">✓</div>
-      <img src="${thumbUrl}" loading="lazy" alt="">
+      <img src="${thumbUrl || ''}" loading="lazy" decoding="async" alt="">
       <div class="card-overlay">
         <div class="card-meta-wrap">
           ${meta.model ? `<div class="card-model-badge">${escHtml(meta.model.replace(/\.(safetensors|ckpt|pt)$/i,'').slice(0,28))}</div>` : ''}
@@ -2693,6 +2768,12 @@ function _addToGalleryInternal(thumbUrl, fullDataUrl, title, meta={}, dbId=null,
     </div>
     <div class="card-rating">${[1,2,3,4,5].map(i=>`<span class="rating-star ${i<=_initRating?'on':''}" data-rating="${i}" title="Rate ${i}">${i<=_initRating?'★':'☆'}</span>`).join('')}</div>`;
   card.oncontextmenu = e => showCtxMenu(e, fullDataUrl, title, meta);
+  if (!thumbUrl && dbId) {
+    dbLoadById(dbId).then(rec => {
+      const img = card.querySelector('img');
+      if (img && rec) img.src = rec.thumbUrl || rec.dataUrl || img.src;
+    }).catch(() => {});
+  }
   if (appendMode) {
     appendCardToGroup(card, grid, getGalleryGroupLabel(card, 'time'));
     requestAnimationFrame(fitGalleryView);
@@ -3593,23 +3674,24 @@ function toggleFavFilter() {
 
 // ── GALLERY SEARCH / FILTER ───────────────────────────────────────
 function filterGallery() {
-  const q     = (document.getElementById('gallery-search')?.value || '').toLowerCase();
+  const q     = (document.getElementById('gallery-search')?.value || '').toLowerCase().trim();
   const model = (document.getElementById('gallery-model-filter')?.value || '').toLowerCase();
   const albums = getAlbums();
   const activeAlbumObj = _activeAlbum ? albums.find(a => String(a.id) === _activeAlbum) : null;
   const activeAlbumCards = activeAlbumObj ? (activeAlbumObj.cards || []) : null;
-  const cardTagsAll = getCardTags();
+  const cardTagsAll = _activeTagFilter ? getCardTags() : null;
   let visible = 0;
   document.querySelectorAll('.gallery-card').forEach(card => {
-    const prompt     = card.querySelector('.card-prompt')?.textContent.toLowerCase() || '';
+    if (!card.dataset.searchBlob) _syncCardSearchBlob(card);
+    const blob       = card.dataset.searchBlob || '';
     const cardModel  = (card.dataset.model || '').toLowerCase();
     const isFav      = card.classList.contains('fav');
     const favKey     = card.dataset.favKey || '';
-    const matchQ     = !q     || prompt.includes(q);
+    const matchQ     = !q || blob.includes(q);
     const matchModel = !model || cardModel.includes(model);
     const matchFav   = !_favFilterOn || isFav;
     const matchAlbum = !activeAlbumCards || activeAlbumCards.includes(favKey);
-    const matchTag   = !_activeTagFilter || (cardTagsAll[favKey] || []).includes(_activeTagFilter);
+    const matchTag   = !_activeTagFilter || (cardTagsAll?.[favKey] || []).includes(_activeTagFilter);
     const show = matchQ && matchModel && matchFav && matchAlbum && matchTag;
     card.style.display = show ? '' : 'none';
     if (show) visible++;
