@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+<script>
+(function(){if(new URLSearchParams(location.search).get('embed')==='char'){document.documentElement.classList.add('embed-char-root');var _b=new URLSearchParams(location.search).get('b')||'';if(_b)document.documentElement.dataset.voidRngBuild=_b;}})();
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VOID.RNG — Prompt · 角色 · 飾品生成器</title>
@@ -179,28 +182,230 @@ textarea.output-edit::placeholder{color:var(--muted2);font-style:italic}
 
 /* VOID.GEN embed */
 .embed-only{display:none}
-html.embed-char-root,body.embed-char{height:100%;min-height:0;overflow:hidden}
+html.embed-char-root,body.embed-char{height:100%;min-height:0;max-height:100%;overflow:hidden}
+html.embed-char-root #view-char{height:100%}
 body.embed-char{display:flex!important;flex-direction:column}
 body.embed-char .topbar,
 body.embed-char #global-search-wrap,
 body.embed-char #view-style,
 body.embed-char #view-jewel{display:none!important}
-body.embed-char #view-char{flex:1;min-height:0;display:flex!important;flex-direction:column;overflow:hidden}
-body.embed-char #view-char>.main{flex:1;min-height:0;display:grid!important;grid-template-columns:minmax(220px,280px) minmax(0,1fr);overflow:hidden}
-body.embed-char #view-char .sidebar{min-height:0;overflow-y:auto;padding:10px 12px;border-right:1px solid var(--line)}
-body.embed-char #view-char .panel{min-height:0;overflow-y:auto;padding:12px 14px;gap:12px;display:flex;flex-direction:column}
-body.embed-char .embed-only{display:none!important}
-body.embed-char .output-edit{min-height:120px;max-height:none;flex-shrink:0}
+body.embed-char #view-char{flex:1;min-height:0;display:flex!important;flex-direction:column;overflow:hidden;height:100%}
+body.embed-char .embed-only:not(.embed-char-bar){display:none!important}
+body.embed-char .embed-char-bar{display:flex!important}
 body.embed-char .char-table td,body.embed-char .char-table th{padding:7px 9px}
 body.embed-char .hist-list{max-height:120px}
 body.embed-char .block{margin-bottom:14px}
 body.embed-char .embed-hide{display:none!important}
+body.embed-char .embed-char-build{display:none;margin-bottom:10px;padding:8px 10px;border:1px solid rgba(140,190,255,.25);border-radius:8px;background:rgba(140,190,255,.06);font-size:9px;color:#9cb8d8;line-height:1.5;letter-spacing:.04em}
+html.embed-char-root .embed-char-build{display:block;margin-bottom:10px;padding:8px 10px;border:1px solid rgba(140,190,255,.35);border-radius:8px;background:rgba(140,190,255,.1);font-size:10px;color:#b8d8f8;line-height:1.5;letter-spacing:.04em}
+.embed-char-build{display:none}
 @media(max-width:720px){
-  body.embed-char #view-char>.main{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) minmax(0,1.2fr)}
-  body.embed-char #view-char .sidebar{max-height:42vh;border-right:none;border-bottom:1px solid var(--line)}
+  body.embed-char #view-char .sidebar{max-height:min(44vh,380px)}
 }
 .embed-char-bar{gap:6px;padding:10px 12px;background:var(--bg1);border-top:1px solid var(--line);flex-wrap:wrap;align-items:center;flex-shrink:0}
+
+/* VOID.FULL 嵌入 · 順手版面 */
+body.embed-char .embed-only:not(.embed-char-bar){display:none!important}
+body.embed-char .embed-char-bar{display:flex!important}
+body.embed-char .embed-char-build{display:none!important}
+body.embed-char #view-char>.main{
+  display:flex!important;
+  flex-direction:column;
+  grid-template-columns:unset;
+  flex:1 1 auto;
+  overflow:hidden;
+  min-height:0;
+}
+body.embed-char #view-char .sidebar{
+  flex:0 0 auto;
+  width:100%;
+  max-height:min(40vh,360px);
+  min-height:0;
+  padding:6px 10px 4px;
+  border-right:none;
+  border-bottom:1px solid var(--line);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+body.embed-char .embed-char-filters{
+  flex:1 1 auto;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  margin-bottom:0;
+  border:none;
+  background:transparent;
+  padding:0;
+}
+body.embed-char .embed-char-filters>summary{display:none!important}
+body.embed-char .embed-char-filter-scroll{
+  display:block!important;
+  flex:1 1 auto;
+  min-height:120px;
+  max-height:100%;
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  padding:6px 2px 8px;
+  scrollbar-width:thin;
+}
+body.embed-char .embed-char-tab-bar{
+  display:flex!important;
+  flex-wrap:wrap;
+  gap:4px;
+  flex-shrink:0;
+  padding:0 0 6px;
+  border-bottom:1px solid var(--line);
+  margin-bottom:6px;
+}
+body.embed-char .embed-char-tab{
+  font-family:var(--mono);
+  font-size:8px;
+  letter-spacing:.06em;
+  padding:5px 8px;
+  border:1px solid var(--line);
+  border-radius:6px;
+  background:rgba(0,0,0,.25);
+  color:var(--muted);
+  cursor:pointer;
+}
+body.embed-char .embed-char-tab.on{
+  border-color:rgba(140,190,255,.45);
+  background:rgba(140,190,255,.12);
+  color:var(--accent2);
+}
+body.embed-char .embed-char-tab-pane{display:none}
+body.embed-char .embed-char-tab-pane.on{display:block}
+body.embed-char .embed-char-legacy-filters{display:none!important}
+body.embed-char .embed-char-quick{flex-shrink:0;max-height:min(22vh,160px);overflow-y:auto}
+body.embed-char #view-char .panel.embed-char-panel,
+body.embed-char #view-char .panel{
+  flex:1 1 0;
+  min-height:0;
+  width:100%;
+  padding:6px 10px 4px;
+  gap:6px;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+body.embed-char .embed-char-hide{display:none!important}
+body.embed-char .sidebar-fold{margin-bottom:6px}
+body.embed-char .sidebar-fold:not([open]) summary{margin-bottom:0}
+body.embed-char .sidebar-fold summary .sec-label{font-size:8px}
+body.embed-char .block{margin-bottom:10px}
+body.embed-char .gen-btn.embed-char-hide{display:none!important}
+body.embed-char #char-status-bar{display:none!important}
+body.embed-char .embed-char-slots-fold{
+  flex:0 0 auto;
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:4px 8px;
+  margin:0;
+  background:rgba(0,0,0,.12);
+}
+body.embed-char .embed-char-slots-fold:not([open]){padding:4px 8px}
+body.embed-char .embed-char-slots-fold[open]{
+  flex:0 1 auto;
+  max-height:min(30vh,220px);
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+body.embed-char .embed-char-slots-scroll{
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  margin-top:6px;
+}
+body.embed-char .embed-char-slots-fold .char-table-wrap{
+  border:none;
+  border-radius:0;
+  background:transparent;
+  max-height:none;
+  min-height:0;
+}
+body.embed-char .embed-char-slots-fold .char-table-wrap .sec-label{display:none}
+body.embed-char .char-table-wrap table{margin:0}
+body:not(.embed-char) .embed-char-slots-fold{border:none;padding:0;background:transparent}
+body:not(.embed-char) .embed-char-slots-fold>summary{display:none}
+body:not(.embed-char) .embed-char-slots-scroll{overflow:visible;margin:0}
+body.embed-char .embed-char-prompt-main{
+  flex:1 1 0;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:8px 10px;
+  background:rgba(0,0,0,.18);
+}
+body.embed-char .embed-char-prompt-main .sec-label{
+  flex-shrink:0;
+  margin-bottom:6px;
+}
+body.embed-char .embed-char-prompt-main .output-edit,
+body.embed-char .embed-char-prompt-main #char-output{
+  flex:1 1 0;
+  min-height:0!important;
+  height:auto!important;
+  max-height:none!important;
+  overflow-y:auto!important;
+  -webkit-overflow-scrolling:touch;
+  resize:none;
+  margin:0;
+}
+body.embed-char #embed-char-bar,
+body.embed-char .embed-char-bar{
+  display:flex!important;
+  flex:0 0 auto;
+  padding:8px 10px;
+  border-top:1px solid var(--line);
+  background:var(--bg1);
+  position:static!important;
+  z-index:1;
+  box-shadow:none;
+}
+body.embed-char .embed-char-bar .tb-btn{font-size:9px;padding:8px 12px}
+body.embed-char .sidebar-fold .meta{display:none}
+body.embed-char .embed-char-bar .tb-btn.primary{flex:1.4;font-size:10px;padding:10px 14px}
+body.embed-char .embed-char-quick .chip-grid{gap:3px}
+body.embed-char .embed-char-quick .chip{padding:3px 7px;font-size:8px}
+body.embed-char .embed-char-quick .param-row{grid-template-columns:52px 1fr 28px;margin-bottom:4px}
+body.embed-char .embed-char-quick #char-tone-level-hint{display:none}
+
 .embed-char-bar .tb-btn.primary{flex:1;min-width:120px}
+.embed-char-tab-bar,
+.embed-char-filter-scroll,
+.embed-char-conflict-hint{display:none}
+body.embed-char .embed-char-conflict-hint{
+  display:block;
+  flex-shrink:0;
+  font-size:8px;
+  line-height:1.4;
+  color:var(--muted);
+  padding:2px 2px 4px;
+  max-height:52px;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+body.embed-char .embed-char-conflict-hint.has-warn{
+  color:#e8c4a0;
+  border-bottom:1px dashed rgba(255,180,120,.25);
+  margin-bottom:4px;
+}
+body.embed-char .embed-conflict-title{
+  display:block;
+  font-size:7px;
+  letter-spacing:.12em;
+  color:#9cb8d8;
+  margin-bottom:3px;
+}
+body.embed-char .embed-conflict-line{margin-bottom:2px}
 </style>
 </head>
 <body>
@@ -297,7 +502,7 @@ body.embed-char .embed-hide{display:none!important}
 <div class="view active" id="view-style">
   <div class="main">
     <aside class="sidebar">
-      <div class="block">
+      <div class="block embed-char-hide">
         <div class="sec-label">生成模式</div>
         <div class="chip-grid" id="mode-chips">
           <span class="chip on" data-mode="full" onclick="setMode('full',this)">完整組合</span>
@@ -322,7 +527,8 @@ body.embed-char .embed-hide{display:none!important}
           <span class="chip" data-lang="mix" onclick="setLang('mix',this)">混合</span>
         </div>
       </div>
-      <div class="block">
+      </details>
+      <div class="block embed-char-hide">
         <div class="sec-label">包含區塊</div>
         <label class="chk-row"><input type="checkbox" id="inc-quality" checked> 品質標籤</label>
         <label class="chk-row"><input type="checkbox" id="inc-style" checked> 風格代號</label>
@@ -369,6 +575,7 @@ body.embed-char .embed-hide{display:none!important}
 <div class="view" id="view-char">
   <div class="main">
     <aside class="sidebar">
+      <details class="sidebar-fold embed-char-quick" open><summary><span class="sec-label">快速</span></summary><div class="embed-char-build embed-char-hide">VOID.RNG · FULL V2 嵌入 · 體型→胸型→身材→穿著→動作→NSFW→背景</div>
       <div class="block">
         <div class="sec-label">風格調性</div>
         <div class="chip-grid">
@@ -385,7 +592,7 @@ body.embed-char .embed-hide{display:none!important}
         </div>
         <div class="meta" id="char-tone-level-hint" style="margin-top:4px">Lv3 · 中等色氣</div>
       </div>
-      <div class="block">
+      <div class="block embed-char-hide">
         <div class="sec-label">生成模式</div>
         <div class="chip-grid">
           <span class="chip on" id="char-mode-mix" onclick="setCharMode('mix')">混合亂數</span>
@@ -393,7 +600,7 @@ body.embed-char .embed-hide{display:none!important}
           <span class="chip" id="char-mode-template" onclick="setCharMode('template')">完整範本</span>
         </div>
       </div>
-      <div class="block">
+      <div class="block embed-char-hide">
         <div class="sec-label">輸出格式</div>
         <div class="chip-grid">
           <span class="chip on" id="char-fmt-structured" onclick="setCharFmt('structured')">分段註解</span>
@@ -407,52 +614,118 @@ body.embed-char .embed-hide{display:none!important}
           <span class="chip preset" onclick="applyQuickPreset('spicy_selfie')">✦ 色氣撩人</span>
           <span class="chip preset preset-hot" onclick="applyQuickPreset('super_spicy')">✦ 超級色氣</span>
           <span class="chip preset" onclick="applyQuickPreset('full_nsfw')">✦ 成人全開</span>
-          <span class="chip preset preset-extreme" onclick="applyQuickPreset('sex_lover')">✦ 超愛做愛的寶貝</span>
-          <span class="chip preset" onclick="applyQuickPreset('pix_cute')">◆ PIX·清純式</span>
-          <span class="chip preset" onclick="applyQuickPreset('pix_tempt')">◆ PIX·誘惑式</span>
-          <span class="chip preset" onclick="applyQuickPreset('pix_cinematic')">◆ PIX·電影光</span>
+          <span class="chip preset preset-extreme embed-char-hide" onclick="applyQuickPreset('sex_lover')">✦ 超愛做愛的寶貝</span>
+          <span class="chip preset embed-char-hide" onclick="applyQuickPreset('pix_cute')">◆ PIX·清純式</span>
+          <span class="chip preset embed-char-hide" onclick="applyQuickPreset('pix_tempt')">◆ PIX·誘惑式</span>
+          <span class="chip preset embed-char-hide" onclick="applyQuickPreset('pix_cinematic')">◆ PIX·電影光</span>
         </div>
       </div>
-      <details class="sidebar-fold body-fold" open>
-        <summary><span class="sec-label">身材・體型</span></summary>
+      </details>
+      <div class="block embed-char-hide">
+        <div class="sec-label">包含區塊</div>
+        <div id="char-inc-checks"></div>
+      </div>
+      <details class="sidebar-fold embed-char-filters" open>
+        <summary><span class="sec-label">篩選（體型·穿著·動作·NSFW·背景）</span></summary>
+        <div class="embed-char-tab-bar" role="tablist">
+          <button type="button" class="embed-char-tab on" data-ect="frame" onclick="setEmbedCharTab('frame')">身形</button>
+          <button type="button" class="embed-char-tab" data-ect="breast" onclick="setEmbedCharTab('breast')">胸部</button>
+          <button type="button" class="embed-char-tab" data-ect="leg" onclick="setEmbedCharTab('leg')">腿</button>
+          <button type="button" class="embed-char-tab" data-ect="outfit" onclick="setEmbedCharTab('outfit')">服裝</button>
+          <button type="button" class="embed-char-tab" data-ect="photo" onclick="setEmbedCharTab('photo')">拍照姿勢</button>
+          <button type="button" class="embed-char-tab" data-ect="action" onclick="setEmbedCharTab('action')">肢體表情</button>
+          <button type="button" class="embed-char-tab" data-ect="nsfw" onclick="setEmbedCharTab('nsfw')">NSFW</button>
+          <button type="button" class="embed-char-tab" data-ect="env" onclick="setEmbedCharTab('env')">背景</button>
+        </div>
+        <div class="embed-char-conflict-hint" id="embed-char-conflict-hint"></div>
+        <div class="embed-char-filter-scroll">
+          <div class="embed-char-tab-pane on" data-ect-pane="frame">
+            <div class="chip-group">
+              <div class="chip-group-lbl">一鍵搭配</div>
+              <div class="chip-grid" id="char-body-combo-chips-embed"></div>
+            </div>
+            <div class="chip-group-lbl" style="margin-top:6px">體型骨架</div>
+            <div id="char-body-frame-chips-embed"></div>
+            <div class="chip-group-lbl" style="margin-top:8px">腰線・曲線</div>
+            <div id="char-body-shape-chips"></div>
+          </div>
+          <div class="embed-char-tab-pane" data-ect-pane="breast">
+            <div id="char-body-breast-chips-embed"></div>
+          </div>
+          <div class="embed-char-tab-pane" data-ect-pane="leg">
+            <div id="char-body-leg-chips"></div>
+          </div>
+          <div class="embed-char-tab-pane" data-ect-pane="outfit">
+            <div class="chip-group-lbl">服裝類型 · 可多選</div>
+            <div id="char-spicy-outfit-chips-embed"></div>
+          </div>
+          <div class="embed-char-tab-pane" data-ect-pane="photo">
+            <div class="chip-group-lbl">拍照姿勢預設 · 可多選</div>
+            <div id="char-pose-chips-embed"></div>
+          </div>
+          <div class="embed-char-tab-pane" data-ect-pane="action">
+            <div class="chip-group-lbl">表情・肢體 · 可多選</div>
+            <div id="char-spicy-action-chips-embed"></div>
+          </div>
+          <div class="embed-char-tab-pane" data-ect-pane="nsfw">
+            <div id="char-job-chips-embed"></div>
+          </div>
+          <div class="embed-char-tab-pane" data-ect-pane="env">
+            <div id="char-env-chips-embed"></div>
+          </div>
+        </div>
+      <div class="embed-char-legacy-filters">
+      <details class="sidebar-fold body-fold">
+        <summary><span class="sec-label">體型</span></summary>
         <div class="chip-group">
           <div class="chip-group-lbl">一鍵搭配</div>
           <div class="chip-grid" id="char-body-combo-chips"></div>
         </div>
         <div id="char-body-frame-chips"></div>
+        <div class="meta" style="margin-top:6px">連動主體／細節／服裝 · 可與胸型、身材 AND 篩選</div>
+      </details>
+      <details class="sidebar-fold body-fold">
+        <summary><span class="sec-label">胸型</span></summary>
         <div id="char-body-breast-chips"></div>
+      </details>
+      <details class="sidebar-fold body-fold">
+        <summary><span class="sec-label">身材</span></summary>
         <div id="char-body-figure-chips"></div>
-        <div class="meta" style="margin-top:6px">三欄 AND 篩選 · 連動主體/細節/服裝 · 一鍵預設自動配身材</div>
       </details>
-      <details class="sidebar-fold" open>
-        <summary><span class="sec-label">JOB 類型</span></summary>
-        <div id="char-job-chips"></div>
-        <div class="meta" style="margin-top:6px">「無」= 無色情 · 外陰夾 = 陰唇夾弄 · 有 JOB 時動作併入姿勢欄輸出 · 口/手/足/乳連動構圖</div>
-      </details>
-      <details class="sidebar-fold" open>
-        <summary><span class="sec-label">姿勢預設</span></summary>
-        <div id="char-pose-chips"></div>
-        <div class="meta" style="margin-top:6px">正常可愛自拍自動排除性交 · 可連動服裝類型</div>
-      </details>
-      <details class="sidebar-fold" open>
-        <summary><span class="sec-label">色氣服裝</span></summary>
+      <details class="sidebar-fold">
+        <summary><span class="sec-label">穿著</span></summary>
         <div id="char-spicy-outfit-chips"></div>
         <div class="meta" style="margin-top:6px">可多選 · 「不篩選」= 不限制服裝類型</div>
       </details>
-      <details class="sidebar-fold spicy-fold" open>
-        <summary><span class="sec-label sec-label-spicy">瑟瑟動作</span></summary>
-        <div id="char-spicy-action-chips"></div>
-        <div class="meta" style="margin-top:6px">影響姿勢與表情 · 可多選</div>
+      <details class="sidebar-fold">
+        <summary><span class="sec-label">動作</span></summary>
+        <div class="chip-group">
+          <div class="chip-group-lbl">姿勢預設</div>
+          <div id="char-pose-chips"></div>
+        </div>
+        <div class="chip-group" style="margin-top:8px">
+          <div class="chip-group-lbl">表情・肢體</div>
+          <div id="char-spicy-action-chips"></div>
+        </div>
+        <div class="meta" style="margin-top:6px">自拍自動排除性交 · 表情肢體連動姿勢與臉部</div>
       </details>
-      <div class="block">
-        <div class="sec-label">包含區塊</div>
-        <div id="char-inc-checks"></div>
+      <details class="sidebar-fold spicy-fold">
+        <summary><span class="sec-label sec-label-spicy">NSFW</span></summary>
+        <div id="char-job-chips"></div>
+        <div class="meta" style="margin-top:6px">「無」= 無色情 · 外陰夾 = 陰唇夾弄 · 有 JOB 時併入姿勢欄輸出</div>
+      </details>
+      <details class="sidebar-fold">
+        <summary><span class="sec-label">背景</span></summary>
+        <div id="char-env-chips"></div>
+        <div class="meta" style="margin-top:6px">篩選環境與光線 · 「不篩選」= 全部背景</div>
+      </details>
       </div>
+      </details>
       <div class="block embed-hide">
         <div class="sec-label">辭庫統計</div>
         <div class="bank-stats" id="bank-stats"></div>
       </div>
-      <button class="gen-btn" onclick="generateChar()">🎲 亂數生成角色</button>
+      <button type="button" class="gen-btn embed-char-hide" onclick="generateChar()">🎲 亂數生成角色</button>
       <button class="gen-btn" style="margin-top:8px;background:transparent" onclick="openLearnPanel()">📚 學習＋自動分類</button>
       <div class="block embed-hide" style="margin-top:12px;margin-bottom:0">
         <div class="sec-label">快速學習</div>
@@ -465,38 +738,43 @@ body.embed-char .embed-hide{display:none!important}
         </div>
       </div>
     </aside>
-    <section class="panel">
-      <div>
-        <div class="sec-label" style="display:flex;justify-content:space-between">
-          <span>輸出 Prompt <span class="meta">（可直接編輯）</span></span>
+    <section class="panel embed-char-panel">
+      <details class="embed-char-slots-fold">
+        <summary><span class="sec-label">進階 · 各區塊細調（可捲動）</span></summary>
+        <div class="embed-char-slots-scroll">
+          <div class="char-table-wrap">
+            <div class="sec-label">角色欄位 · ↻ 重抽 · 雙擊鎖定</div>
+            <table class="char-table">
+              <thead><tr><th>區塊</th><th>內容</th><th style="width:56px">操作</th></tr></thead>
+              <tbody id="char-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+      <div class="char-prompt-compact embed-char-prompt-main">
+        <div class="sec-label" style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span>Prompt</span>
           <span class="meta" id="char-meta">—</span>
         </div>
         <div class="status-bar" id="char-status-bar"></div>
-        <textarea class="output-box output-edit empty" id="char-output" placeholder="點擊「亂數生成」開始…" onblur="commitCharOutputEdit()"></textarea>
+        <textarea class="output-box output-edit empty" id="char-output" placeholder="🎲 重抽後可編輯…" onblur="commitCharOutputEdit()"></textarea>
       </div>
-      <div class="actions-row">
+      <div class="actions-row embed-char-hide">
         <button class="tb-btn primary" onclick="copyCharOutput()">複製 Prompt</button>
         <button class="tb-btn" onclick="generateChar()">重抽全部</button>
         <button class="tb-btn" onclick="copyCharTagsOnly()">僅複製標籤</button>
         <button class="tb-btn" onclick="addCharHistory()">加入歷史</button>
-      </div>
-
-      <div>
-        <div class="sec-label">角色生成表（可直接編輯 · ↻ 重抽 · 雙擊鎖定）</div>
-        <table class="char-table">
-          <thead><tr><th>區塊</th><th>內容</th><th style="width:56px">操作</th></tr></thead>
-          <tbody id="char-table-body"></tbody>
-        </table>
       </div>
       <div class="embed-hide">
         <div class="sec-label">角色歷史</div>
         <div class="hist-list" id="char-hist-list"><div class="meta">尚無紀錄</div></div>
       </div>
     </section>
-    <div class="embed-char-bar embed-only" id="embed-char-bar">
-      <button class="tb-btn primary" onclick="embedSendToVoidGen(true)">▶ 套用並生成</button>
-      <button class="tb-btn" onclick="embedSendToVoidGen(false)">→ 僅套用</button>
-      <button class="tb-btn" onclick="generateChar()">🎲 重抽</button>
+    <div class="embed-char-bar" id="embed-char-bar">
+      <button type="button" class="tb-btn" onclick="generateChar()">🎲 重抽</button>
+      <button type="button" class="tb-btn" onclick="embedSendToVoidGen(false)">→ 套用</button>
+      <button type="button" class="tb-btn primary" id="embed-btn-generate" onclick="embedGenerateAndSend()">▶ 生成</button>
+      <button type="button" class="tb-btn" onclick="copyCharOutput()">複製</button>
     </div>
   </div>
 </div>
@@ -769,6 +1047,7 @@ function captureSessionSnapshot() {
         bodyFrame: [...(charBodyFrame || ['none'])],
         bodyBreast: [...(charBodyBreast || ['none'])],
         bodyFigure: [...(charBodyFigure || ['none'])],
+        envPresets: [...(charEnvPresets || ['none'])],
       },
       style: {
         slots: { ...(slots || {}) },
@@ -810,14 +1089,15 @@ function applySessionSnapshot(data) {
     charBodyFrame = migrateBodySet(data.char.bodyFrame, BODY_FRAME_TYPES);
     charBodyBreast = migrateBodySet(data.char.bodyBreast, BODY_BREAST_TYPES);
     charBodyFigure = migrateBodySet(data.char.bodyFigure, BODY_FIGURE_TYPES);
+    charEnvPresets = migrateSpicySet(data.char.envPresets, ENV_PRESET_TYPES, 'none');
     setCharTone(charTone);
     setCharMode(charMode);
     setCharFmt(charFmt);
     renderCharJobChips();
-    renderCharPoseChips();
+    renderCharActionChips();
     renderCharSpicyOutfitChips();
-    renderCharSpicyActionChips();
     renderCharBodyChips();
+    renderCharEnvChips();
     const intEl = document.getElementById('char-tone-intensity');
     if (intEl) { intEl.value = charToneIntensity; syncCharIntensity(); }
   }
@@ -1575,6 +1855,7 @@ const PIX_FORMULA_TEMPLATES = {
 };
 
 const CHAR_SECTIONS = [
+  { key:'quality',  label:'QUALITY / TECHNICAL TAGS',  zh:'品質標籤' },
   { key:'subject',  label:'Subject & Character',       zh:'主體與角色' },
   { key:'face',     label:'Facial Features',           zh:'臉部特徵' },
   { key:'details',  label:'Character Details',         zh:'角色細節' },
@@ -1583,7 +1864,6 @@ const CHAR_SECTIONS = [
   { key:'job',      label:'JOB / Act',                 zh:'JOB' },
   { key:'env',      label:'Environment & Lighting',    zh:'環境與光線' },
   { key:'styleRef', label:'STYLE REFERENCES',          zh:'風格參考' },
-  { key:'quality',  label:'QUALITY / TECHNICAL TAGS',  zh:'品質標籤' },
 ];
 
 const DEFAULT_CHAR_BANKS = {
@@ -1924,39 +2204,59 @@ const JOB_TYPES = [
   { id:'oral', label:'口交' },
   { id:'feet', label:'足交' },
   { id:'cameltoe', label:'外陰夾' },
+  { id:'cowgirl', label:'騎乘' },
+  { id:'doggy', label:'後入' },
+  { id:'missionary', label:'傳教式' },
 ];
 
 const JOB_PRESET_GROUPS = [
   { label:'模式', ids:['none','all'] },
-  { label:'類型', ids:['breasts','hand','oral','feet','cameltoe'] },
+  { label:'非插入', ids:['breasts','hand','oral','feet','cameltoe'] },
+  { label:'性交体位', ids:['cowgirl','doggy','missionary'] },
 ];
+
+/** 体位類互斥；選定時自動取消衝突項 */
+const JOB_TYPE_CONFLICTS = {
+  cowgirl:    ['doggy','missionary'],
+  doggy:      ['cowgirl','missionary'],
+  missionary: ['cowgirl','doggy'],
+};
 
 const POSE_PRESET_GROUPS = [
   { label:'模式', ids:['all'] },
-  { label:'正常可愛自拍', ids:['cute_outfit_normal','cute_outfit_underwear','cute_outfit_sleepwear'] },
-  { label:'誘惑自拍', ids:['tempt_high_collar','tempt_low_upskirt','tempt_sit_legs','tempt_jump_skirt'] },
-  { label:'構圖姿勢', ids:['portrait_clean','dynamic_motion','lying_relaxed','from_behind','sitting_casual','cosplay_stage'] },
+  { label:'清純自拍', ids:['cute_outfit_normal','cute_outfit_underwear','cute_outfit_sleepwear','mirror_selfie','overhead_selfie'] },
+  { label:'誘惑自拍', ids:['tempt_high_collar','tempt_low_upskirt','tempt_sit_legs','tempt_jump_skirt','wall_lean_selfie'] },
+  { label:'拍照構圖', ids:['portrait_clean','full_body_stand','dutch_angle','dynamic_motion','lying_relaxed','from_behind','sitting_casual','kneeling_pose','squat_cute','back_arch'] },
+  { label:'角色舞台', ids:['cosplay_stage'] },
 ];
 
 const POSE_PRESETS = [
   { id:'all', label:'全部' },
-  { id:'cute_outfit_normal', label:'正常服裝' },
-  { id:'cute_outfit_underwear', label:'內衣' },
-  { id:'cute_outfit_sleepwear', label:'性感睡衣' },
-  { id:'tempt_high_collar', label:'高角度·衣領露胸' },
-  { id:'tempt_low_upskirt', label:'低角度·裙底臀' },
+  { id:'cute_outfit_normal', label:'清純日常' },
+  { id:'cute_outfit_underwear', label:'內衣自拍' },
+  { id:'cute_outfit_sleepwear', label:'睡衣慵懶' },
+  { id:'mirror_selfie', label:'鏡子自拍' },
+  { id:'overhead_selfie', label:'高角度俯拍' },
+  { id:'tempt_high_collar', label:'俯拍·開領' },
+  { id:'tempt_low_upskirt', label:'仰拍·裙底' },
   { id:'tempt_sit_legs', label:'坐姿露腿' },
-  { id:'tempt_jump_skirt', label:'跳躍·裙飛' },
-  { id:'portrait_clean', label:'肖像·乾淨' },
-  { id:'dynamic_motion', label:'動態' },
-  { id:'lying_relaxed', label:'躺臥' },
+  { id:'tempt_jump_skirt', label:'跳躍裙飛' },
+  { id:'wall_lean_selfie', label:'靠牆自拍' },
+  { id:'portrait_clean', label:'肖像特寫' },
+  { id:'full_body_stand', label:'全身站立' },
+  { id:'dutch_angle', label:'荷蘭角' },
+  { id:'dynamic_motion', label:'動態抓拍' },
+  { id:'lying_relaxed', label:'躺姿放鬆' },
   { id:'from_behind', label:'回眸背影' },
-  { id:'sitting_casual', label:'坐姿日常' },
-  { id:'cosplay_stage', label:'cos·舞台' },
+  { id:'sitting_casual', label:'坐姿生活' },
+  { id:'kneeling_pose', label:'跪姿' },
+  { id:'squat_cute', label:'深蹲可愛' },
+  { id:'back_arch', label:'拱背曲線' },
+  { id:'cosplay_stage', label:'cos舞台' },
 ];
 
-const CUTE_SELFIE_OUTFIT_IDS = ['cute_outfit_normal','cute_outfit_underwear','cute_outfit_sleepwear'];
-const TEMPT_SELFIE_IDS = ['tempt_high_collar','tempt_low_upskirt','tempt_sit_legs','tempt_jump_skirt'];
+const CUTE_SELFIE_OUTFIT_IDS = ['cute_outfit_normal','cute_outfit_underwear','cute_outfit_sleepwear','mirror_selfie','overhead_selfie'];
+const TEMPT_SELFIE_IDS = ['tempt_high_collar','tempt_low_upskirt','tempt_sit_legs','tempt_jump_skirt','wall_lean_selfie'];
 const SAFE_SELFIE_IDS = [...CUTE_SELFIE_OUTFIT_IDS, ...TEMPT_SELFIE_IDS];
 
 const SPICY_OUTFIT_TYPES = [
@@ -1966,30 +2266,45 @@ const SPICY_OUTFIT_TYPES = [
   { id:'sheer', label:'透明' },
   { id:'lingerie', label:'內衣' },
   { id:'garter', label:'吊帶襪' },
+  { id:'stockings', label:'絲襪' },
   { id:'miniskirt', label:'迷你裙' },
+  { id:'dress', label:'連身裙' },
   { id:'bodycon', label:'包臀' },
   { id:'keyhole', label:'開胸' },
+  { id:'crop_top', label:'短上衣' },
+  { id:'off_shoulder', label:'露肩' },
   { id:'fishnet', label:'網襪' },
+  { id:'latex', label:'膠衣' },
+  { id:'leather', label:'皮革' },
   { id:'school', label:'校服' },
   { id:'maid', label:'女僕' },
   { id:'nurse', label:'護士' },
   { id:'bunny', label:'兔女郎' },
   { id:'bikini', label:'比基尼' },
+  { id:'one_piece_swim', label:'連身泳裝' },
   { id:'qipao', label:'旗袍' },
   { id:'ol', label:'OL' },
   { id:'gothic', label:'哥德' },
   { id:'idol', label:'偶像' },
   { id:'yukata', label:'浴衣' },
+  { id:'kimono', label:'和服' },
   { id:'witch', label:'魔女' },
   { id:'gym', label:'運動' },
+  { id:'sweater', label:'毛衣' },
+  { id:'hoodie', label:'帽T' },
+  { id:'pajama', label:'睡衣' },
   { id:'apron', label:'圍裙' },
+  { id:'nun', label:'修女' },
+  { id:'police', label:'警察' },
+  { id:'teacher', label:'教師' },
   { id:'cosplay', label:'cos' },
 ];
 
 const SPICY_OUTFIT_GROUPS = [
   { label:'模式', ids:['all','none'] },
-  { label:'色氣類型', ids:['wet','sheer','lingerie','garter','miniskirt','bodycon','keyhole','fishnet'] },
-  { label:'角色制服', ids:['school','maid','nurse','bunny','bikini','qipao','ol','gothic','idol','yukata','witch','gym','apron','cosplay'] },
+  { label:'色氣剪裁', ids:['wet','sheer','lingerie','garter','stockings','miniskirt','dress','bodycon','keyhole','crop_top','off_shoulder','fishnet','latex','leather'] },
+  { label:'制服角色', ids:['school','maid','nurse','bunny','nun','police','teacher','ol','idol','witch','cosplay'] },
+  { label:'日常・節慶', ids:['sweater','hoodie','pajama','gym','apron','gothic','yukata','kimono','bikini','one_piece_swim','qipao'] },
 ];
 
 const SPICY_OUTFIT_MARKERS = {
@@ -2015,6 +2330,20 @@ const SPICY_OUTFIT_MARKERS = {
   gym:      ['gym bloomers','buruma','tennis skirt','yoga shorts','athletic crop','track suit','sporty'],
   apron:    ['apron','naked apron','frilled apron'],
   cosplay:  ['cosplay','devil costume','angel costume','santa bikini','cow print','horns','halo accessory','Halloween'],
+  stockings:['thigh-high stockings','pantyhose','sheer stockings','black stockings','garter stockings'],
+  dress:    ['dress','one-piece dress','sundress','flared dress','cocktail dress','evening dress'],
+  crop_top: ['crop top','midriff','bare midriff','short top','navel'],
+  off_shoulder:['off-shoulder','off shoulder','bare shoulders','one shoulder'],
+  latex:    ['latex','latex suit','shiny latex','rubber suit'],
+  leather:  ['leather','leather jacket','leather skirt','biker'],
+  one_piece_swim:['one-piece swimsuit','competition swimsuit','school swimsuit'],
+  sweater:  ['sweater','knit sweater','oversized sweater','turtleneck'],
+  hoodie:   ['hoodie','hooded','sweatshirt'],
+  pajama:   ['pajamas','pajama','sleepwear','nightwear'],
+  kimono:   ['kimono','furisode','traditional japanese'],
+  nun:      ['nun','nun habit','sister outfit'],
+  police:   ['police','police uniform','officer'],
+  teacher:  ['teacher','glasses teacher','blazer teacher'],
 };
 
 const SPICY_OUTFIT_CONFLICTS = {
@@ -2031,16 +2360,28 @@ const SPICY_OUTFIT_CONFLICTS = {
   witch:  ['school', 'nurse', 'yukata', 'ol'],
   apron:  ['qipao', 'bodycon', 'bikini'],
   cosplay:['school', 'ol', 'nurse'],
+  nun:    ['bunny','bikini','gym','maid'],
+  police: ['maid','nurse','bunny','witch'],
+  teacher:['bunny','bikini','nurse','maid'],
+  dress:  ['apron','gym'],
 };
 
 const POSE_PRESET_CONFLICTS = {
   cute_outfit_normal:    ['tempt_low_upskirt', 'tempt_jump_skirt'],
   cute_outfit_underwear: ['tempt_jump_skirt', 'cosplay_stage'],
   cute_outfit_sleepwear: ['tempt_jump_skirt', 'dynamic_motion'],
+  mirror_selfie:         ['tempt_low_upskirt'],
+  overhead_selfie:       ['tempt_low_upskirt','from_behind'],
   portrait_clean:        ['tempt_low_upskirt', 'tempt_jump_skirt'],
-  tempt_low_upskirt:     ['cute_outfit_normal', 'portrait_clean'],
+  tempt_low_upskirt:     ['cute_outfit_normal', 'portrait_clean','mirror_selfie','overhead_selfie'],
   tempt_jump_skirt:      ['cute_outfit_normal', 'cute_outfit_underwear', 'portrait_clean'],
+  wall_lean_selfie:      ['cute_outfit_normal'],
+  kneeling_pose:         ['tempt_jump_skirt'],
+  squat_cute:            ['tempt_jump_skirt','cosplay_stage'],
 };
+
+/** 自拍姿勢與 NSFW 体位併選時提示 */
+const JOB_POSE_SELFIE_BLOCK = ['cowgirl','doggy','missionary'];
 
 const OUTFIT_EXPLICIT_MARKERS = [
   'nude', 'topless', 'completely nude', 'fully nude', 'no coverage', 'explicit nsfw',
@@ -2071,6 +2412,8 @@ const SPICY_ACTION_TYPES = [
   { id:'bedroom_eyes', label:'媚眼' },
   { id:'bite_lip', label:'咬唇' },
   { id:'embarrassed', label:'害羞' },
+  { id:'peace_sign', label:'比耶' },
+  { id:'finger_heart', label:'手指愛心' },
   { id:'skirt_lift', label:'撩裙' },
   { id:'shirt_lift', label:'撩衣' },
   { id:'on_bed', label:'床上' },
@@ -2083,14 +2426,23 @@ const SPICY_ACTION_TYPES = [
   { id:'thigh_focus', label:'大腿' },
   { id:'looking_back', label:'回眸' },
   { id:'panty_peek', label:'裙底暗示' },
+  { id:'mirror_gaze', label:'鏡中眼神' },
+  { id:'kneeling_cute', label:'跪姿可愛' },
 ];
 
 const SPICY_ACTION_GROUPS = [
   { label:'模式', ids:['all','none'] },
-  { label:'表情', ids:['seductive_smile','blush','bedroom_eyes','bite_lip','embarrassed'] },
-  { label:'動作', ids:['skirt_lift','shirt_lift','on_bed','shower','all_fours','cover_chest','straddle','wet_hair'] },
-  { label:'構圖', ids:['cleavage','thigh_focus','looking_back','panty_peek'] },
+  { label:'表情', ids:['seductive_smile','blush','bedroom_eyes','bite_lip','embarrassed','peace_sign','finger_heart'] },
+  { label:'肢體動作', ids:['skirt_lift','shirt_lift','on_bed','shower','all_fours','cover_chest','straddle','wet_hair','kneeling_cute'] },
+  { label:'構圖焦點', ids:['cleavage','thigh_focus','looking_back','panty_peek','mirror_gaze'] },
 ];
+
+const SPICY_ACTION_CONFLICTS = {
+  peace_sign:   ['all_fours','straddle'],
+  finger_heart: ['all_fours'],
+  all_fours:    ['peace_sign','finger_heart'],
+  straddle:     ['peace_sign'],
+};
 
 const SPICY_ACTION_FACE_MARKERS = {
   seductive_smile: ['seductive smile','teasing smile','sultry smile','inviting smirk'],
@@ -2098,6 +2450,8 @@ const SPICY_ACTION_FACE_MARKERS = {
   bedroom_eyes:    ['bedroom eyes','half-lidded','seductive gaze','sultry gaze'],
   bite_lip:        ['biting lip','lip bite'],
   embarrassed:     ['embarrassed','shy blush','flustered'],
+  peace_sign:      ['peace sign','v sign','cheerful smile'],
+  finger_heart:    ['finger heart','heart hands','cute gesture'],
 };
 
 const SPICY_ACTION_POSE_MARKERS = {
@@ -2113,6 +2467,41 @@ const SPICY_ACTION_POSE_MARKERS = {
   thigh_focus:  ['thigh focus','thighs','thick thighs','inner thighs'],
   looking_back: ['looking back','over shoulder','back glance'],
   panty_peek:   ['pantyshot','panty peek','upskirt tease'],
+  mirror_gaze:  ['mirror gaze','looking at reflection','mirror eye contact'],
+  kneeling_cute:['kneeling','cute kneeling','on knees'],
+};
+
+const ENV_PRESET_TYPES = [
+  { id:'all', label:'全部' },
+  { id:'none', label:'不篩選' },
+  { id:'indoor', label:'室內' },
+  { id:'bedroom', label:'臥室' },
+  { id:'outdoor', label:'戶外' },
+  { id:'beach', label:'海邊' },
+  { id:'city', label:'都市' },
+  { id:'studio', label:'棚拍' },
+  { id:'nature', label:'自然' },
+  { id:'night', label:'夜景' },
+  { id:'nsfw_room', label:'親密' },
+];
+
+const ENV_PRESET_GROUPS = [
+  { label:'模式', ids:['all','none'] },
+  { label:'日常', ids:['indoor','outdoor','nature','city'] },
+  { label:'場景', ids:['bedroom','beach','studio','night'] },
+  { label:'親密', ids:['nsfw_room'] },
+];
+
+const ENV_PRESET_MARKERS = {
+  indoor:    ['indoor', 'indoors', 'room', 'classroom', 'cafe', 'library', 'window', '室內'],
+  bedroom:   ['bedroom', 'pastel pink bedroom', 'plush toys', 'fairy lights', 'rumpled sheets', 'bed sheets', '臥室'],
+  outdoor:   ['outdoor', 'outdoors', 'rooftop', 'sakura', 'spring breeze', '戶外'],
+  beach:     ['beach', 'ocean', 'sunlit beach', 'waves', 'summer atmosphere', '海邊'],
+  city:      ['city', 'street', 'neon', 'skyline', 'urban', 'rainy street', '都市'],
+  studio:    ['studio', 'backdrop', 'gradient background', 'soft box', 'minimal studio', '棚拍'],
+  nature:    ['forest', 'ginkgo', 'nature', 'dappled sunlight', 'mist', 'dreamy nature', '自然'],
+  night:     ['night', 'neon-lit', 'evening', 'sunset', 'golden hour', 'moody atmospheric night', '夜景'],
+  nsfw_room: ['love hotel', 'steamy bathroom', 'onsen', 'dim red', 'intimate mood', 'explicit nsfw setting', '親密'],
 };
 
 const BODY_FRAME_TYPES = [
@@ -2146,15 +2535,23 @@ const BODY_FIGURE_TYPES = [
 ];
 
 const BODY_FRAME_GROUPS = [
-  { label:'體型', ids:['none','petite','slim','average','tall','curvy','athletic','chubby'] },
+  { label:'', ids:['none','petite','slim','average','tall','curvy','athletic','chubby'] },
 ];
 
 const BODY_BREAST_GROUPS = [
-  { label:'胸部', ids:['none','flat','small','medium','large','huge'] },
+  { label:'', ids:['none','flat','small','medium','large','huge'] },
 ];
 
 const BODY_FIGURE_GROUPS = [
-  { label:'身材', ids:['none','slim_waist','wide_hips','long_legs','thick_thighs','hourglass','girlish'] },
+  { label:'', ids:['none','slim_waist','wide_hips','long_legs','thick_thighs','hourglass','girlish'] },
+];
+/** 嵌入分頁：身形（腰線等） */
+const BODY_FIGURE_SHAPE_GROUPS = [
+  { label:'腰線・曲線', ids:['none','slim_waist','hourglass','girlish'] },
+];
+/** 嵌入分頁：腿・臀 */
+const BODY_FIGURE_LEG_GROUPS = [
+  { label:'腿・臀', ids:['none','long_legs','thick_thighs','wide_hips'] },
 ];
 
 const BODY_FRAME_MARKERS = {
@@ -2301,6 +2698,9 @@ const POSE_JOB_AFFINITY = {
   hand:     ['close-up', 'hands in frame', 'sitting', 'lying on bed', 'intimate', 'lap', 'hands visible', 'hand on'],
   feet:     ['sitting', 'legs angled', 'soles', 'foot', 'lying on back', 'kneeling', 'thighs', 'legs extended', 'feet up'],
   cameltoe: ['low angle', 'thighs', 'sitting', 'squatting', 'crotch', 'from below', 'panty', 'inner thighs', 'worm eye', 'legs apart'],
+  cowgirl:  ['riding', 'straddling', 'on top', 'cowgirl', 'hips', 'bouncing', 'lap'],
+  doggy:    ['all fours', 'from behind', 'doggy', 'rear', 'arched back', 'on hands and knees'],
+  missionary:['lying on back', 'on back', 'missionary', 'legs spread', 'bed', 'face up'],
 };
 
 const POSE_PRESET_MARKERS = {
@@ -2317,6 +2717,14 @@ const POSE_PRESET_MARKERS = {
   from_behind:             ['from behind','looking back','over shoulder','back view','back glance','butt curve','hip sway','shoulder glance'],
   sitting_casual:          ['sitting','crossed legs','cafe','chair sit','seiza','reading book','hand on cheek','coffee cup','library','passenger seat'],
   cosplay_stage:           ['cosplay','stage performance','convention','character pose','idol spotlight','mic','salute','curtsy','peace sign','fan event'],
+  mirror_selfie:           ['mirror selfie','reflection','mirror shot','phone in mirror','bathroom mirror','full mirror'],
+  overhead_selfie:         ['overhead shot','from above selfie','high angle selfie','arm extended above','looking up at camera'],
+  wall_lean_selfie:        ['leaning on wall','wall lean','against wall','casual wall pose','sideways lean'],
+  full_body_stand:         ['full body','standing full','head to toe','full length','standing straight full'],
+  dutch_angle:             ['dutch angle','tilted frame','canted angle','dynamic diagonal'],
+  kneeling_pose:           ['kneeling','on knees','seiza','kneeling pose','kneeling on floor'],
+  squat_cute:              ['squatting','squat pose','crouching','low squat'],
+  back_arch:               ['arched back','back arch','spine curve','arching spine','emphasized curve'],
 };
 
 const JOB_TYPE_MARKERS = {
@@ -2325,6 +2733,9 @@ const JOB_TYPE_MARKERS = {
   oral:     ['fellatio','blowjob','oral sex','deepthroat','cunnilingus','licking penis','licking pussy','licking nipple','sucking finger','saliva trail','drool','tongue on','penis in mouth','face between legs'],
   feet:     ['footjob','foot job','stocking footjob','feet on penis','foot pressing','double footjob','soles rubbing','toes stroking','barefoot footjob','oily soles'],
   cameltoe: ['pussyjob','pussy job','labia','labia grip','labia clamp','vulva','vulva squeeze','pussy lips','penis between labia','cock between labia','genital rub','external stimulation','outercourse','grinding on penis','rubbing on penis','crotch job','through panties','panties on','wet panties','panties aside','no penetration','labia sandwich'],
+  cowgirl:  ['cowgirl','girl on top','riding','straddling sex','bouncing on','riding penis','woman on top'],
+  doggy:    ['doggy style','doggystyle','from behind sex','all fours sex','rear entry','on all fours penetration'],
+  missionary:['missionary','missionary position','lying on back sex','legs spread sex','face to face sex'],
 };
 
 const JOB_TYPE_FALLBACK = {
@@ -2333,6 +2744,9 @@ const JOB_TYPE_FALLBACK = {
   oral:     'fellatio, blowjob, oral sex, licking penis tip, saliva trail, looking at viewer',
   feet:     'footjob, feet on penis, soles rubbing shaft, toes stroking, looking at viewer',
   cameltoe: 'pussyjob, labia gripping penis shaft, grinding through panties, outercourse, no penetration, looking at viewer',
+  cowgirl:  'cowgirl position, girl on top, riding, straddling, bouncing, looking at viewer',
+  doggy:    'doggy style, from behind, on all fours, rear entry, arched back, looking back at viewer',
+  missionary:'missionary position, lying on back, legs spread, face to face, intimate POV, looking at viewer',
 };
 
 const JOB_POSE_FALLBACK = {
@@ -2341,6 +2755,9 @@ const JOB_POSE_FALLBACK = {
   breasts:  'leaning forward, presenting chest, cleavage focus, arched back, bent forward emphasis',
   feet:     'sitting, legs extended, soles visible, feet in frame, lying on back, thighs angled to camera',
   cameltoe: 'low angle, thighs visible, sitting, squatting, crotch emphasis, from below, inner thighs',
+  cowgirl:  'cowgirl on bed, riding pose, straddling, hips emphasis, looking at viewer',
+  doggy:    'on all fours, doggy style pose, from behind, arched back, looking back',
+  missionary:'lying on back, missionary pose, legs apart, intimate angle, looking at viewer',
 };
 
 const JOB_POSE_EXCLUDE = {
@@ -2349,6 +2766,9 @@ const JOB_POSE_EXCLUDE = {
   feet:     ['handjob', 'fellatio', 'blowjob', 'paizuri', 'titjob', 'pussyjob', 'fingering'],
   breasts:  ['handjob', 'footjob', 'fellatio', 'blowjob', 'pussyjob', 'deepthroat'],
   cameltoe: ['handjob', 'footjob', 'fellatio', 'blowjob', 'paizuri', 'titjob'],
+  cowgirl:  ['doggy style', 'doggystyle', 'missionary', 'fellatio', 'footjob', 'handjob only'],
+  doggy:    ['cowgirl', 'missionary position', 'fellatio', 'paizuri', 'footjob'],
+  missionary:['cowgirl', 'doggy style', 'from behind sex', 'footjob', 'oral only'],
 };
 
 const JOB_TONE_BOOST = {
@@ -2358,6 +2778,9 @@ const JOB_TONE_BOOST = {
     breasts:  'breast press tease, inviting paizuri hint, leaning forward',
     feet:     'foot tease on lap, legs angled, sole peek',
     cameltoe: 'panties on, labia rub tease hint, thigh squeeze',
+    cowgirl:  'riding tease, straddling hint, girl on top implication',
+    doggy:    'from behind tease, arched back, rear view hint',
+    missionary:'lying on bed tease, intimate face to face hint',
   },
   sex: {
     oral:     'messy oral sex, saliva trail, drool, intense fellatio',
@@ -2365,6 +2788,9 @@ const JOB_TONE_BOOST = {
     breasts:  'paizuri, titjob, penis between breasts, breast squeeze',
     feet:     'footjob, soles on penis, oily soles, toe curl',
     cameltoe: 'pussyjob through panties, labia gripping penis, outercourse friction',
+    cowgirl:  'riding rhythm, cowgirl, girl on top, intense eye contact',
+    doggy:    'doggy style, rear entry, arched back emphasis',
+    missionary:'missionary, deep penetration, legs wrapped, intimate face to face',
   },
 };
 
@@ -2449,6 +2875,7 @@ let charSpicyActions = new Set(['none']);
 let charBodyFrame = new Set(['none']);
 let charBodyBreast = new Set(['none']);
 let charBodyFigure = new Set(['none']);
+let charEnvPresets = new Set(['none']);
 let charHistory = [];
 let learnPreviewData = null;
 
@@ -3031,13 +3458,14 @@ function applySafeSelfieDefaults() {
 }
 
 function syncJobPoseMutex(opts = {}) {
-  if (!hasActiveJob()) return;
+  const penJobs = getActiveJobTypes().filter(id => JOB_POSE_SELFIE_BLOCK.includes(id));
+  if (!penJobs.length) return;
   const hadSafe = [...charPosePresets].filter(id => SAFE_SELFIE_IDS.includes(id));
   if (!hadSafe.length) return;
   hadSafe.forEach(id => charPosePresets.delete(id));
   if (!charPosePresets.size) charPosePresets.add('all');
   renderCharPoseChips();
-  if (!opts.silent) toast('已清除自拍姿勢預設（JOB 優先）');
+  if (!opts.silent) toast('已清除自拍姿勢（性交体位 NSFW 優先）');
 }
 
 function filterPoseNoExplicit(bank) {
@@ -3117,6 +3545,26 @@ function resolvePosePresetConflicts(id) {
   });
 }
 
+function resolveJobTypeConflicts(id) {
+  (JOB_TYPE_CONFLICTS[id] || []).forEach(c => charJobTypes.delete(c));
+  Object.entries(JOB_TYPE_CONFLICTS).forEach(([other, list]) => {
+    if (list.includes(id)) charJobTypes.delete(other);
+  });
+}
+
+function resolveSpicyActionConflicts(id) {
+  (SPICY_ACTION_CONFLICTS[id] || []).forEach(c => charSpicyActions.delete(c));
+  Object.entries(SPICY_ACTION_CONFLICTS).forEach(([other, list]) => {
+    if (list.includes(id)) charSpicyActions.delete(other);
+  });
+  if (isCuteSelfieOutfitMode() && charSpicyActions.has(id)) {
+    ['all_fours', 'straddle', 'panty_peek'].forEach(c => {
+      if (id === c || (SPICY_ACTION_CONFLICTS.peace_sign || []).includes(id)) charSpicyActions.delete(c);
+    });
+    if (['all_fours', 'straddle', 'panty_peek'].includes(id)) charSpicyActions.delete(id);
+  }
+}
+
 function collectPresetConflictWarnings() {
   const warnings = [];
   const spicyActive = [...charSpicyOutfits].filter(id => id !== 'all' && id !== 'none');
@@ -3130,9 +3578,28 @@ function collectPresetConflictWarnings() {
   const poseLabel = id => POSE_PRESETS.find(p => p.id === id)?.label || id;
   poseActive.forEach(id => {
     (POSE_PRESET_CONFLICTS[id] || []).filter(c => poseActive.includes(c)).forEach(c => {
-      warnings.push(`姿勢「${poseLabel(id)}」與「${poseLabel(c)}」衝突`);
+      warnings.push(`拍照「${poseLabel(id)}」與「${poseLabel(c)}」衝突`);
     });
   });
+  const jobActive = getActiveJobTypes();
+  const jobLabel = id => JOB_TYPES.find(j => j.id === id)?.label || id;
+  jobActive.forEach(id => {
+    (JOB_TYPE_CONFLICTS[id] || []).filter(c => jobActive.includes(c)).forEach(c => {
+      warnings.push(`NSFW「${jobLabel(id)}」與「${jobLabel(c)}」請擇一`);
+    });
+  });
+  const selfiePoseOn = poseActive.some(id => SAFE_SELFIE_IDS.includes(id));
+  if (selfiePoseOn && jobActive.some(id => JOB_POSE_SELFIE_BLOCK.includes(id))) {
+    warnings.push('自拍姿勢與性交体位 NSFW 不宜併選');
+  }
+  const spicySchool = spicyActive.includes('school') || spicyActive.includes('teacher');
+  if (spicySchool && jobActive.length && !charJobTypes.has('all')) {
+    warnings.push('制服系服裝與 NSFW 併選時將偏向成人向重抽');
+  }
+  const actionActive = [...charSpicyActions].filter(id => id !== 'all' && id !== 'none');
+  if (isCuteSelfieOutfitMode() && actionActive.some(id => ['all_fours', 'straddle', 'panty_peek'].includes(id))) {
+    warnings.push('清純自拍與露骨肢體動作可能不符');
+  }
   if (charSlots.outfit && charSlots.pose) {
     if (textHasAnyMarker(charSlots.pose, POSE_NEEDS_SKIRT_MARKERS) && !outfitSupportsSkirtPose(charSlots.outfit)) {
       warnings.push('裙擺姿勢需裙子／連身裙類服裝');
@@ -3150,8 +3617,22 @@ function collectPresetConflictWarnings() {
 
 function checkPresetConflicts(silent = false) {
   const warnings = collectPresetConflictWarnings();
-  if (warnings.length && !silent) toast(warnings[0]);
+  if (warnings.length && !silent) toast(warnings[0] + (warnings.length > 1 ? ` 等${warnings.length}項` : ''));
+  updateEmbedCharConflictHint(warnings);
   return warnings;
+}
+
+function updateEmbedCharConflictHint(warnings) {
+  const el = document.getElementById('embed-char-conflict-hint');
+  if (!el) return;
+  const list = warnings || collectPresetConflictWarnings();
+  if (!list.length) {
+    el.innerHTML = '';
+    el.classList.remove('has-warn');
+    return;
+  }
+  el.classList.add('has-warn');
+  el.innerHTML = `<span class="embed-conflict-title">PROMPT 衝突提示</span>${list.slice(0, 4).map(w => `<div class="embed-conflict-line">⚠ ${escHtml(w)}</div>`).join('')}`;
 }
 
 function filterOutfitExcludePoseConflict(bank) {
@@ -3372,6 +3853,34 @@ function checkBodySoftConflicts() {
   }
 }
 
+function scoreEnvPresetEntry(text) {
+  const t = text.toLowerCase();
+  const scores = {};
+  Object.entries(ENV_PRESET_MARKERS).forEach(([id, keys]) => {
+    scores[id] = keys.reduce((n, k) => n + (t.includes(k) ? 1 : 0), 0);
+  });
+  return scores;
+}
+
+function filterEnvBankByPreset(bank) {
+  if (!bank.length || charEnvPresets.has('none')) return bank;
+  const typeIds = Object.keys(ENV_PRESET_MARKERS);
+  if (charEnvPresets.has('all')) {
+    const filtered = bank.filter(entry => {
+      const s = scoreEnvPresetEntry(entry);
+      return typeIds.some(id => s[id] > 0);
+    });
+    return filtered.length ? filtered : bank;
+  }
+  const active = [...charEnvPresets].filter(id => id !== 'all' && id !== 'none');
+  if (!active.length) return bank;
+  const filtered = bank.filter(entry => {
+    const s = scoreEnvPresetEntry(entry);
+    return active.some(id => (s[id] || 0) > 0);
+  });
+  return filtered.length ? filtered : bank;
+}
+
 function getCharBankFiltered(key) {
   let bank = filterBankByTone(charBanks[key] || [], charTone);
   if (key === 'subject' || key === 'details' || key === 'outfit') bank = filterBankByBody(bank);
@@ -3379,6 +3888,7 @@ function getCharBankFiltered(key) {
     bank = filterOutfitExcludePoseConflict(filterOutfitBankBySpicy(filterOutfitBankByPosePreset(bank)));
   }
   if (key === 'face') bank = filterFaceBankBySpicyAction(bank);
+  if (key === 'env') bank = filterEnvBankByPreset(bank);
   return bank;
 }
 
@@ -3441,11 +3951,11 @@ function toggleCharPosePreset(id) {
   }
   if (id !== 'all' && charPosePresets.has(id)) resolvePosePresetConflicts(id);
   if (SAFE_SELFIE_IDS.includes(id) && charPosePresets.has(id)) {
-    if (hasActiveJob()) {
+    if (getActiveJobTypes().some(j => JOB_POSE_SELFIE_BLOCK.includes(j))) {
       charPosePresets.delete(id);
       if (!charPosePresets.size) charPosePresets.add('all');
-      toast('自拍姿勢與 JOB 衝突（JOB 優先）');
-    } else {
+      toast('自拍姿勢與性交体位 NSFW 衝突');
+    } else if (CUTE_SELFIE_OUTFIT_IDS.includes(id)) {
       applySafeSelfieDefaults();
     }
   }
@@ -3459,19 +3969,39 @@ function toggleCharPosePreset(id) {
   saveActiveSession();
 }
 
-function renderGroupedChips(containerId, groups, allItems, activeSet, toggleFn, opts = {}) {
-  const el = document.getElementById(containerId);
-  if (!el) return;
+function buildGroupedChipsHtml(groups, allItems, activeSet, toggleFn, opts = {}) {
   const spicyCls = opts.spicy ? ' spicy' : '';
   const itemMap = Object.fromEntries(allItems.map(i => [i.id, i]));
-  el.innerHTML = groups.map(g => {
+  return groups.map(g => {
     const chips = g.ids.map(id => {
       const item = itemMap[id];
       if (!item) return '';
       return `<span class="chip compact${spicyCls}${activeSet.has(id) ? ' on' : ''}" onclick="${toggleFn}('${id}')">${item.label}</span>`;
     }).join('');
-    return `<div class="chip-group"><div class="chip-group-lbl">${g.label}</div><div class="chip-grid">${chips}</div></div>`;
+    const lbl = g.label ? `<div class="chip-group-lbl">${g.label}</div>` : '';
+    return `<div class="chip-group">${lbl}<div class="chip-grid">${chips}</div></div>`;
   }).join('');
+}
+
+function renderGroupedChips(containerId, groups, allItems, activeSet, toggleFn, opts = {}) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const html = buildGroupedChipsHtml(groups, allItems, activeSet, toggleFn, opts);
+  el.innerHTML = html;
+  if (opts.mirrorId) {
+    const mirror = document.getElementById(opts.mirrorId);
+    if (mirror) mirror.innerHTML = html;
+  }
+}
+
+function setEmbedCharTab(tab) {
+  document.querySelectorAll('.embed-char-tab').forEach(btn => {
+    btn.classList.toggle('on', btn.dataset.ect === tab);
+  });
+  document.querySelectorAll('.embed-char-tab-pane').forEach(pane => {
+    pane.classList.toggle('on', pane.dataset.ectPane === tab);
+  });
+  try { localStorage.setItem('void-rng-embed-tab', tab); } catch (_) {}
 }
 
 function toggleSpicyChipSet(activeSet, id, fallback) {
@@ -3500,7 +4030,13 @@ function toggleCharSpicyOutfit(id) {
 }
 
 function toggleCharSpicyAction(id) {
-  charSpicyActions = id === 'none' ? new Set(['none']) : toggleSpicyChipSet(charSpicyActions, id, 'all');
+  if (id === 'none') {
+    charSpicyActions = new Set(['none']);
+  } else {
+    charSpicyActions = toggleSpicyChipSet(charSpicyActions, id, 'all');
+    if (charSpicyActions.has(id)) resolveSpicyActionConflicts(id);
+  }
+  checkPresetConflicts(true);
   renderCharSpicyActionChips();
   if (charIsIncluded('pose') || charIsIncluded('face')) generateChar();
   else renderChar();
@@ -3508,11 +4044,11 @@ function toggleCharSpicyAction(id) {
 }
 
 function renderCharSpicyOutfitChips() {
-  renderGroupedChips('char-spicy-outfit-chips', SPICY_OUTFIT_GROUPS, SPICY_OUTFIT_TYPES, charSpicyOutfits, 'toggleCharSpicyOutfit');
+  renderGroupedChips('char-spicy-outfit-chips', SPICY_OUTFIT_GROUPS, SPICY_OUTFIT_TYPES, charSpicyOutfits, 'toggleCharSpicyOutfit', { mirrorId: 'char-spicy-outfit-chips-embed' });
 }
 
 function renderCharSpicyActionChips() {
-  renderGroupedChips('char-spicy-action-chips', SPICY_ACTION_GROUPS, SPICY_ACTION_TYPES, charSpicyActions, 'toggleCharSpicyAction', { spicy: true });
+  renderGroupedChips('char-spicy-action-chips', SPICY_ACTION_GROUPS, SPICY_ACTION_TYPES, charSpicyActions, 'toggleCharSpicyAction', { spicy: true, mirrorId: 'char-spicy-action-chips-embed' });
 }
 
 function toggleBodyChipSet(activeSet, id, opts = {}) {
@@ -3585,26 +4121,49 @@ function applyBodyCombo(comboId, opts = {}) {
 
 function renderCharBodyComboChips() {
   const el = document.getElementById('char-body-combo-chips');
-  if (!el) return;
-  const combos = Object.entries(BODY_COMBOS).map(([id, combo]) => {
-    const on = combo.frame.every(x => charBodyFrame.has(x))
-      && combo.breast.every(x => charBodyBreast.has(x))
-      && combo.figure.every(x => charBodyFigure.has(x));
-    return `<span class="chip compact body${on ? ' on' : ''}" onclick="applyBodyCombo('${id}')">${combo.label}</span>`;
-  }).join('');
-  const clearOn = !isBodyFilterActive();
-  el.innerHTML = combos + `<span class="chip compact body${clearOn ? ' on' : ''}" onclick="resetBodyFilters()">清除篩選</span>`;
+  const html = (() => {
+    const combos = Object.entries(BODY_COMBOS).map(([id, combo]) => {
+      const on = combo.frame.every(x => charBodyFrame.has(x))
+        && combo.breast.every(x => charBodyBreast.has(x))
+        && combo.figure.every(x => charBodyFigure.has(x));
+      return `<span class="chip compact body${on ? ' on' : ''}" onclick="applyBodyCombo('${id}')">${combo.label}</span>`;
+    }).join('');
+    const clearOn = !isBodyFilterActive();
+    return combos + `<span class="chip compact body${clearOn ? ' on' : ''}" onclick="resetBodyFilters()">清除篩選</span>`;
+  })();
+  if (el) el.innerHTML = html;
+  const emb = document.getElementById('char-body-combo-chips-embed');
+  if (emb) emb.innerHTML = html;
 }
 
 function renderCharBodyChips() {
   renderCharBodyComboChips();
-  renderGroupedChips('char-body-frame-chips', BODY_FRAME_GROUPS, BODY_FRAME_TYPES, charBodyFrame, 'toggleCharBodyFrame');
-  renderGroupedChips('char-body-breast-chips', BODY_BREAST_GROUPS, BODY_BREAST_TYPES, charBodyBreast, 'toggleCharBodyBreast');
+  renderGroupedChips('char-body-frame-chips', BODY_FRAME_GROUPS, BODY_FRAME_TYPES, charBodyFrame, 'toggleCharBodyFrame', { mirrorId: 'char-body-frame-chips-embed' });
+  renderGroupedChips('char-body-breast-chips', BODY_BREAST_GROUPS, BODY_BREAST_TYPES, charBodyBreast, 'toggleCharBodyBreast', { mirrorId: 'char-body-breast-chips-embed' });
   renderGroupedChips('char-body-figure-chips', BODY_FIGURE_GROUPS, BODY_FIGURE_TYPES, charBodyFigure, 'toggleCharBodyFigure');
+  renderGroupedChips('char-body-shape-chips', BODY_FIGURE_SHAPE_GROUPS, BODY_FIGURE_TYPES, charBodyFigure, 'toggleCharBodyFigure');
+  renderGroupedChips('char-body-leg-chips', BODY_FIGURE_LEG_GROUPS, BODY_FIGURE_TYPES, charBodyFigure, 'toggleCharBodyFigure');
 }
 
 function renderCharPoseChips() {
-  renderGroupedChips('char-pose-chips', POSE_PRESET_GROUPS, POSE_PRESETS, charPosePresets, 'toggleCharPosePreset');
+  renderGroupedChips('char-pose-chips', POSE_PRESET_GROUPS, POSE_PRESETS, charPosePresets, 'toggleCharPosePreset', { mirrorId: 'char-pose-chips-embed' });
+}
+
+function renderCharActionChips() {
+  renderCharPoseChips();
+  renderCharSpicyActionChips();
+}
+
+function toggleCharEnvPreset(id) {
+  charEnvPresets = toggleSpicyChipSet(charEnvPresets, id, 'none');
+  renderCharEnvChips();
+  if (charIsIncluded('env')) generateChar();
+  else renderChar();
+  saveActiveSession();
+}
+
+function renderCharEnvChips() {
+  renderGroupedChips('char-env-chips', ENV_PRESET_GROUPS, ENV_PRESET_TYPES, charEnvPresets, 'toggleCharEnvPreset', { mirrorId: 'char-env-chips-embed' });
 }
 
 function toggleCharJobType(id) {
@@ -3623,13 +4182,18 @@ function toggleCharJobType(id) {
   } else {
     charJobTypes.delete('all');
     charJobTypes.delete('none');
+    const adding = !charJobTypes.has(id);
     charJobTypes.has(id) ? charJobTypes.delete(id) : charJobTypes.add(id);
     if (!charJobTypes.size) charJobTypes.add('all');
+    if (adding && charJobTypes.has(id)) {
+      resolveJobTypeConflicts(id);
+      if (JOB_POSE_SELFIE_BLOCK.includes(id)) syncJobPoseMutex({ source: 'job', silent: true });
+    }
   }
+  checkPresetConflicts(true);
   renderCharJobChips();
   const inc = document.getElementById('char-inc-job');
   if (inc) inc.checked = true;
-  syncJobPoseMutex({ source: 'job', silent: true });
   if (charIsIncluded('pose') && hasActiveJob() && !charLocked.has('pose')) {
     charSlots.pose = rollPoseSection();
   }
@@ -3642,7 +4206,7 @@ function toggleCharJobType(id) {
 }
 
 function renderCharJobChips() {
-  renderGroupedChips('char-job-chips', JOB_PRESET_GROUPS, JOB_TYPES, charJobTypes, 'toggleCharJobType');
+  renderGroupedChips('char-job-chips', JOB_PRESET_GROUPS, JOB_TYPES, charJobTypes, 'toggleCharJobType', { mirrorId: 'char-job-chips-embed' });
 }
 
 function applyQuickPreset(preset, opts = {}) {
@@ -3765,10 +4329,10 @@ function applyQuickPreset(preset, opts = {}) {
   if (PRESET_BODY_MAP[preset]) setBodyComboState(PRESET_BODY_MAP[preset]);
   else resetBodyFilters({ stateOnly: true, silent: true });
   renderCharJobChips();
-  renderCharPoseChips();
+  renderCharActionChips();
   renderCharSpicyOutfitChips();
-  renderCharSpicyActionChips();
   renderCharBodyChips();
+  renderCharEnvChips();
   generateChar();
   saveActiveSession();
   if (!opts.silent) {
@@ -3901,18 +4465,17 @@ function renderChar() {
   const poseLabel = charIsIncluded('pose')
     ? ([...charPosePresets].filter(c => c !== 'all').map(c => POSE_PRESETS.find(p => p.id === c)?.label).filter(Boolean).join('+') || '姿勢全') + (isSafeSelfieMode() ? '·無性交' : '')
     : '';
-  const spicyOutfitLabel = !charSpicyOutfits.has('none')
-    ? ([...charSpicyOutfits].filter(c => c !== 'all').map(c => SPICY_OUTFIT_TYPES.find(x => x.id === c)?.label).filter(Boolean).join('+') || '色氣裝全')
+  const outfitLabel = !charSpicyOutfits.has('none')
+    ? ([...charSpicyOutfits].filter(c => c !== 'all').map(c => SPICY_OUTFIT_TYPES.find(x => x.id === c)?.label).filter(Boolean).join('+') || '穿著全')
     : '';
-  const spicyActionLabel = !charSpicyActions.has('none')
-    ? ([...charSpicyActions].filter(c => c !== 'all').map(c => SPICY_ACTION_TYPES.find(x => x.id === c)?.label).filter(Boolean).join('+') || '瑟瑟全')
+  const actionLabel = !charSpicyActions.has('none')
+    ? ([...charSpicyActions].filter(c => c !== 'all').map(c => SPICY_ACTION_TYPES.find(x => x.id === c)?.label).filter(Boolean).join('+') || '動作全')
     : '';
-  const bodyLabel = isBodyFilterActive()
-    ? [
-        [...charBodyFrame].filter(c => c !== 'none').map(c => BODY_FRAME_TYPES.find(x => x.id === c)?.label).filter(Boolean).join('+'),
-        [...charBodyBreast].filter(c => c !== 'none').map(c => BODY_BREAST_TYPES.find(x => x.id === c)?.label).filter(Boolean).join('+'),
-        [...charBodyFigure].filter(c => c !== 'none').map(c => BODY_FIGURE_TYPES.find(x => x.id === c)?.label).filter(Boolean).join('+'),
-      ].filter(Boolean).join(' · ')
+  const bodyFrameLabel = [...charBodyFrame].filter(c => c !== 'none').map(c => BODY_FRAME_TYPES.find(x => x.id === c)?.label).filter(Boolean).join('+');
+  const bodyBreastLabel = [...charBodyBreast].filter(c => c !== 'none').map(c => BODY_BREAST_TYPES.find(x => x.id === c)?.label).filter(Boolean).join('+');
+  const bodyFigureLabel = [...charBodyFigure].filter(c => c !== 'none').map(c => BODY_FIGURE_TYPES.find(x => x.id === c)?.label).filter(Boolean).join('+');
+  const envLabel = !charEnvPresets.has('none')
+    ? ([...charEnvPresets].filter(c => c !== 'all').map(c => ENV_PRESET_TYPES.find(x => x.id === c)?.label).filter(Boolean).join('+') || '背景全')
     : '';
   document.getElementById('char-meta').textContent =
     `${buildCharTagsOnly().length} 字 · ${modeLabel} · 範本${learnedN}`;
@@ -3920,16 +4483,20 @@ function renderChar() {
   if (bar) {
     const pills = [
       `<span class="status-pill on">${toneLabel}${lvlLabel ? ' ' + lvlLabel : ''}</span>`,
-      poseLabel ? `<span class="status-pill${isSafeSelfieMode() ? ' safe' : ''}">${poseLabel}</span>` : '',
-      bodyLabel ? `<span class="status-pill on" style="border-color:rgba(180,210,255,.35);color:#b8d4f0">${bodyLabel}</span>` : '',
-      spicyOutfitLabel ? `<span class="status-pill on">${spicyOutfitLabel}</span>` : '',
-      spicyActionLabel ? `<span class="status-pill on" style="border-color:rgba(255,192,203,.4);color:#f0b8c8">${spicyActionLabel}</span>` : '',
-      `<span class="status-pill${isJobDisabled() ? ' safe' : ''}">${jobLabel}</span>`,
+      bodyFrameLabel ? `<span class="status-pill on" style="border-color:rgba(180,210,255,.35);color:#b8d4f0">體型 ${bodyFrameLabel}</span>` : '',
+      bodyBreastLabel ? `<span class="status-pill on" style="border-color:rgba(180,210,255,.35);color:#b8d4f0">胸型 ${bodyBreastLabel}</span>` : '',
+      bodyFigureLabel ? `<span class="status-pill on" style="border-color:rgba(180,210,255,.35);color:#b8d4f0">身材 ${bodyFigureLabel}</span>` : '',
+      outfitLabel ? `<span class="status-pill on">服裝 ${outfitLabel}</span>` : '',
+      poseLabel ? `<span class="status-pill${isSafeSelfieMode() ? ' safe' : ''}">拍照 ${poseLabel}</span>` : '',
+      actionLabel ? `<span class="status-pill on" style="border-color:rgba(255,192,203,.4);color:#f0b8c8">${actionLabel}</span>` : '',
+      `<span class="status-pill${isJobDisabled() ? ' safe' : ''}">NSFW ${jobLabel}</span>`,
+      envLabel ? `<span class="status-pill on">背景 ${envLabel}</span>` : '',
       `<span class="status-pill">詞庫 ${tagTotal}</span>`,
-      ...collectPresetConflictWarnings().slice(0, 2).map(w => `<span class="status-pill warn" title="${escHtml(w)}">⚠ ${escHtml(w)}</span>`),
+      ...collectPresetConflictWarnings().slice(0, 3).map(w => `<span class="status-pill warn" title="${escHtml(w)}">⚠ ${escHtml(w)}</span>`),
     ].filter(Boolean).join('');
     bar.innerHTML = pills;
   }
+  updateEmbedCharConflictHint();
   renderCharTable();
   renderBankStats();
 }
@@ -3998,6 +4565,12 @@ function getCharPromptText() {
   return (out?.value?.trim()) || buildCharPrompt();
 }
 
+function embedGenerateAndSend() {
+  if (!getCharPromptText().trim()) generateChar();
+  const prompt = getCharPromptText();
+  if (!prompt) { toast('請先重抽或輸入 Prompt'); return; }
+  embedSendToVoidGen(true);
+}
 function embedSendToVoidGen(andGenerate = false) {
   const prompt = getCharPromptText();
   if (!prompt) return toast('尚無內容');
@@ -4088,6 +4661,7 @@ function _mkDebounce(fn, ms) {
 }
 
 const SECTION_MATCHERS = [
+  { key:'quality',  patterns:[/quality\s*\/\s*technical/i, /quality/i, /technical\s*tags?/i, /品質/, /技術標籤/] },
   { key:'subject',  patterns:[/subject\s*&\s*character/i, /主體與角色/, /主題與角色/, /角色主體/] },
   { key:'face',     patterns:[/facial\s*features?/i, /臉部特徵/, /面部特徵/] },
   { key:'details',  patterns:[/character\s*details?/i, /角色細節/, /人物細節/] },
@@ -4096,7 +4670,6 @@ const SECTION_MATCHERS = [
   { key:'job',      patterns:[/\bjob\b/i, /\bact\b/i, /行為/, /玩法/] },
   { key:'env',      patterns:[/environment\s*&\s*lighting/i, /environment/i, /lighting/i, /環境與光線/, /環境/, /光線/] },
   { key:'styleRef', patterns:[/style\s*references?/i, /風格參考/, /畫風/] },
-  { key:'quality',  patterns:[/quality\s*\/\s*technical/i, /quality/i, /technical\s*tags?/i, /品質/, /技術標籤/] },
 ];
 
 const CLASSIFY_RULES = {
@@ -4806,17 +5379,25 @@ try {
   if (EMBED_CHAR) {
     document.documentElement.classList.add('embed-char-root');
     document.body.classList.add('embed-char');
+    setCharFmt('flat');
     const charTab = document.querySelector('.page-tab[data-page="char"]');
     switchPage('char', charTab);
+    let savedTab = 'frame';
+    try { savedTab = localStorage.getItem('void-rng-embed-tab') || 'frame'; } catch (_) {}
+    setEmbedCharTab(savedTab);
+    const qFold = document.querySelector('.embed-char-quick');
+    if (qFold && qFold.open) qFold.open = false;
+    const slotsFold = document.querySelector('.embed-char-slots-fold');
+    if (slotsFold) slotsFold.open = false;
   }
   loadSessionsFromStorage();
   renderPoolChips();
   renderCharIncChecks();
   renderCharJobChips();
-  renderCharPoseChips();
+  renderCharActionChips();
   renderCharSpicyOutfitChips();
-  renderCharSpicyActionChips();
   renderCharBodyChips();
+  renderCharEnvChips();
   renderJewelCatChips();
   renderJewelIncChecks();
   document.getElementById('learn-fallback-sec').innerHTML = CHAR_SECTIONS.map(s =>
