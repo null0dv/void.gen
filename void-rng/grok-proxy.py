@@ -11,6 +11,7 @@ from pathlib import Path
 import json
 import mimetypes
 import os
+import subprocess
 import threading
 import time
 import urllib.request
@@ -178,6 +179,57 @@ def _already_running(url: str) -> bool:
         return False
 
 
+def _pids_listening_on(port: int) -> list[int]:
+    pids: set[int] = set()
+    needle = f":{port}"
+    try:
+        out = subprocess.check_output(
+            ["netstat", "-ano"],
+            text=True,
+            errors="replace",
+            timeout=5,
+        )
+    except Exception:
+        return []
+    for line in out.splitlines():
+        if "LISTENING" not in line or needle not in line:
+            continue
+        parts = line.split()
+        if not parts:
+            continue
+        try:
+            pids.add(int(parts[-1]))
+        except ValueError:
+            continue
+    return sorted(pids)
+
+
+def _clear_stale_listeners(port: int) -> bool:
+    """Kill processes holding the port when /health is unreachable (zombie listeners)."""
+    pids = _pids_listening_on(port)
+    if not pids:
+        return True
+    print(f"WARN: Port {port} is occupied but /health failed — clearing stale listeners: {pids}")
+    if os.name == "nt":
+        for pid in pids:
+            try:
+                subprocess.run(
+                    ["taskkill", "/F", "/PID", str(pid)],
+                    capture_output=True,
+                    timeout=5,
+                )
+            except Exception:
+                pass
+    else:
+        for pid in pids:
+            try:
+                os.kill(pid, 9)
+            except Exception:
+                pass
+    time.sleep(0.5)
+    return not _pids_listening_on(port)
+
+
 def main():
     if not HTML_FILE.is_file():
         print(f"WARNING: {HTML_FILE.name} not found in {ROOT}")
@@ -191,7 +243,12 @@ def main():
             webbrowser.open(open_url)
         except Exception:
             pass
+        time.sleep(2)
         return
+    if _pids_listening_on(PORT) and not _clear_stale_listeners(PORT):
+        print(f"ERROR: Port {PORT} is still occupied after cleanup.")
+        print("  Close other VOID.RNG windows, or end python/grok-proxy in Task Manager.")
+        raise SystemExit(1)
     try:
         server = ReuseHTTPServer((HOST, PORT), GrokProxyHandler)
     except OSError as e:
