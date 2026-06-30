@@ -35,7 +35,7 @@ void-rng/
   data/             整合辭庫（manifest v3）
   js/               引擎與搜尋
   css/              樣式
-  tools/            check-standalone.py
+  tools/            check-standalone.py（健康檢查）
 ```
 
 ## 常見問題
