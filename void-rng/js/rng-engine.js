@@ -67,16 +67,16 @@ const PAGE_STORAGE_KEY = 'void-rng-page';
 let currentPage = 'style';
 
 function switchPage(page, el) {
-  if (!['style', 'char', 'jewel'].includes(page)) return;
+  if (!['style', 'char', 'jewel', 'space'].includes(page)) return;
   if (EMBED_CHAR && page !== 'char') return;
   currentPage = page;
   document.querySelectorAll('.page-tab').forEach(t => t.classList.toggle('on', t.dataset.page === page));
-  const views = { style: 'view-style', char: 'view-char', jewel: 'view-jewel' };
+  const views = { style: 'view-style', char: 'view-char', jewel: 'view-jewel', space: 'view-space' };
   Object.entries(views).forEach(([p, id]) => {
     const node = document.getElementById(id);
     if (node) node.classList.toggle('active', p === page);
   });
-  const bars = { style: 'topbar-style', char: 'topbar-char', jewel: 'topbar-jewel' };
+  const bars = { style: 'topbar-style', char: 'topbar-char', jewel: 'topbar-jewel', space: 'topbar-space' };
   Object.entries(bars).forEach(([p, id]) => {
     const node = document.getElementById(id);
     if (node) node.style.display = p === page ? 'flex' : 'none';
@@ -97,7 +97,7 @@ function restoreSavedPage() {
   if (EMBED_CHAR) return;
   let saved = 'style';
   try { saved = localStorage.getItem(PAGE_STORAGE_KEY) || 'style'; } catch (_) {}
-  if (!['style', 'char', 'jewel'].includes(saved) || saved === currentPage) return;
+  if (!['style', 'char', 'jewel', 'space'].includes(saved) || saved === currentPage) return;
   const tab = document.querySelector(`.page-tab[data-page="${saved}"]`);
   if (tab) switchPage(saved, tab);
 }
@@ -197,6 +197,19 @@ function captureSessionSnapshot() {
         categories: [...(jewelActiveCats || ['all'])],
         history: (jewelHistory || []).slice(0, 30),
       },
+      space: {
+        slots: { ...(spaceSlots || {}) },
+        locked: [...(spaceLocked || [])],
+        mode: spaceMode || 'full',
+        lang: spaceLang || 'zh',
+        fmt: spaceFmt || 'structured',
+        categories: [...(spaceActiveCats || ['all'])],
+        stylePools: [...(spaceStylePools || ['all'])],
+        styleCount: +(document.getElementById('space-style-count')?.value || 2),
+        cards: (spaceCards || []).map(c => ({ ...(c || {}) })),
+        activeCard: spaceActiveCard ?? 0,
+        history: (spaceHistory || []).slice(0, 30),
+      },
     };
   } catch (e) {
     console.error('captureSessionSnapshot', e);
@@ -273,12 +286,52 @@ function applySessionSnapshot(data) {
     renderJewelCatChips();
     generateJewel();
   }
+  if (data.space) {
+    spaceSlots = { ...(data.space.slots || {}) };
+    spaceLocked = new Set(data.space.locked || []);
+    spaceMode = data.space.mode || 'full';
+    spaceLang = data.space.lang || 'zh';
+    spaceFmt = data.space.fmt || 'structured';
+    spaceActiveCats = new Set(data.space.categories || ['all']);
+    spaceStylePools = new Set(data.space.stylePools || ['all']);
+    spaceCards = (data.space.cards || []).map(c => ({ ...(c || {}) }));
+    spaceActiveCard = data.space.activeCard ?? 0;
+    spaceHistory = data.space.history || [];
+    document.querySelectorAll('#space-mode-chips .chip').forEach(c => c.classList.toggle('on', c.dataset.smode === spaceMode));
+    document.querySelectorAll('#view-space [data-slang]').forEach(c => c.classList.toggle('on', c.dataset.slang === spaceLang));
+    const scEl = document.getElementById('space-style-count');
+    if (scEl && data.space.styleCount) { scEl.value = data.space.styleCount; syncSlider('space-style-count'); }
+    setSpaceFmt(spaceFmt);
+    renderSpaceCatChips();
+    renderSpaceStylePoolChips();
+    renderSpaceStyleCodeHint();
+  } else {
+    spaceSlots = {};
+    spaceLocked = new Set();
+    spaceMode = 'full';
+    spaceLang = 'zh';
+    spaceFmt = 'structured';
+    spaceActiveCats = new Set(['all']);
+    spaceStylePools = new Set(['all']);
+    spaceCards = [];
+    spaceActiveCard = 0;
+    spaceHistory = [];
+    document.querySelectorAll('#space-mode-chips .chip').forEach(c => c.classList.toggle('on', c.dataset.smode === 'full'));
+    document.querySelectorAll('#view-space [data-slang]').forEach(c => c.classList.toggle('on', c.dataset.slang === 'zh'));
+    setSpaceFmt('structured');
+    renderSpaceCatChips();
+    renderSpaceStylePoolChips();
+    renderSpaceStyleCodeHint();
+    generateSpaceCards();
+  }
   renderChar();
   renderStyle();
   renderJewel();
+  renderSpace();
   renderCharHistory();
   renderStyleHistory();
   renderJewelHistory();
+  renderSpaceHistory();
   if (typeof VoidSearch !== 'undefined') VoidSearch.renderUI();
 }
 
@@ -943,6 +996,641 @@ function importJewelConfig() {
     r.readAsText(f);
   };
   inp.click();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// 場景·空間 PROMPT 生成器（六卡）
+// ═══════════════════════════════════════════════════════════════════
+const SPACE_CARD_COUNT = 6;
+const SPACE_BANKS_KEY = 'void-space-banks';
+
+const SPACE_CATEGORIES = [
+  { id:'all', label:'全部' },
+  { id:'fractal', label:'碎形' },
+  { id:'structure', label:'結構' },
+  { id:'pattern', label:'花紋' },
+  { id:'decon', label:'解構' },
+  { id:'minimal', label:'極簡' },
+  { id:'inorganic', label:'無機' },
+  { id:'void', label:'虛空' },
+  { id:'arch', label:'建築感' },
+];
+
+const SPACE_SECTIONS = [
+  { key:'quality', label:'QUALITY / TECHNICAL', zh:'品質標籤' },
+  { key:'styleCode', label:'Style Codes', zh:'風格代號' },
+  { key:'scene', label:'Scene', zh:'場景' },
+  { key:'space', label:'Spatial Environment', zh:'空間' },
+  { key:'fractal', label:'Fractal Form', zh:'碎形體' },
+  { key:'structure', label:'Structure', zh:'結構' },
+  { key:'pattern', label:'Pattern & Ornament', zh:'花紋' },
+  { key:'deconstruct', label:'Deconstructivism', zh:'解構主義' },
+  { key:'minimal', label:'Minimalism', zh:'極簡主義' },
+  { key:'inorganic', label:'Inorganic Matter', zh:'無機物' },
+  { key:'light', label:'Lighting', zh:'光線' },
+  { key:'comp', label:'Composition', zh:'構圖' },
+  { key:'mood', label:'Mood & Atmosphere', zh:'氛圍' },
+  { key:'negative', label:'Negative', zh:'負向' },
+];
+
+const DEFAULT_SPACE_BANKS = {
+  quality: [
+    { zh:'傑作，最高品質，超精細，8K', en:'masterpiece, best quality, ultra-detailed, 8k', cats:['*'] },
+  ],
+  styleCode: [
+    { zh:'風格 n：Null Craft 幾何對稱深灰仿生', en:'style n: Null Craft geometric symmetry deep gray bionic', cats:['void','inorganic','structure'], pool:'null', code:'n' },
+    { zh:'風格 fractanull：Fractal Null 骨質裂解晶體', en:'style fractanull: fractal null bone crystal fracture structure', cats:['fractal','inorganic','void'], pool:'null', code:'fractanull' },
+    { zh:'風格 fp：Fractal Psy 高對比分形螺旋', en:'style fp: fractal psychedelic high contrast spiral', cats:['fractal'], pool:'psy', code:'fp' },
+    { zh:'風格 fx：Fractal Grid Collapse 幾何崩解', en:'style fx: fractal grid collapse pixel geometry breakdown', cats:['decon','fractal'], pool:'glitch', code:'fx' },
+    { zh:'風格 lw：Lumenwave 光子流液態虹膜', en:'style lw: lumenwave photon flow liquid iris', cats:['void','minimal'], pool:'light', code:'lw' },
+  ],
+  scene: [
+    { zh:'純黑虛空空間，無地平線', en:'pure black void space, no horizon', cats:['void'] },
+  ],
+  space: [
+    { zh:'巨大尺度虛空，深遠負空間', en:'monumental void scale, deep negative space', cats:['void'] },
+  ],
+  fractal: [
+    { zh:'曼德博碎形邊界，遞迴細節', en:'mandelbrot fractal boundary, recursive detail', cats:['fractal'] },
+  ],
+  structure: [
+    { zh:'桁架網格結構，三角穩定', en:'truss grid structure, triangular stability', cats:['structure'] },
+  ],
+  pattern: [
+    { zh:'蜂巢六邊密鋪花紋', en:'hexagonal honeycomb tessellation pattern', cats:['pattern'] },
+  ],
+  deconstruct: [
+    { zh:'解構主義碎片，軸線錯位', en:'deconstructivist fragments, displaced axis', cats:['decon'] },
+  ],
+  minimal: [
+    { zh:'極簡主義，單一幾何體塊', en:'minimalism, single geometric monolith', cats:['minimal'] },
+  ],
+  inorganic: [
+    { zh:'石英晶簇，無機礦物，無人物', en:'quartz crystal cluster, inorganic mineral, no humans', cats:['inorganic'] },
+  ],
+  light: [
+    { zh:'冷白側光，結構邊緣高光', en:'cool white side light, structural edge highlight', cats:['*'] },
+  ],
+  comp: [
+    { zh:'正中軸對稱構圖', en:'centered axial symmetry composition', cats:['minimal'] },
+  ],
+  mood: [
+    { zh:'空靈寂靜，冥想氛圍', en:'ethereal silence, meditative atmosphere', cats:['void'] },
+  ],
+  negative: [
+    { zh:'無人物，無生物，低品質，模糊', en:'no humans, no creature, low quality, blurry', cats:['*'] },
+  ],
+};
+
+const SPACE_MODE_PRESETS = {
+  full:     { quality:1, styleCode:1, scene:1, space:1, fractal:1, structure:1, pattern:1, deconstruct:1, minimal:1, inorganic:1, light:1, comp:1, mood:1, negative:1 },
+  fractal:  { quality:1, styleCode:1, scene:0, space:1, fractal:1, structure:1, pattern:1, deconstruct:0, minimal:0, inorganic:1, light:1, comp:1, mood:1, negative:1 },
+  minimal:  { quality:1, styleCode:1, scene:1, space:1, fractal:0, structure:1, pattern:0, deconstruct:0, minimal:1, inorganic:1, light:1, comp:1, mood:1, negative:1 },
+  decon:    { quality:1, styleCode:1, scene:1, space:1, fractal:1, structure:1, pattern:0, deconstruct:1, minimal:0, inorganic:1, light:1, comp:1, mood:1, negative:1 },
+  void:     { quality:1, styleCode:1, scene:0, space:1, fractal:1, structure:1, pattern:1, deconstruct:1, minimal:1, inorganic:1, light:1, comp:1, mood:1, negative:1 },
+};
+
+let SPACE_BANKS = JSON.parse(JSON.stringify(DEFAULT_SPACE_BANKS));
+let spaceActiveCats = new Set(['all']);
+let spaceStylePools = new Set(['all']);
+let spaceMode = 'full';
+let spaceLang = 'zh';
+let spaceFmt = 'structured';
+let spaceSlots = {};
+let spaceLocked = new Set();
+let spaceCards = [];
+let spaceActiveCard = 0;
+let spaceHistory = [];
+
+function mergeUserSpaceBanks() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SPACE_BANKS_KEY) || '{}');
+    Object.keys(saved).forEach(k => {
+      if (!Array.isArray(saved[k])) return;
+      if (!SPACE_BANKS[k]) SPACE_BANKS[k] = [];
+      const seen = new Set(SPACE_BANKS[k].map(i => i.zh + '|' + i.en));
+      saved[k].forEach(item => {
+        const norm = typeof item === 'string' ? { zh: item, en: item, cats: ['*'] } : item;
+        const sig = (norm.zh || '') + '|' + (norm.en || '');
+        if (!seen.has(sig)) { SPACE_BANKS[k].push(norm); seen.add(sig); }
+      });
+    });
+  } catch (_) {}
+}
+
+function saveSpaceBanks() {
+  try {
+    const extra = {};
+    SPACE_SECTIONS.forEach(s => {
+      const defaults = new Set((DEFAULT_SPACE_BANKS[s.key] || []).map(i => i.zh + '|' + i.en));
+      const user = (SPACE_BANKS[s.key] || []).filter(i => !defaults.has(i.zh + '|' + i.en));
+      if (user.length) extra[s.key] = user;
+    });
+    localStorage.setItem(SPACE_BANKS_KEY, JSON.stringify(extra));
+  } catch (_) {}
+}
+
+function spaceText(item) {
+  if (!item) return '';
+  if (spaceLang === 'zh') return item.zh || item.en || '';
+  if (spaceLang === 'en') return item.en || item.zh || '';
+  return Math.random() < 0.5 ? (item.zh || item.en || '') : (item.en || item.zh || '');
+}
+
+function getSpaceBankFiltered(key) {
+  const bank = SPACE_BANKS[key] || [];
+  let filtered = bank;
+  if (!spaceActiveCats.has('all')) {
+    filtered = filtered.filter(item =>
+      !item.cats || item.cats.includes('*') || item.cats.some(c => spaceActiveCats.has(c))
+    );
+  }
+  if (key === 'styleCode' && !spaceStylePools.has('all')) {
+    filtered = filtered.filter(item => !item.pool || spaceStylePools.has(item.pool));
+  }
+  return filtered;
+}
+
+function getFilteredSpaceStyleCodes() {
+  let pool = STYLE_CODES;
+  if (!spaceStylePools.has('all')) pool = pool.filter(s => spaceStylePools.has(s.pool));
+  if (!spaceActiveCats.has('all')) {
+    const bankCodes = new Set(
+      (SPACE_BANKS.styleCode || [])
+        .filter(item => !item.cats || item.cats.includes('*') || item.cats.some(c => spaceActiveCats.has(c)))
+        .map(item => item.code)
+        .filter(Boolean)
+    );
+    if (bankCodes.size) pool = pool.filter(s => bankCodes.has(s.code));
+  }
+  return pool;
+}
+
+function formatSpaceStyleCodes(chosen) {
+  if (!chosen.length) return '';
+  const codes = chosen.map(s => s.code).join(' + ');
+  const desc = chosen.map(s => spaceLang === 'en' ? s.en : s.zh).join(', ');
+  if (spaceLang === 'en') return `style ${codes}: ${desc}`;
+  if (spaceLang === 'mix') {
+    const zhDesc = chosen.map(s => s.zh).join('，');
+    return `風格 ${codes}：${zhDesc}`;
+  }
+  return `風格 ${codes}：${desc}`;
+}
+
+function rollSpaceStyleCode() {
+  const pool = getFilteredSpaceStyleCodes();
+  if (!pool.length) {
+    const bank = getSpaceBankFiltered('styleCode');
+    if (bank.length) return spaceText(pick(bank));
+    return '';
+  }
+  const n = Math.min(pool.length, +(document.getElementById('space-style-count')?.value || 2));
+  const chosen = pickN(pool, n);
+  return formatSpaceStyleCodes(chosen);
+}
+
+function rollSpaceSection(key) {
+  if (key === 'styleCode') return rollSpaceStyleCode();
+  const bank = getSpaceBankFiltered(key);
+  if (!bank.length) {
+    const fallback = SPACE_BANKS[key] || [];
+    return spaceText(pick(fallback) || { zh:'', en:'' });
+  }
+  return spaceText(pick(bank));
+}
+
+function spaceIsIncluded(key) {
+  return document.getElementById('space-inc-' + key)?.checked !== false;
+}
+
+function rollSpaceSlotsFromLocks() {
+  const out = {};
+  SPACE_SECTIONS.forEach(s => {
+    if (!spaceIsIncluded(s.key)) { out[s.key] = ''; return; }
+    if (spaceLocked.has(s.key) && spaceSlots[s.key]) out[s.key] = spaceSlots[s.key];
+    else out[s.key] = rollSpaceSection(s.key);
+  });
+  return out;
+}
+
+function buildSpacePromptFromSlots(slotsObj) {
+  const pos = [];
+  const neg = [];
+  SPACE_SECTIONS.forEach(s => {
+    if (!spaceIsIncluded(s.key) || !slotsObj[s.key]) return;
+    if (s.key === 'negative') neg.push(slotsObj[s.key]);
+    else if (spaceFmt === 'structured') pos.push(`// ❖ ${s.label}\n${slotsObj[s.key]}`);
+    else pos.push(slotsObj[s.key]);
+  });
+  let text = spaceFmt === 'structured' ? pos.join('\n\n') : pos.join(', ');
+  if (neg.length) {
+    const negLine = neg.join(', ');
+    text += (text ? '\n\n' : '') + `// ❖ Negative\n${negLine}`;
+  }
+  return text;
+}
+
+function buildSpaceTagsOnlyFromSlots(slotsObj) {
+  return SPACE_SECTIONS
+    .filter(s => spaceIsIncluded(s.key) && s.key !== 'negative' && slotsObj[s.key])
+    .map(s => slotsObj[s.key])
+    .join(', ');
+}
+
+function setSpaceMode(m, el) {
+  spaceMode = m;
+  document.querySelectorAll('#space-mode-chips .chip').forEach(c => c.classList.toggle('on', c.dataset.smode === m));
+  const preset = SPACE_MODE_PRESETS[m] || SPACE_MODE_PRESETS.full;
+  SPACE_SECTIONS.forEach(s => {
+    const el2 = document.getElementById('space-inc-' + s.key);
+    if (el2) el2.checked = !!preset[s.key];
+  });
+  renderSpace();
+}
+
+function setSpaceLang(l, el) {
+  spaceLang = l;
+  document.querySelectorAll('#view-space [data-slang]').forEach(c => c.classList.toggle('on', c.dataset.slang === l));
+  renderSpace();
+}
+
+function setSpaceFmt(f) {
+  spaceFmt = f;
+  document.getElementById('space-fmt-structured')?.classList.toggle('on', f === 'structured');
+  document.getElementById('space-fmt-flat')?.classList.toggle('on', f === 'flat');
+  renderSpace();
+}
+
+function toggleSpaceCat(id) {
+  if (id === 'all') spaceActiveCats = new Set(['all']);
+  else {
+    spaceActiveCats.delete('all');
+    spaceActiveCats.has(id) ? spaceActiveCats.delete(id) : spaceActiveCats.add(id);
+    if (!spaceActiveCats.size) spaceActiveCats.add('all');
+  }
+  renderSpaceCatChips();
+  renderSpaceStyleCodeHint();
+  if (!spaceLocked.size) generateSpaceCards();
+}
+
+function toggleSpaceStylePool(id) {
+  if (id === 'all') spaceStylePools = new Set(['all']);
+  else {
+    spaceStylePools.delete('all');
+    spaceStylePools.has(id) ? spaceStylePools.delete(id) : spaceStylePools.add(id);
+    if (!spaceStylePools.size) spaceStylePools.add('all');
+  }
+  renderSpaceStylePoolChips();
+  renderSpaceStyleCodeHint();
+  if (!spaceLocked.has('styleCode')) rerollSpaceSlot('styleCode');
+}
+
+function renderSpaceStylePoolChips() {
+  const el = document.getElementById('space-style-pool-chips');
+  if (!el) return;
+  el.innerHTML = POOLS.map(p =>
+    `<span class="chip${spaceStylePools.has(p.id) ? ' on' : ''}" onclick="toggleSpaceStylePool('${p.id}')">${p.label}</span>`
+  ).join('');
+}
+
+function renderSpaceStyleCodeHint() {
+  const el = document.getElementById('space-style-code-hint');
+  if (!el) return;
+  const codes = getFilteredSpaceStyleCodes();
+  if (!codes.length) { el.textContent = '（目前篩選無可用代號）'; return; }
+  el.textContent = codes.map(s => `${s.code} · ${s.zh}`).join('\n');
+}
+
+function renderSpaceCatChips() {
+  const el = document.getElementById('space-cat-chips');
+  if (!el) return;
+  el.innerHTML = SPACE_CATEGORIES.map(c =>
+    `<span class="chip${spaceActiveCats.has(c.id) ? ' on' : ''}" onclick="toggleSpaceCat('${c.id}')">${c.label}</span>`
+  ).join('');
+}
+
+function renderSpaceIncChecks() {
+  const el = document.getElementById('space-inc-checks');
+  if (!el) return;
+  el.innerHTML = SPACE_SECTIONS.map(s =>
+    `<label class="chk-row"><input type="checkbox" id="space-inc-${s.key}" checked onchange="renderSpace()"> ${s.zh}</label>`
+  ).join('');
+}
+
+function generateSpaceCards() {
+  spaceCards = [];
+  for (let i = 0; i < SPACE_CARD_COUNT; i++) {
+    const slots = rollSpaceSlotsFromLocks();
+    spaceCards.push({ slots, prompt: buildSpacePromptFromSlots(slots) });
+  }
+  if (spaceActiveCard >= spaceCards.length) spaceActiveCard = 0;
+  loadSpaceActiveCardToSlots();
+  renderSpace();
+  saveActiveSession();
+}
+
+function generateSpaceSingle() {
+  if (!spaceCards.length) { generateSpaceCards(); return; }
+  const slots = rollSpaceSlotsFromLocks();
+  spaceCards[spaceActiveCard] = { slots, prompt: buildSpacePromptFromSlots(slots) };
+  spaceSlots = { ...slots };
+  renderSpace();
+  saveActiveSession();
+}
+
+function selectSpaceCard(i) {
+  if (!spaceCards[i]) return;
+  spaceActiveCard = i;
+  loadSpaceActiveCardToSlots();
+  renderSpace();
+}
+
+function loadSpaceActiveCardToSlots() {
+  const card = spaceCards[spaceActiveCard];
+  if (!card?.slots) return;
+  spaceSlots = { ...card.slots };
+}
+
+function rerollSpaceSlot(key) {
+  if (!spaceIsIncluded(key) || spaceLocked.has(key)) return;
+  spaceSlots[key] = rollSpaceSection(key);
+  if (spaceCards[spaceActiveCard]) {
+    spaceCards[spaceActiveCard].slots = { ...spaceSlots };
+    spaceCards[spaceActiveCard].prompt = buildSpacePromptFromSlots(spaceSlots);
+  }
+  renderSpace();
+}
+
+function toggleSpaceLock(key) {
+  spaceLocked.has(key) ? spaceLocked.delete(key) : spaceLocked.add(key);
+  renderSpaceSlots();
+}
+
+function renderSpace() {
+  renderSpaceCardGrid();
+  renderSpaceSlots();
+  const card = spaceCards[spaceActiveCard];
+  const text = card?.prompt || buildSpacePromptFromSlots(spaceSlots);
+  setOutputText('space-output', text, '生成後顯示目前選取卡片…');
+  const cats = [...spaceActiveCats].filter(c => c !== 'all')
+    .map(c => SPACE_CATEGORIES.find(x => x.id === c)?.label || c).join('·') || '全部';
+  const meta = document.getElementById('space-meta');
+  if (meta) {
+    const len = card ? buildSpaceTagsOnlyFromSlots(card.slots || spaceSlots).length : 0;
+    meta.textContent = `${len} 字 · 卡 ${spaceActiveCard + 1}/${SPACE_CARD_COUNT} · ${cats}`;
+  }
+}
+
+function renderSpaceCardGrid() {
+  const el = document.getElementById('space-card-grid');
+  if (!el) return;
+  if (!spaceCards.length) {
+    el.innerHTML = `<div class="meta" style="grid-column:1/-1;padding:20px 0">點「隨機生成 6 張卡片」或按空白鍵開始…</div>`;
+    return;
+  }
+  el.innerHTML = spaceCards.map((card, i) => {
+    const preview = (card.prompt || '').replace(/\n/g, ' ').slice(0, 120);
+    const tags = buildSpaceTagsOnlyFromSlots(card.slots || {});
+    return `<div class="space-card${i === spaceActiveCard ? ' on' : ''}" onclick="selectSpaceCard(${i})" ondblclick="event.preventDefault();copySpaceCard(${i})">
+      <div class="space-card-head">
+        <span class="space-card-idx">CARD ${i + 1}</span>
+        <span class="space-card-copy" onclick="event.stopPropagation();copySpaceCard(${i})">複製</span>
+      </div>
+      <div class="space-card-body">${escHtml(preview || '（空）')}</div>
+      <div class="space-card-meta">${tags.length} 字 · ${spaceLocked.size ? spaceLocked.size + ' 鎖' : '全隨機'}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderSpaceSlots() {
+  const el = document.getElementById('space-slots');
+  if (!el) return;
+  const active = document.activeElement;
+  const activeKey = active?.dataset?.slotKey;
+  el.innerHTML = SPACE_SECTIONS.filter(s => spaceIsIncluded(s.key)).map(s => {
+    const val = (activeKey === s.key && active?.classList?.contains('slot-edit')) ? active.value : (spaceSlots[s.key] || '');
+    const lc = spaceLocked.has(s.key) ? ' locked' : '';
+    return `<div class="slot${lc}" ondblclick="toggleSpaceLock('${s.key}')">
+      <div class="slot-label">${s.zh}<span class="slot-reroll" onclick="event.stopPropagation();rerollSpaceSlot('${s.key}')">↻</span></div>
+      <textarea class="slot-edit" data-slot-key="${s.key}" rows="2" oninput="onSpaceSlotEdit('${s.key}', this)" onblur="commitSpaceSlotEdit()" ondblclick="event.stopPropagation()">${escTextarea(val)}</textarea>
+    </div>`;
+  }).join('');
+}
+
+function onSpaceSlotEdit(key, el) {
+  spaceSlots[key] = el.value;
+  if (spaceCards[spaceActiveCard]) {
+    spaceCards[spaceActiveCard].slots = { ...spaceSlots };
+    spaceCards[spaceActiveCard].prompt = buildSpacePromptFromSlots(spaceSlots);
+  }
+  setOutputText('space-output', buildSpacePromptFromSlots(spaceSlots), '生成後顯示目前選取卡片…');
+  const meta = document.getElementById('space-meta');
+  if (meta) {
+    const cats = [...spaceActiveCats].filter(c => c !== 'all')
+      .map(c => SPACE_CATEGORIES.find(x => x.id === c)?.label || c).join('·') || '全部';
+    meta.textContent = `${buildSpaceTagsOnlyFromSlots(spaceSlots).length} 字 · 卡 ${spaceActiveCard + 1}/${SPACE_CARD_COUNT} · ${cats}`;
+  }
+  renderSpaceCardGrid();
+}
+
+function commitSpaceSlotEdit() { saveActiveSession(); }
+
+function commitSpaceOutputEdit() {
+  const text = document.getElementById('space-output')?.value?.trim();
+  if (!text) return;
+  if (spaceFmt === 'structured' || text.includes('// ❖')) {
+    const parsed = parseStructuredSections(text, SPACE_SECTIONS);
+    SPACE_SECTIONS.forEach(s => {
+      if (!spaceIsIncluded(s.key)) return;
+      if (parsed[s.key] !== undefined) spaceSlots[s.key] = parsed[s.key];
+    });
+    const negBlock = text.match(/\/\/\s*❖\s*Negative\s*\n([\s\S]*)$/i);
+    if (negBlock && spaceIsIncluded('negative')) spaceSlots.negative = negBlock[1].trim();
+  } else {
+    assignListToSlots(text, SPACE_SECTIONS, spaceSlots, spaceIsIncluded);
+  }
+  if (spaceCards[spaceActiveCard]) {
+    spaceCards[spaceActiveCard].slots = { ...spaceSlots };
+    spaceCards[spaceActiveCard].prompt = buildSpacePromptFromSlots(spaceSlots);
+  }
+  renderSpaceSlots();
+  renderSpaceCardGrid();
+  saveActiveSession();
+}
+
+function getSpaceActivePrompt() {
+  const card = spaceCards[spaceActiveCard];
+  if (card?.prompt) return card.prompt;
+  const out = document.getElementById('space-output');
+  return (out?.value?.trim()) || buildSpacePromptFromSlots(spaceSlots);
+}
+
+function copySpaceCard(i) {
+  const t = spaceCards[i]?.prompt;
+  if (!t) return toast('尚無內容');
+  navigator.clipboard.writeText(t).then(() => toast(`已複製 CARD ${i + 1}`));
+}
+
+function copySpaceActiveCard() {
+  const t = getSpaceActivePrompt();
+  if (!t) return toast('尚無內容');
+  navigator.clipboard.writeText(t).then(() => toast('已複製目前卡'));
+}
+
+function copySpaceAllCards() {
+  if (!spaceCards.length) return toast('尚無內容');
+  const t = spaceCards.map((c, i) => `--- CARD ${i + 1} ---\n${c.prompt}`).join('\n\n');
+  navigator.clipboard.writeText(t).then(() => toast('已複製全部 6 張'));
+}
+
+function copySpaceTagsOnly() {
+  const t = buildSpaceTagsOnlyFromSlots(spaceSlots);
+  if (!t) return toast('尚無內容');
+  navigator.clipboard.writeText(t).then(() => toast('已複製標籤'));
+}
+
+function addSpaceEntryToBank(key, text) {
+  const trimmed = String(text || '').trim();
+  if (!trimmed || !SPACE_BANKS[key]) return false;
+  const exists = SPACE_BANKS[key].some(i => i.zh === trimmed || i.en === trimmed);
+  if (exists) return false;
+  SPACE_BANKS[key].push({ zh: trimmed, en: trimmed, cats: ['*'] });
+  return true;
+}
+
+function feedSpaceSlotsToBank() {
+  let n = 0;
+  SPACE_SECTIONS.forEach(s => {
+    if (!spaceIsIncluded(s.key) || !spaceSlots[s.key]?.trim()) return;
+    if (addSpaceEntryToBank(s.key, spaceSlots[s.key])) n++;
+  });
+  if (!n) return toast('無新內容可入庫');
+  saveSpaceBanks();
+  toast(`已餵回辭庫：${n} 段`);
+}
+
+function feedSpaceActiveCardToBank() {
+  const card = spaceCards[spaceActiveCard];
+  if (!card?.slots) return toast('請先選取卡片');
+  let n = 0;
+  SPACE_SECTIONS.forEach(s => {
+    const v = card.slots[s.key];
+    if (!spaceIsIncluded(s.key) || !v?.trim()) return;
+    if (addSpaceEntryToBank(s.key, v)) n++;
+  });
+  if (!n) return toast('無新內容可入庫');
+  saveSpaceBanks();
+  toast(`CARD ${spaceActiveCard + 1} 入庫：${n} 段`);
+}
+
+function addSpaceHistory() {
+  const t = getSpaceActivePrompt();
+  if (!t) return;
+  spaceHistory.unshift({ text: t, ts: Date.now(), card: spaceActiveCard + 1 });
+  spaceHistory = spaceHistory.slice(0, 30);
+  saveActiveSession();
+  renderSpaceHistory();
+  toast('已加入歷史');
+}
+
+function renderSpaceHistory() {
+  const list = document.getElementById('space-hist-list');
+  if (!list) return;
+  if (!spaceHistory.length) { list.innerHTML = '<div class="meta">尚無紀錄</div>'; return; }
+  list.innerHTML = spaceHistory.map((h, i) =>
+    `<div class="hist-item" onclick="loadSpaceHistory(${i})">${escHtml(`#${h.card || '?'} ` + h.text.slice(0, 72).replace(/\n/g, ' '))}…</div>`
+  ).join('');
+}
+
+function loadSpaceHistory(i) {
+  const out = document.getElementById('space-output');
+  if (!out || !spaceHistory[i]) return;
+  out.value = spaceHistory[i].text;
+  out.classList.remove('empty');
+  commitSpaceOutputEdit();
+  toast('已載入');
+}
+
+function exportSpaceConfig() {
+  const blob = new Blob([JSON.stringify({
+    mode: spaceMode, lang: spaceLang, fmt: spaceFmt,
+    categories: [...spaceActiveCats], stylePools: [...spaceStylePools],
+    styleCount: +(document.getElementById('space-style-count')?.value || 2),
+    slots: spaceSlots, locked: [...spaceLocked],
+    cards: spaceCards, activeCard: spaceActiveCard, history: spaceHistory,
+    banks: SPACE_BANKS,
+  }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'void-space-config.json';
+  a.click();
+}
+
+function importSpaceConfig() {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = '.json';
+  inp.onchange = e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const c = JSON.parse(r.result);
+        if (c.mode) { spaceMode = c.mode; document.querySelector(`#space-mode-chips [data-smode="${c.mode}"]`)?.click(); }
+        if (c.lang) { spaceLang = c.lang; document.querySelector(`#view-space [data-slang="${c.lang}"]`)?.click(); }
+        if (c.fmt) setSpaceFmt(c.fmt);
+        if (c.categories) { spaceActiveCats = new Set(c.categories); renderSpaceCatChips(); }
+        if (c.stylePools) { spaceStylePools = new Set(c.stylePools); renderSpaceStylePoolChips(); renderSpaceStyleCodeHint(); }
+        if (c.styleCount != null) {
+          const scEl = document.getElementById('space-style-count');
+          if (scEl) { scEl.value = c.styleCount; syncSlider('space-style-count'); }
+        }
+        if (c.slots) spaceSlots = c.slots;
+        if (c.locked) spaceLocked = new Set(c.locked);
+        if (c.cards) spaceCards = c.cards;
+        if (c.activeCard != null) spaceActiveCard = c.activeCard;
+        if (c.history) spaceHistory = c.history;
+        if (c.banks) {
+          Object.keys(c.banks).forEach(k => { if (Array.isArray(c.banks[k])) SPACE_BANKS[k] = c.banks[k]; });
+          saveSpaceBanks();
+        }
+        renderSpace();
+        renderSpaceHistory();
+        toast('場景·空間設定已匯入');
+      } catch { toast('匯入失敗'); }
+    };
+    r.readAsText(f);
+  };
+  inp.click();
+}
+
+function applySpaceSearchEffects(effects, opts) {
+  const fillMode = effects.fillMode || opts.fillMode || 'smart';
+  const hinted = new Set();
+  for (const [section, hints] of Object.entries(effects.sectionHints || {})) {
+    if (section === 'negative') continue;
+    const key = section;
+    if (!spaceIsIncluded(key) || spaceLocked.has(key)) continue;
+    if (hints?.length) {
+      spaceSlots[key] = hints.join(', ');
+      hinted.add(key);
+    }
+  }
+  if (effects.regenerate || fillMode === 'full') {
+    spaceLocked.clear();
+    generateSpaceCards();
+  } else if (fillMode === 'smart') {
+    SPACE_SECTIONS.forEach(s => {
+      if (!spaceIsIncluded(s.key) || spaceLocked.has(s.key) || hinted.has(s.key)) return;
+      if (!spaceSlots[s.key]) spaceSlots[s.key] = rollSpaceSection(s.key);
+    });
+    generateSpaceSingle();
+  } else {
+    renderSpace();
+  }
+  saveActiveSession();
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -4496,6 +5184,7 @@ function initVoidSearch() {
       char: { apply: applyCharSearchEffects, buildPrompt: buildCharPrompt },
       style: { apply: applyStyleSearchEffects, buildPrompt: buildStylePrompt },
       jewel: { apply: applyJewelSearchEffects, buildPrompt: buildJewelPrompt },
+      space: { apply: applySpaceSearchEffects, buildPrompt: getSpaceActivePrompt },
     },
   });
 }
@@ -4516,11 +5205,13 @@ document.addEventListener('keydown', e => {
     e.preventDefault();
     if (currentPage === 'style') generateAll();
     else if (currentPage === 'jewel') generateJewel();
+    else if (currentPage === 'space') generateSpaceCards();
     else generateChar();
   }
   if (e.key === 'c' && !e.ctrlKey && !e.metaKey) {
     if (currentPage === 'style') copyStyleOutput();
     else if (currentPage === 'jewel') copyJewelOutput();
+    else if (currentPage === 'space') copySpaceActiveCard();
     else copyCharOutput();
   }
   if (e.key === 'Escape') { closeLearnPanel(); closeSessionPanel(); }
@@ -4532,6 +5223,7 @@ try {
   if (typeof voidRngApplyLatestData === 'function' && window.VoidRngData?.payload) {
     voidRngApplyLatestData(window.VoidRngData.payload);
   }
+  mergeUserSpaceBanks();
   loadSessionsFromStorage();
   renderPoolChips();
   renderCharIncChecks();
@@ -4542,6 +5234,10 @@ try {
   renderCharEnvChips();
   renderJewelCatChips();
   renderJewelIncChecks();
+  renderSpaceCatChips();
+  renderSpaceStylePoolChips();
+  renderSpaceStyleCodeHint();
+  renderSpaceIncChecks();
   document.getElementById('learn-fallback-sec').innerHTML = CHAR_SECTIONS.map(s =>
     `<option value="${s.key}">${s.zh} (${s.label})</option>`
   ).join('');
@@ -4553,8 +5249,10 @@ try {
     if (!EMBED_CHAR) {
       renderStyleHistory();
       renderJewelHistory();
+      renderSpaceHistory();
       generateAll();
       generateJewel();
+      generateSpaceCards();
     }
     renderCharHistory();
     setCharTone(charTone);
@@ -4572,16 +5270,16 @@ try {
   console.error('VOID.RNG init failed:', e);
   document.body.insertAdjacentHTML('afterbegin',
     '<div style="background:#2a1010;color:#e84040;padding:12px 16px;font-size:11px;border-bottom:1px solid #441818">載入錯誤：'+e.message+' — 請重新整理，或清除瀏覽器本機資料後再試。</div>');
-  try { generateAll(); generateChar(); generateJewel(); } catch {}
+  try { generateAll(); generateChar(); generateJewel(); generateSpaceCards(); } catch {}
 }
 }
 window.bootVoidRng = bootVoidRng;
 (function exposeVoidRngApi() {
   const fns = [
-    'switchPage', 'generateChar', 'generateAll', 'generateJewel', 'toast',
+    'switchPage', 'generateChar', 'generateAll', 'generateJewel', 'generateSpaceCards', 'toast',
     'setCharTone', 'setCharMode', 'setCharFmt', 'applyQuickPreset', 'openLearnPanel',
-    'closeLearnPanel', 'openSessionPanel', 'closeSessionPanel', 'copyCharOutput',
-    'copyStyleOutput', 'copyJewelOutput',
+    'closeSessionPanel', 'openSessionPanel', 'closeLearnPanel', 'copyCharOutput',
+    'copyStyleOutput', 'copyJewelOutput', 'copySpaceActiveCard', 'feedSpaceSlotsToBank',
   ];
   fns.forEach((name) => {
     const fn = globalThis[name];

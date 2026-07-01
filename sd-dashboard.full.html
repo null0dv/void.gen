@@ -73,7 +73,7 @@ body.file-protocol-warn{padding-top:40px}
 .collapsible-body{overflow:hidden}
 
 /* MODE */
-.mode-toggle{display:grid;grid-template-columns:repeat(2,1fr);gap:3px;background:rgba(0,0,0,.3);border-radius:8px;padding:3px;border:1px solid var(--line)}
+.mode-toggle{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;background:rgba(0,0,0,.3);border-radius:8px;padding:3px;border:1px solid var(--line)}
 .mode-btn{font-size:9px;letter-spacing:.04em}
 #center-gallery-stack{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
 .mode-btn{padding:7px;text-align:center;cursor:pointer;border-radius:6px;font-size:10px;letter-spacing:.07em;color:var(--muted);transition:all .18s;font-family:var(--mono);border:1px solid transparent}
@@ -714,7 +714,29 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
         <div class="sec-label">MODE</div>
         <div class="mode-toggle">
           <div class="mode-btn active" data-mode="txt2img" onclick="setMode('txt2img',this)">TXT → IMG</div>
+          <div class="mode-btn" data-mode="img2img" onclick="setMode('img2img',this)">IMG → IMG</div>
           <div class="mode-btn" data-mode="img2txt" onclick="setMode('img2txt',this)">IMG → TXT</div>
+        </div>
+      </div>
+
+      <div class="ss" id="img2img-section" style="display:none">
+        <div class="sec-label" style="margin-bottom:6px">
+          SOURCE IMAGE
+          <span style="font-size:8px;color:var(--muted2);letter-spacing:.06em">IMG2IMG</span>
+        </div>
+        <div class="img-upload vis" id="img-upload" onclick="triggerUpload()"
+          ondragover="event.preventDefault();this.style.borderColor='var(--muted)'"
+          ondragleave="this.style.borderColor=''"
+          ondrop="handleDropImg2img(event)">
+          <span>↑</span>
+          <span class="ul">CLICK OR DROP</span>
+        </div>
+        <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleUpload(this)">
+        <div class="param-row" style="margin-top:10px;margin-bottom:0">
+          <span class="param-name">DENOISE</span>
+          <input type="range" class="slider" id="denoise-slider" min="0" max="1" step="0.01" value="0.75"
+            oninput="document.getElementById('denoise-val').textContent=parseFloat(this.value).toFixed(2);saveSettings()">
+          <span class="param-val" id="denoise-val">0.75</span>
         </div>
       </div>
 
@@ -1072,6 +1094,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
     </div>
     <div class="action-row">
       <div class="action-btn" onclick="saveLastImg()">SAVE</div>
+      <div class="action-btn" onclick="sendToImg2Img()">→ i2i</div>
       <div class="action-btn" onclick="copyPrompt()">COPY</div>
     </div>
   </div>
@@ -1079,7 +1102,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 </div><!-- /main -->
 
 <div class="statusbar">
-  <div class="sb-item" id="sb-main">Void.gen</div>
+  <div class="sb-item" id="sb-main">Void.gen · v28</div>
   <span id="vram-badge" title="GPU VRAM usage">VRAM —</span>
   <span id="sb-api-url" style="font-size:9px;color:var(--muted2);cursor:pointer;letter-spacing:.05em;margin-left:auto" onclick="changeApiUrl()" title="Click to change server URL">127.0.0.1:8188</span>
   <div class="sb-item" id="sb-backend">ComfyUI · 127.0.0.1:8188</div>
@@ -1123,6 +1146,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 
   <div class="ctx-item" onclick="ctxRestoreSettings()">↺ Restore Settings</div>
   <div class="ctx-item" onclick="ctxCopyPrompt()">⎘ Copy Prompt</div>
+  <div class="ctx-item" onclick="ctxSendToImg2Img()">→ Send to IMG2IMG</div>
   <div class="ctx-sep"></div>
   <div class="ctx-stars">
     <span class="ctx-stars-label">RATE</span>
@@ -1332,7 +1356,7 @@ let tasks = [], activeTask = -1;
 let currentMode = 'txt2img';
 let currentW = 1024, currentH = 1024, currentBatch = 1;
 let seedLocked = false, stopRequested = false, isGenerating = false;
-let img2txtBase64 = null, lastResult = null, loraList = [];
+let img2imgBase64 = null, img2imgFilename = null, img2txtBase64 = null, lastResult = null, loraList = [];
 let queueStatuses = {};
 let _progressTotal = 1, _progressCompleted = 0;
 let _currentTheme = localStorage.getItem('void-theme') || 'VOID';
@@ -1547,6 +1571,7 @@ function _runGalleryCardAction(action, card) {
     case 'apply': applyAllFromCard(card); break;
     case 'copy': copyPromptToEditor(card); break;
     case 'download': downloadFromCard(card, card.dataset.title); break;
+    case 'i2i': sendToI2IFromGallery(card); break;
     case 'delete': deleteFromGallery(card); break;
   }
 }
@@ -1968,6 +1993,8 @@ function saveSettings() {
       refiner:   document.getElementById('refiner-select').value,
       baseSwitch:document.getElementById('switch-slider').value,
       vae:       document.getElementById('vae-select').value,
+      denoise:   document.getElementById('denoise-slider')?.value,
+      panelMode: currentMode,
       loras: [0,1,2,3,4,5].map(i => ({
         name:     document.getElementById(`lora-sel-${i}`)?.value || '',
         strength: document.getElementById(`lora-sldr-${i}`)?.value || '0.8'
@@ -2007,6 +2034,13 @@ function restoreImmediateSettings() {
   if (s.hiresDen)   { const v = s.hiresDen;   document.getElementById('hires-denoise-slider').value = v; document.getElementById('hires-denoise-num').value = v; document.getElementById('hires-denoise-val').textContent = v; }
   if (s.upscaleEn)  { document.getElementById('upscale-enable').checked = true; document.getElementById('upscale-settings').style.display = 'block'; }
   if (s.upscaleFac) document.getElementById('upscale-factor').value = s.upscaleFac;
+  if (s.denoise !== undefined) {
+    const v = s.denoise;
+    const ds = document.getElementById('denoise-slider');
+    const dv = document.getElementById('denoise-val');
+    if (ds) ds.value = v;
+    if (dv) dv.textContent = parseFloat(v).toFixed(2);
+  }
 }
 
 // ── INIT ─────────────────────────────────────────────────────────
@@ -2508,10 +2542,62 @@ function setMode(mode, el) {
   currentMode = mode;
   document.querySelectorAll('.mode-toggle .mode-btn').forEach(b => b.classList.remove('active'));
   (el || document.querySelector('.mode-toggle .mode-btn[data-mode="' + mode + '"]'))?.classList.add('active');
+  const img2imgSec = document.getElementById('img2img-section');
   const img2sec = document.getElementById('img2txt-section');
+  if (img2imgSec) img2imgSec.style.display = mode === 'img2img' ? 'block' : 'none';
   if (img2sec) img2sec.style.display = mode === 'img2txt' ? 'block' : 'none';
+  saveSettings();
 }
 window.setMode = setMode;
+function triggerUpload() { document.getElementById('file-input')?.click(); }
+function handleUpload(input) {
+  const file = input?.files?.[0];
+  if (!file) return;
+  _loadImg2imgFile(file);
+}
+function _loadImg2imgFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    _setImg2imgFromDataUrl(e.target.result);
+    setStatus('SOURCE IMAGE LOADED', 'ok');
+    setTimeout(() => setStatus('Void.gen'), 1500);
+  };
+  reader.readAsDataURL(file);
+}
+function handleDropImg2img(e) {
+  e.preventDefault();
+  e.currentTarget.style.borderColor = '';
+  const file = e.dataTransfer.files[0];
+  if (!file || !file.type.startsWith('image/')) return;
+  _loadImg2imgFile(file);
+}
+function _setImg2imgFromDataUrl(dataUrl) {
+  if (!dataUrl) return;
+  img2imgBase64 = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
+  img2imgFilename = null;
+  const up = document.getElementById('img-upload');
+  if (!up) return;
+  up.classList.add('has-img', 'vis');
+  up.innerHTML = `<img src="${dataUrl.startsWith('data:') ? dataUrl : dataUrl}"><span class="ul" style="color:var(--text)">✓ LOADED</span>`;
+}
+async function _uploadBase64ToComfyInput(base64, filename = 'void_upload.png') {
+  const raw = atob(base64);
+  const buf = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) buf[i] = raw.charCodeAt(i);
+  const blob = new Blob([buf], { type: 'image/png' });
+  const form = new FormData();
+  form.append('image', blob, filename);
+  form.append('type', 'input');
+  form.append('overwrite', 'true');
+  const upCtrl = new AbortController();
+  const upTid = setTimeout(() => upCtrl.abort(), 15000);
+  const upResp = await fetch(`${COMFY_API}/upload/image`, {
+    method: 'POST', body: form, signal: upCtrl.signal
+  }).finally(() => clearTimeout(upTid));
+  if (!upResp.ok) throw new Error(`Upload failed: HTTP ${upResp.status}`);
+  const { name } = await upResp.json();
+  return name;
+}
 function triggerUpload2txt() { document.getElementById('file-input-2txt').click(); }
 function handleUpload2txt(input) {
   const file = input.files[0]; if (!file) return;
@@ -2547,23 +2633,7 @@ async function runInterrogate() {
   setStatus('UPLOADING TO WD14 TAGGER…');
 
   try {
-    // Step 1: upload base64 image to ComfyUI input folder
-    const raw = atob(img2txtBase64);
-    const buf = new Uint8Array(raw.length);
-    for (let i = 0; i < raw.length; i++) buf[i] = raw.charCodeAt(i);
-    const blob = new Blob([buf], { type: 'image/png' });
-    const form = new FormData();
-    form.append('image', blob, 'wd14_input.png');
-    form.append('type', 'input');
-    form.append('overwrite', 'true');
-
-    const upCtrl = new AbortController();
-    const upTid = setTimeout(() => upCtrl.abort(), 15000);
-    const upResp = await fetch(`${COMFY_API}/upload/image`, {
-      method: 'POST', body: form, signal: upCtrl.signal
-    }).finally(() => clearTimeout(upTid));
-    if (!upResp.ok) throw new Error(`Upload failed: HTTP ${upResp.status}`);
-    const { name } = await upResp.json();
+    const name = await _uploadBase64ToComfyInput(img2txtBase64, 'wd14_input.png');
 
     // Step 2: call the WD14-Tagger REST endpoint (uses installed wd-v1-4-moat-tagger-v2)
     setStatus('ANALYZING WITH WD14 TAGGER…');
@@ -2761,6 +2831,7 @@ function _addToGalleryInternal(thumbUrl, fullDataUrl, title, meta={}, dbId=null,
       <div class="card-actions">
         <div class="card-action-btn" data-gallery-action="apply" title="Apply model + LoRA + all settings">⚡</div>
         <div class="card-action-btn" data-gallery-action="copy" title="Copy prompt to editor">✎</div>
+        <div class="card-action-btn" data-gallery-action="i2i" title="Send to IMG→IMG">→</div>
         <div class="card-action-btn" data-gallery-action="download" title="Download">↓</div>
         <div class="card-action-btn" data-gallery-action="delete" title="Delete image and file in output folder">×</div>
       </div>
@@ -3027,6 +3098,28 @@ function saveLastImg() { if (lastResult) downloadImg(lastResult.dataUrl, 'void-g
 function downloadImg(dataUrl, name) {
   const a = document.createElement('a'); a.href = dataUrl; a.download = (name||'void-gen')+'.png'; a.click();
 }
+function sendToImg2Img() {
+  if (!lastResult?.dataUrl) { setStatus('GENERATE SOMETHING FIRST', 'warn'); return; }
+  const btn = document.querySelector('.mode-toggle .mode-btn[data-mode="img2img"]');
+  setMode('img2img', btn);
+  _setImg2imgFromDataUrl(lastResult.dataUrl);
+  setStatus('READY FOR IMG→IMG', 'ok');
+  setTimeout(() => setStatus('Void.gen'), 1500);
+}
+async function sendToI2IFromGallery(cardOrUrl) {
+  let dataUrl = typeof cardOrUrl === 'string' ? cardOrUrl : null;
+  if (!dataUrl && cardOrUrl?.dataset) dataUrl = await _cardFullDataUrl(cardOrUrl);
+  if (!dataUrl) return;
+  const btn = document.querySelector('.mode-toggle .mode-btn[data-mode="img2img"]');
+  setMode('img2img', btn);
+  _setImg2imgFromDataUrl(dataUrl);
+  setStatus('READY FOR IMG→IMG', 'ok');
+  setTimeout(() => setStatus('Void.gen'), 1500);
+}
+function copyPrompt() {
+  const p = tasks[activeTask]?.prompt || '';
+  if (p) navigator.clipboard.writeText(p).then(() => { setStatus('PROMPT COPIED', 'ok'); setTimeout(() => setStatus('Void.gen'), 1500); });
+}
 function copyPromptToEditor(card) {
   let meta = {};
   try { meta = JSON.parse(card.dataset.metaJson || '{}'); } catch {}
@@ -3047,10 +3140,6 @@ function applyAllFromCard(card) {
   const applied = restoreFromMeta(meta);
   const ta = document.getElementById('te-prompt');
   if (ta && meta.prompt) { updateTokenCount(); _autoResize(ta); }
-}
-function copyPrompt() {
-  const p = tasks[activeTask]?.prompt || '';
-  if (p) navigator.clipboard.writeText(p).then(() => { setStatus('PROMPT COPIED','ok'); setTimeout(()=>setStatus('Void.gen'),1500); }).catch(()=>{});
 }
 
 // ── PROMPT CLEAR / TAGGER ACTIONS ────────────────────────────────
@@ -3106,6 +3195,11 @@ function ctxRestoreSettings() {
   restoreFromMeta(_ctxData.meta);
   hideCtxMenu();
 }
+function ctxSendToImg2Img() {
+  if (!_ctxData?.dataUrl) return;
+  sendToI2IFromGallery(_ctxData.dataUrl);
+  hideCtxMenu();
+}
 function ctxDownload() {
   if (!_ctxData) return;
   downloadImg(_ctxData.dataUrl, _ctxData.title);
@@ -3140,6 +3234,18 @@ function restoreFromMeta(meta) {
   if (meta.steps) { document.getElementById('steps-slider').value = meta.steps; syncParam('steps', meta.steps); applied.push('STEPS'); }
   if (meta.cfg)   { document.getElementById('cfg-slider').value   = meta.cfg;   syncParam('cfg',   meta.cfg);   applied.push('CFG'); }
   if (meta.sampler) { document.getElementById('sampler-select').value = meta.sampler; applied.push('SAMPLER'); }
+  if (meta.denoise !== undefined) {
+    const ds = document.getElementById('denoise-slider');
+    const dv = document.getElementById('denoise-val');
+    if (ds) ds.value = meta.denoise;
+    if (dv) dv.textContent = parseFloat(meta.denoise).toFixed(2);
+    applied.push('DENOISE');
+  }
+  if (meta.mode === 'img2img') {
+    const btn = document.querySelector('.mode-toggle .mode-btn[data-mode="img2img"]');
+    if (btn) setMode('img2img', btn);
+    applied.push('IMG2IMG');
+  }
   if (meta.negative && activeTask >= 0) {
     tasks[activeTask].negative = meta.negative;
     const taNeg = document.getElementById('te-neg');
@@ -3240,7 +3346,7 @@ function _stopResize() {
 }
 
 // ── WORKFLOW ──────────────────────────────────────────────────────
-function buildWorkflow(task, modelName, seed) {
+function buildWorkflow(task, modelName, seed, img2imgFile = null) {
   currentW = parseInt(document.getElementById('size-w').value) || currentW;
   currentH = parseInt(document.getElementById('size-h').value) || currentH;
   const w = currentW, h = currentH;
@@ -3250,14 +3356,22 @@ function buildWorkflow(task, modelName, seed) {
   const steps     = parseInt(document.getElementById('steps-num').value) || 20;
   const cfg       = parseFloat(document.getElementById('cfg-num').value) || 7;
   const batchSize = Math.max(1, parseInt(task.batch || currentBatch || 1, 10) || 1);
+  const isImg2img = !!img2imgFile;
+  const denoise   = isImg2img ? parseFloat(document.getElementById('denoise-slider')?.value || 0.75) : 1;
   const loras = [0,1,2,3,4,5].map(i => ({
     name: document.getElementById(`lora-sel-${i}`)?.value || '',
     strength: parseFloat(document.getElementById(`lora-sldr-${i}`)?.value || 0.8)
   })).filter(l => l.name);
 
   const wf = { "1": { class_type:"CheckpointLoaderSimple", inputs:{ ckpt_name: modelName } } };
+  const vaeRef = vaeName ? (wf["9"] = { class_type:"VAELoader", inputs:{ vae_name:vaeName } }, ["9",0]) : ["1",2];
 
-  wf["4"] = { class_type:"EmptyLatentImage", inputs:{ width:w, height:h, batch_size:batchSize } };
+  if (isImg2img) {
+    wf["8"] = { class_type:"LoadImage", inputs:{ image: img2imgFile } };
+    wf["4"] = { class_type:"VAEEncode", inputs:{ pixels:["8",0], vae:vaeRef } };
+  } else {
+    wf["4"] = { class_type:"EmptyLatentImage", inputs:{ width:w, height:h, batch_size:batchSize } };
+  }
 
   let modelRef = ["1",0], clipRef = ["1",1];
   loras.forEach((lora, i) => {
@@ -3279,10 +3393,8 @@ function buildWorkflow(task, modelName, seed) {
     wf["32"] = { class_type:"CLIPTextEncode", inputs:{ text:task.negative||'low quality', clip:["30",1] } };
     wf["33"] = { class_type:"KSamplerAdvanced", inputs:{ add_noise:"disable", noise_seed:seed, steps, cfg, sampler_name:sampler, scheduler, start_at_step:switchStep, end_at_step:steps, return_with_leftover_noise:"disable", model:["30",0], positive:["31",0], negative:["32",0], latent_image:["5",0] } };
   } else {
-    wf["5"] = { class_type:"KSampler", inputs:{ seed, steps, cfg, sampler_name:sampler, scheduler, denoise:1, model:modelRef, positive:["2",0], negative:["3",0], latent_image:["4",0] } };
+    wf["5"] = { class_type:"KSampler", inputs:{ seed, steps, cfg, sampler_name:sampler, scheduler, denoise, model:modelRef, positive:["2",0], negative:["3",0], latent_image:["4",0] } };
   }
-
-  const vaeRef = vaeName ? (wf["9"] = { class_type:"VAELoader", inputs:{ vae_name:vaeName } }, ["9",0]) : ["1",2];
   const hiresOn   = document.getElementById('hires-enable')?.checked;
   const upscaleOn = document.getElementById('upscale-enable')?.checked;
   let latentRef = refinerName ? ["33",0] : ["5",0];
@@ -3351,7 +3463,14 @@ async function comfyuiGenerate(task) {
   const modelName = document.getElementById('model-select').value;
   if (!modelName) throw new Error('Please select a model');
   const seed = getEffectiveSeed();
-  const { wf: workflow, saveNodeId } = buildWorkflow(task, modelName, seed);
+  let img2imgFile = null;
+  if (currentMode === 'img2img') {
+    if (!img2imgBase64) throw new Error('Upload a source image for IMG→IMG');
+    setStatus('UPLOADING SOURCE IMAGE…');
+    img2imgFile = await _uploadBase64ToComfyInput(img2imgBase64, `void_i2i_${Date.now()}.png`);
+    img2imgFilename = img2imgFile;
+  }
+  const { wf: workflow, saveNodeId } = buildWorkflow(task, modelName, seed, img2imgFile);
   const stagesInTask = Math.max(1, Object.values(workflow).filter(n =>
     ['KSampler','KSamplerAdvanced'].includes(n.class_type)
   ).length);
@@ -3477,6 +3596,12 @@ function stopGenerate() {
 async function startGenerate(allTasks = false, opts = {}) {
   if (isGenerating) return;
   if (!tasks.length) { setStatus('ADD A TASK FIRST','warn'); return; }
+  if (currentMode === 'img2img' && !img2imgBase64) {
+    setStatus('UPLOAD SOURCE IMAGE FOR IMG→IMG', 'warn');
+    const btn = document.querySelector('.mode-toggle .mode-btn[data-mode="img2img"]');
+    if (btn) setMode('img2img', btn);
+    return;
+  }
   const runIndices = _getGenerateTaskIndices(allTasks);
   if (!runIndices.length) { setStatus('ADD A PROMPT','warn'); return; }
   const promptTaskCount = tasks.filter(t => t.prompt.trim()).length;
@@ -3521,6 +3646,8 @@ async function startGenerate(allTasks = false, opts = {}) {
         const title = tasks[i].title + (dataUrls.length>1 ? ` #${j+1}` : '');
         const imgFile = files?.[j];
         const meta = { prompt:tasks[i].prompt, negative:tasks[i].negative, seed, model,
+          mode: currentMode,
+          denoise: currentMode === 'img2img' ? document.getElementById('denoise-slider')?.value : undefined,
           steps:document.getElementById('steps-num').value, cfg:document.getElementById('cfg-num').value,
           sampler:document.getElementById('sampler-select').value, time:elapsed,
           filename: imgFile?.filename || '', subfolder: imgFile?.subfolder || '', outputType: imgFile?.type || 'output',

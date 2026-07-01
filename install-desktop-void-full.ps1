@@ -18,7 +18,7 @@ $S   = $Wsh.CreateShortcut($Lnk)
 $S.TargetPath = $Cmd
 $S.WorkingDirectory = $Root
 $S.WindowStyle = 1
-$S.Description = 'VOID.GEN Full V3 — http://localhost:8080/sd-dashboard.full.html'
+$S.Description = 'VOID.GEN Full V3 — TXT/IMG2IMG/IMG2TXT — localhost:8080'
 if (Test-Path $Ico) { $S.IconLocation = "$Ico,0" }
 $S.Save()
 

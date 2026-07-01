@@ -9,8 +9,8 @@
 ## V3 changes (from V2)
 
 - VOID.RNG fully separated into standalone `void-rng/` project (port 8787)
-- Full panel modes: TXT→IMG + IMG→TXT only (no embedded character PROMPT)
-- PWA cache `sd-panel-v27`
+- Full panel modes: TXT→IMG + IMG→IMG + IMG→TXT (no embedded character PROMPT)
+- PWA cache `sd-panel-v28` (HTML network-first)
 
 ## Architecture
 

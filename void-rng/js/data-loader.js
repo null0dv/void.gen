@@ -15,6 +15,7 @@
       ...(manifest.char || []),
       ...(manifest.style || []),
       ...(manifest.jewel || []),
+      ...(manifest.space || []),
       ...(manifest.search || []),
     ];
     const payload = {};

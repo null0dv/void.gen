@@ -176,11 +176,14 @@
       char: ['outfit', 'subject', 'details', 'pose', 'env', 'styleRef', 'quality', 'negative'],
       style: ['style', 'quality', 'negative'],
       jewel: ['jewel', 'quality', 'negative'],
+      space: ['styleCode', 'scene', 'space', 'fractal', 'structure', 'pattern', 'deconstruct', 'minimal', 'inorganic', 'quality', 'negative'],
     };
     const sections = pageMap[page] || pageMap.char;
     const secZh = {
       outfit: '服裝', subject: '角色', details: '細節', pose: '姿勢', env: '場景',
       styleRef: '畫風', quality: '品質', negative: '負向', style: '風格', jewel: '飾品',
+      scene: '場景', space: '空間', fractal: '碎形體', structure: '結構', pattern: '花紋',
+      deconstruct: '解構', minimal: '極簡', inorganic: '無機物', styleCode: '風格代號',
     };
     sections.forEach(section => {
       const theme = map[section];
@@ -726,7 +729,7 @@
   function setPage(page) {
     state.page = page;
     const badge = getEl('search-page-badge');
-    const names = { char: '角色', style: '風格', jewel: '飾品' };
+    const names = { char: '角色', style: '風格', jewel: '飾品', space: '場景·空間' };
     if (badge) badge.textContent = names[page] || page;
     const inp = getEl('prompt-search-input');
     if (inp) {
@@ -734,7 +737,9 @@
         ? '輸入：銀飾 戒指 北歐 8k…（中文可 Ctrl+Enter 翻譯入庫）'
         : page === 'style'
           ? '輸入：混沌 賽博 海邊 不要文字…（中文可 Ctrl+Enter 翻譯入庫）'
-          : '輸入：女僕 泳裝 高角度 嬌小蕾絲內衣…（Ctrl+Enter 翻譯入庫）';
+          : page === 'space'
+            ? '輸入：碎形 解構 極簡 無機物 虛空…（Enter 套用 · 餵回辭庫用側欄按鈕）'
+            : '輸入：女僕 泳裝 高角度 嬌小蕾絲內衣…（Ctrl+Enter 翻譯入庫）';
     }
     onInput();
   }

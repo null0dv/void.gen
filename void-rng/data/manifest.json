@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 5,
   "char": [
     "char-sections.json",
     "char-banks.json",
@@ -30,6 +30,12 @@
     "jewel-sections.json",
     "jewel-banks.json",
     "jewel-mode-presets.json"
+  ],
+  "space": [
+    "space-sections.json",
+    "space-categories.json",
+    "space-banks.json",
+    "space-mode-presets.json"
   ],
   "search": [
     "prompt-search-rules.json",

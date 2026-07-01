@@ -1,0 +1,16 @@
+[
+  { "key": "quality", "label": "QUALITY / TECHNICAL", "zh": "品質標籤" },
+  { "key": "styleCode", "label": "Style Codes", "zh": "風格代號" },
+  { "key": "scene", "label": "Scene", "zh": "場景" },
+  { "key": "space", "label": "Spatial Environment", "zh": "空間" },
+  { "key": "fractal", "label": "Fractal Form", "zh": "碎形體" },
+  { "key": "structure", "label": "Structure", "zh": "結構" },
+  { "key": "pattern", "label": "Pattern & Ornament", "zh": "花紋" },
+  { "key": "deconstruct", "label": "Deconstructivism", "zh": "解構主義" },
+  { "key": "minimal", "label": "Minimalism", "zh": "極簡主義" },
+  { "key": "inorganic", "label": "Inorganic Matter", "zh": "無機物" },
+  { "key": "light", "label": "Lighting", "zh": "光線" },
+  { "key": "comp", "label": "Composition", "zh": "構圖" },
+  { "key": "mood", "label": "Mood & Atmosphere", "zh": "氛圍" },
+  { "key": "negative", "label": "Negative", "zh": "負向" }
+]

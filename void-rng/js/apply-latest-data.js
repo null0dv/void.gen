@@ -44,6 +44,8 @@
       'slot-keys': 'SLOT_KEYS',
       'jewel-categories': 'JEWEL_CATEGORIES',
       'jewel-sections': 'JEWEL_SECTIONS',
+      'space-categories': 'SPACE_CATEGORIES',
+      'space-sections': 'SPACE_SECTIONS',
     };
     Object.entries(arrayMap).forEach(([fileKey, varName]) => {
       if (payload[fileKey] && global[varName]) replaceArray(global[varName], payload[fileKey]);
@@ -56,6 +58,8 @@
       'style-banks': 'BANKS',
       'jewel-banks': 'JEWEL_BANKS',
       'jewel-mode-presets': 'JEWEL_MODE_PRESETS',
+      'space-banks': 'SPACE_BANKS',
+      'space-mode-presets': 'SPACE_MODE_PRESETS',
       'pix-formula-templates': 'PIX_FORMULA_TEMPLATES',
     };
     Object.entries(objectMap).forEach(([fileKey, varName]) => {

@@ -20,6 +20,7 @@
     <div class="page-tab on" data-page="style" onclick="switchPage('style',this)">風格 Prompt</div>
     <div class="page-tab" data-page="char" onclick="switchPage('char',this)">角色 PROMPT</div>
     <div class="page-tab" data-page="jewel" onclick="switchPage('jewel',this)">飾品 Prompt</div>
+    <div class="page-tab" data-page="space" onclick="switchPage('space',this)">場景·空間</div>
   </div>
   <div class="topbar-actions" id="topbar-style">
     <button class="tb-btn" onclick="VoidSearch.focusSearch()">🔍 搜尋</button>
@@ -39,6 +40,13 @@
     <button class="tb-btn" onclick="exportJewelConfig()">匯出</button>
     <button class="tb-btn" onclick="importJewelConfig()">匯入</button>
     <button class="tb-btn primary" onclick="generateJewel()">🎲 亂數生成</button>
+  </div>
+  <div class="topbar-actions" id="topbar-space" style="display:none">
+    <button class="tb-btn" onclick="VoidSearch.focusSearch()">🔍 搜尋</button>
+    <button class="tb-btn" onclick="exportSpaceConfig()">匯出</button>
+    <button class="tb-btn" onclick="importSpaceConfig()">匯入</button>
+    <button class="tb-btn" onclick="feedSpaceSlotsToBank()">📥 餵回辭庫</button>
+    <button class="tb-btn primary" onclick="generateSpaceCards()">🎲 生成 6 張</button>
   </div>
 </div>
 
@@ -371,6 +379,87 @@
       <div>
         <div class="sec-label">歷史紀錄</div>
         <div class="hist-list" id="jewel-hist-list"><div class="meta">尚無紀錄</div></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ═══ 場景·空間 PROMPT 頁 ═══ -->
+<div class="view" id="view-space">
+  <div class="main">
+    <aside class="sidebar">
+      <div class="block">
+        <div class="sec-label">主題篩選</div>
+        <div class="chip-grid" id="space-cat-chips"></div>
+      </div>
+      <div class="block">
+        <div class="sec-label">風格代號池</div>
+        <div class="chip-grid" id="space-style-pool-chips"></div>
+        <div class="param-row" style="margin-top:10px;margin-bottom:0">
+          <span class="param-name">代號數</span>
+          <input type="range" class="slider" id="space-style-count" min="1" max="4" value="2" oninput="syncSlider('space-style-count')">
+          <span class="param-val" id="space-style-count-val">2</span>
+        </div>
+        <div class="meta" id="space-style-code-hint" style="margin-top:6px;line-height:1.5">n · Ns · fractanull · fw · bone · mb · Xg · lsd1 · fp · psy · fx · lw · cbd · cat</div>
+      </div>
+      <div class="block">
+        <div class="sec-label">生成模式</div>
+        <div class="chip-grid" id="space-mode-chips">
+          <span class="chip on" data-smode="full" onclick="setSpaceMode('full',this)">完整組合</span>
+          <span class="chip" data-smode="fractal" onclick="setSpaceMode('fractal',this)">碎形體</span>
+          <span class="chip" data-smode="minimal" onclick="setSpaceMode('minimal',this)">極簡主義</span>
+          <span class="chip" data-smode="decon" onclick="setSpaceMode('decon',this)">解構主義</span>
+          <span class="chip" data-smode="void" onclick="setSpaceMode('void',this)">虛空無機</span>
+        </div>
+      </div>
+      <div class="block">
+        <div class="sec-label">語言</div>
+        <div class="chip-grid">
+          <span class="chip on" data-slang="zh" onclick="setSpaceLang('zh',this)">中文</span>
+          <span class="chip" data-slang="en" onclick="setSpaceLang('en',this)">English</span>
+          <span class="chip" data-slang="mix" onclick="setSpaceLang('mix',this)">混合</span>
+        </div>
+      </div>
+      <div class="block">
+        <div class="sec-label">輸出格式</div>
+        <div class="chip-grid">
+          <span class="chip on" id="space-fmt-structured" onclick="setSpaceFmt('structured')">分段註解</span>
+          <span class="chip" id="space-fmt-flat" onclick="setSpaceFmt('flat')">純標籤串</span>
+        </div>
+      </div>
+      <div class="block">
+        <div class="sec-label">包含區塊</div>
+        <div id="space-inc-checks"></div>
+      </div>
+      <button class="gen-btn" onclick="generateSpaceCards()">🎲 隨機生成 6 張卡片</button>
+      <button class="gen-btn" style="margin-top:8px;background:transparent" onclick="generateSpaceSingle()">↻ 重抽目前卡片</button>
+    </aside>
+    <section class="panel">
+      <div>
+        <div class="sec-label" style="display:flex;justify-content:space-between;align-items:center">
+          <span>六卡輸出 <span class="meta">（點卡片載入編輯 · 雙擊複製）</span></span>
+          <span class="meta" id="space-meta">—</span>
+        </div>
+        <div class="space-card-grid" id="space-card-grid"></div>
+      </div>
+      <div class="actions-row">
+        <button class="tb-btn primary" onclick="copySpaceActiveCard()">複製目前卡</button>
+        <button class="tb-btn" onclick="copySpaceAllCards()">複製全部 6 張</button>
+        <button class="tb-btn" onclick="copySpaceTagsOnly()">僅複製標籤</button>
+        <button class="tb-btn" onclick="feedSpaceActiveCardToBank()">此卡餵回辭庫</button>
+        <button class="tb-btn" onclick="addSpaceHistory()">加入歷史</button>
+      </div>
+      <div>
+        <div class="sec-label">各區塊（可直接編輯 · ↻ 重抽 · 雙擊鎖定）</div>
+        <div class="slot-grid" id="space-slots"></div>
+      </div>
+      <div>
+        <div class="sec-label">完整 Prompt 預覽</div>
+        <textarea class="output-box output-edit empty" id="space-output" placeholder="生成後顯示目前選取卡片…" onblur="commitSpaceOutputEdit()"></textarea>
+      </div>
+      <div>
+        <div class="sec-label">歷史紀錄</div>
+        <div class="hist-list" id="space-hist-list"><div class="meta">尚無紀錄</div></div>
       </div>
     </section>
   </div>

@@ -1,0 +1,11 @@
+[
+  { "id": "all", "label": "全部" },
+  { "id": "fractal", "label": "碎形" },
+  { "id": "structure", "label": "結構" },
+  { "id": "pattern", "label": "花紋" },
+  { "id": "decon", "label": "解構" },
+  { "id": "minimal", "label": "極簡" },
+  { "id": "inorganic", "label": "無機" },
+  { "id": "void", "label": "虛空" },
+  { "id": "arch", "label": "建築感" }
+]

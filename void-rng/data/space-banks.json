@@ -1,0 +1,138 @@
+{
+  "quality": [
+    { "zh": "傑作，最高品質，超精細，8K，銳利對焦", "en": "masterpiece, best quality, ultra-detailed, 8k, sharp focus", "cats": ["*"] },
+    { "zh": "概念藝術級，精準材質，無浮水印", "en": "concept art grade, precise material rendering, no watermark", "cats": ["*"] },
+    { "zh": "建築攝影質感，高動態範圍，專業構圖", "en": "architectural photography quality, high dynamic range, professional composition", "cats": ["arch", "structure"] },
+    { "zh": "微距結構特寫，晶體邊緣清晰", "en": "macro structural close-up, crisp crystalline edges", "cats": ["fractal", "inorganic"] }
+  ],
+  "styleCode": [
+    { "zh": "風格 n：Null Craft 幾何對稱深灰仿生", "en": "style n: Null Craft geometric symmetry deep gray bionic", "cats": ["void", "inorganic", "structure", "minimal"], "pool": "null", "code": "n" },
+    { "zh": "風格 Ns：Null 飾品 鈦金屬原石", "en": "style Ns: Null jewelry titanium metal raw crystal", "cats": ["inorganic", "minimal", "pattern"], "pool": "null", "code": "Ns" },
+    { "zh": "風格 fractanull：Fractal Null 骨質裂解晶體", "en": "style fractanull: fractal null bone crystal fracture structure", "cats": ["fractal", "inorganic", "void", "structure"], "pool": "null", "code": "fractanull" },
+    { "zh": "風格 fw：Floating Wood 木質流動線條", "en": "style fw: floating wood organic carved lines", "cats": ["pattern", "structure"], "pool": "null", "code": "fw" },
+    { "zh": "風格 bone：類骨盆中空器官感骨質", "en": "style bone: pelvis-like hollow asymmetric bone organ", "cats": ["structure", "inorganic", "void"], "pool": "null", "code": "bone" },
+    { "zh": "風格 mb：Moss Bolt 黑底綠苔電能量", "en": "style mb: moss bolt black green lightning energy", "cats": ["void", "inorganic", "decon"], "pool": "null", "code": "mb" },
+    { "zh": "風格 Xg：X-glitch 數位錯亂病毒視覺", "en": "style Xg: X-glitch digital corruption virus stripes", "cats": ["decon", "fractal", "pattern"], "pool": "psy", "code": "Xg" },
+    { "zh": "風格 lsd1：LSD 擴張型幻彩錯位", "en": "style lsd1: LSD expansion psychedelic color shift", "cats": ["fractal", "decon"], "pool": "psy", "code": "lsd1" },
+    { "zh": "風格 fp：Fractal Psy 高對比分形螺旋", "en": "style fp: fractal psychedelic high contrast spiral", "cats": ["fractal"], "pool": "psy", "code": "fp" },
+    { "zh": "風格 psy：Tropical Mirage 多重月亮虹彩", "en": "style psy: tropical mirage multiple moons iridescent sky", "cats": ["void", "fractal", "pattern"], "pool": "psy", "code": "psy" },
+    { "zh": "風格 fx：Fractal Grid Collapse 幾何崩解", "en": "style fx: fractal grid collapse pixel geometry breakdown", "cats": ["decon", "fractal", "structure"], "pool": "glitch", "code": "fx" },
+    { "zh": "風格 lw：Lumenwave 光子流液態虹膜", "en": "style lw: lumenwave photon flow liquid iris", "cats": ["void", "minimal", "inorganic", "light"], "pool": "light", "code": "lw" },
+    { "zh": "風格 cbd：Cyber-Doll 粉色排線電子人偶", "en": "style cbd: cyber-doll pink wiring electronic doll", "cats": ["decon", "structure", "pattern"], "pool": "char", "code": "cbd" },
+    { "zh": "風格 cat：油畫貓耳少女古典筆觸", "en": "style cat: oil painting cat-ear girl classical brushwork", "cats": ["pattern"], "pool": "char", "code": "cat" }
+  ],
+  "scene": [
+    { "zh": "純黑虛空空間，無地平線，懸浮構件", "en": "pure black void space, no horizon, floating components", "cats": ["void", "inorganic"] },
+    { "zh": "白色無限展廳，博物館級陳列", "en": "white infinite gallery, museum-grade display", "cats": ["minimal", "arch"] },
+    { "zh": "混凝土廢墟內部，解構殘骸", "en": "concrete ruin interior, deconstructed debris", "cats": ["decon", "structure"] },
+    { "zh": "深海無光帶，礦物質沉積場景", "en": "abyssal dark zone, mineral sediment scene", "cats": ["inorganic", "void"] },
+    { "zh": "數位網格空間，座標軸隱現", "en": "digital grid space, faint coordinate axes", "cats": ["fractal", "decon"] },
+    { "zh": "霧面灰階攝影棚，極簡舞台", "en": "matte grey studio cyclorama, minimal stage", "cats": ["minimal"] },
+    { "zh": "地底晶洞，鐘乳石與礦脈交錯", "en": "subterranean crystal cave, stalactite and ore veins", "cats": ["inorganic", "fractal"] },
+    { "zh": "未完工建築骨架，鋼筋外露", "en": "unfinished building skeleton, exposed rebar", "cats": ["decon", "arch"] }
+  ],
+  "space": [
+    { "zh": "巨大尺度虛空，深遠負空間", "en": "monumental void scale, deep negative space", "cats": ["void", "minimal"] },
+    { "zh": "對稱中庭式空間，軸線透視", "en": "symmetrical atrium space, axial perspective", "cats": ["arch", "minimal"] },
+    { "zh": "非歐幾何內部，彎曲面連續", "en": "non-euclidean interior, continuous curved surfaces", "cats": ["fractal", "structure"] },
+    { "zh": "層疊平台空間，懸浮階梯", "en": "layered platform space, floating terraces", "cats": ["decon", "arch"] },
+    { "zh": "密閉立方體腔室，壓迫感", "en": "sealed cubic chamber, oppressive enclosure", "cats": ["minimal", "structure"] },
+    { "zh": "開放式工業廠房，高挑空", "en": "open industrial hall, double-height volume", "cats": ["arch", "decon"] },
+    { "zh": "碎形遞迴空間，自我相似走廊", "en": "fractal recursive space, self-similar corridor", "cats": ["fractal"] },
+    { "zh": "真空無重力場，粒子懸浮", "en": "vacuum zero-gravity field, suspended particles", "cats": ["void", "inorganic"] }
+  ],
+  "fractal": [
+    { "zh": "曼德博集合邊界，無限遞迴細節", "en": "mandelbrot set boundary, infinite recursive detail", "cats": ["fractal"] },
+    { "zh": "謝爾賓斯基三角，孔洞碎形結構", "en": "sierpinski triangle, perforated fractal structure", "cats": ["fractal", "structure"] },
+    { "zh": "羅曼esco花椰菜曲面，自然碎形", "en": "romanesco broccoli surface, natural fractal form", "cats": ["fractal", "inorganic"] },
+    { "zh": "分形樹狀分叉，枝幹遞迴延伸", "en": "fractal tree branching, recursive limb extension", "cats": ["fractal", "structure"] },
+    { "zh": "螺旋碎形塔，對數螺線堆疊", "en": "spiral fractal tower, logarithmic spiral stacking", "cats": ["fractal"] },
+    { "zh": "晶體簇生長碎形，自組裝幾何", "en": "crystal cluster growth fractal, self-assembling geometry", "cats": ["fractal", "inorganic"] },
+    { "zh": "断裂面碎形紋理，裂解遞迴", "en": "fracture surface fractal texture, crack propagation recursion", "cats": ["fractal", "inorganic"] },
+    { "zh": "全息干涉碎形圖樣", "en": "holographic interference fractal pattern", "cats": ["fractal", "pattern"] }
+  ],
+  "structure": [
+    { "zh": "桁架網格結構，三角穩定系統", "en": "truss grid structure, triangular stability system", "cats": ["structure", "arch"] },
+    { "zh": "殼體薄殼結構，曲面承載", "en": "shell thin-shell structure, curved load bearing", "cats": ["structure", "arch"] },
+    { "zh": "中空骨質桁架，類骨盆幾何", "en": "hollow bone truss, pelvis-like geometry", "cats": ["structure", "inorganic"] },
+    { "zh": "模組化單元重複，蜂巢陣列", "en": "modular unit repetition, honeycomb array", "cats": ["structure", "minimal"] },
+    { "zh": "懸臂式懸挑結構，張力平衡", "en": "cantilever overhang structure, tension balance", "cats": ["structure", "decon"] },
+    { "zh": "扭轉塔身結構，螺旋承重", "en": "twisted tower structure, spiral load path", "cats": ["structure", "arch"] },
+    { "zh": "晶格原子排列，金屬鍵結構", "en": "lattice atomic arrangement, metallic bond structure", "cats": ["structure", "inorganic"] },
+    { "zh": "摺疊板殼結構，摺紙幾何", "en": "folded plate shell, origami geometry", "cats": ["structure", "minimal"] }
+  ],
+  "pattern": [
+    { "zh": "六邊形蜂巢花紋，密鋪平面", "en": "hexagonal honeycomb pattern, tessellated plane", "cats": ["pattern", "structure"] },
+    { "zh": "摩爾紋干涉花紋，光學錯覺", "en": "moire interference pattern, optical illusion", "cats": ["pattern", "fractal"] },
+    { "zh": "伊斯蘭幾何花紋，無限重複", "en": "islamic geometric pattern, infinite repeat", "cats": ["pattern", "minimal"] },
+    { "zh": "裂紋網狀花紋，乾涸泥地紋理", "en": "crack network pattern, dried mud texture", "cats": ["pattern", "inorganic"] },
+    { "zh": "電路板走線花紋，蝕刻銅箔", "en": "circuit board trace pattern, etched copper foil", "cats": ["pattern", "decon"] },
+    { "zh": "雲雷紋遞迴花紋，傳統螺旋紋", "en": "thunder spiral motif, recursive traditional swirl", "cats": ["pattern"] },
+    { "zh": " Voronoi 細胞分割花紋", "en": "voronoi cell partition pattern", "cats": ["pattern", "structure"] },
+    { "zh": "分形噪聲花紋，Perlin 紋理", "en": "fractal noise pattern, perlin texture", "cats": ["pattern", "fractal"] }
+  ],
+  "deconstruct": [
+    { "zh": "解構主義碎片拼貼，軸線錯位", "en": "deconstructivist fragment collage, displaced axis", "cats": ["decon", "arch"] },
+    { "zh": "立面剝離，表皮與結構分離", "en": "facade peeling, skin separated from structure", "cats": ["decon", "arch"] },
+    { "zh": "幾何崩解，網格塌陷錯層", "en": "geometric collapse, grid breakdown misalignment", "cats": ["decon", "fractal"] },
+    { "zh": "碎片懸浮，爆炸凝固瞬間", "en": "fragment suspension, frozen explosion moment", "cats": ["decon", "void"] },
+    { "zh": "斜切體量，非正交交錯", "en": "oblique massing, non-orthogonal intersection", "cats": ["decon", "arch"] },
+    { "zh": "材質錯置，混凝土包覆玻璃", "en": "material misplacement, concrete wrapping glass", "cats": ["decon"] },
+    { "zh": "解構主義紀念碑，紀念性廢墟", "en": "deconstructivist monument, memorial ruin", "cats": ["decon", "structure"] },
+    { "zh": "數位腐化，像素幾何解體", "en": "digital corruption, pixel geometry disintegration", "cats": ["decon", "fractal"] }
+  ],
+  "minimal": [
+    { "zh": "極簡主義，單一幾何體塊", "en": "minimalism, single geometric monolith", "cats": ["minimal"] },
+    { "zh": "克制留白，大量負空間", "en": "restrained negative space, vast emptiness", "cats": ["minimal", "void"] },
+    { "zh": "減法造型，去除一切裝飾", "en": "subtractive form, all ornament removed", "cats": ["minimal"] },
+    { "zh": "單色調灰階，低飽和克制", "en": "monochrome greyscale, low saturation restraint", "cats": ["minimal"] },
+    { "zh": "精準邊緣，直角與圓弧純化", "en": "precise edges, purified right angles and arcs", "cats": ["minimal", "structure"] },
+    { "zh": "日本極簡美學，間與靜", "en": "japanese minimal aesthetic, ma and silence", "cats": ["minimal"] },
+    { "zh": "工業極簡，裸露材質本色", "en": "industrial minimalism, raw material honesty", "cats": ["minimal", "inorganic"] },
+    { "zh": "單一光源，極少陰影層次", "en": "single light source, minimal shadow gradation", "cats": ["minimal"] }
+  ],
+  "inorganic": [
+    { "zh": "石英晶簇，六方晶系無機礦物", "en": "quartz crystal cluster, hexagonal mineral system", "cats": ["inorganic", "fractal"] },
+    { "zh": "黑曜石玻璃質，火山無機熔岩", "en": "obsidian vitreous, volcanic inorganic lava", "cats": ["inorganic"] },
+    { "zh": "鈦金屬氧化層，陽極上色", "en": "titanium oxide layer, anodized coloration", "cats": ["inorganic", "minimal"] },
+    { "zh": "鹽晶立方結晶，蒸發沉積", "en": "salt cubic crystals, evaporative deposit", "cats": ["inorganic", "pattern"] },
+    { "zh": "金屬鏽蝕層，氧化鐵剝離", "en": "metal rust patina, iron oxide flaking", "cats": ["inorganic", "decon"] },
+    { "zh": "陶瓷釉面龜裂，開片紋", "en": "ceramic glaze crazing, crackle pattern", "cats": ["inorganic", "pattern"] },
+    { "zh": "冰晶霜花，無機結晶生長", "en": "ice crystal frost, inorganic crystal growth", "cats": ["inorganic", "fractal"] },
+    { "zh": "隕石鎳鐵紋理，魏德曼花紋", "en": "meteorite nickel-iron, widmanstatten pattern", "cats": ["inorganic", "pattern"] },
+    { "zh": "無機物特寫，無生命材質，無人物", "en": "inorganic matter close-up, lifeless material, no humans", "cats": ["inorganic", "*"] }
+  ],
+  "light": [
+    { "zh": "冷白側光，強調結構邊緣", "en": "cool white side light, structural edge emphasis", "cats": ["*"] },
+    { "zh": "底部逆光大氣，輪廓剪影", "en": "bottom backlight atmosphere, silhouette outline", "cats": ["void", "minimal"] },
+    { "zh": "體積光穿透，霧中光束", "en": "volumetric light beams through haze", "cats": ["void", "mood"] },
+    { "zh": "高對比明暗，卡拉瓦喬式", "en": "high contrast chiaroscuro lighting", "cats": ["decon", "structure"] },
+    { "zh": "柔和漫射天光，均勻無硬影", "en": "soft diffused skylight, even no harsh shadow", "cats": ["minimal", "arch"] },
+    { "zh": "紫外線螢光，礦物自發光", "en": "ultraviolet fluorescence, mineral luminescence", "cats": ["inorganic", "fractal"] },
+    { "zh": "單點頂光，雕塑感投影", "en": "single overhead spotlight, sculptural cast shadow", "cats": ["*"] }
+  ],
+  "comp": [
+    { "zh": "正中軸對稱構圖", "en": "centered axial symmetry composition", "cats": ["minimal", "arch"] },
+    { "zh": "極低角度仰拍，紀念性尺度", "en": "extreme low angle, monumental scale", "cats": ["arch", "structure"] },
+    { "zh": "俯視平面圖式構圖", "en": "top-down plan view composition", "cats": ["pattern", "structure"] },
+    { "zh": "特寫微距，材質填滿畫面", "en": "macro close-up, material fills frame", "cats": ["inorganic", "fractal"] },
+    { "zh": "對角線動態構圖", "en": "diagonal dynamic composition", "cats": ["decon"] },
+    { "zh": "大量留白邊界，主體居中", "en": "wide margin negative space, centered subject", "cats": ["minimal", "void"] },
+    { "zh": "廣角透視誇張，空間纵深", "en": "wide angle perspective exaggeration, spatial depth", "cats": ["space", "arch"] }
+  ],
+  "mood": [
+    { "zh": "空靈寂靜，冥想氛圍", "en": "ethereal silence, meditative atmosphere", "cats": ["minimal", "void"] },
+    { "zh": "神秘壓抑，未知感", "en": "mysterious oppressive, sense of unknown", "cats": ["void", "decon"] },
+    { "zh": "冷峻疏離，工業感", "en": "cold detached, industrial mood", "cats": ["inorganic", "minimal"] },
+    { "zh": "壯麗崇高，巨大尺度敬畏", "en": "sublime awe, monumental scale reverence", "cats": ["arch", "void"] },
+    { "zh": "迷幻錯覺，視覺失衡", "en": "psychedelic disorientation, visual imbalance", "cats": ["fractal", "decon"] },
+    { "zh": "秩序與混沌並存", "en": "order and chaos coexistence", "cats": ["fractal", "structure"] }
+  ],
+  "negative": [
+    { "zh": "無人物，無臉，無生物，無植物", "en": "no humans, no face, no creature, no plant", "cats": ["*"] },
+    { "zh": "低品質，模糊，浮水印，文字", "en": "low quality, blurry, watermark, text", "cats": ["*"] },
+    { "zh": "卡通，可愛，插畫風，動漫", "en": "cartoon, cute, illustration style, anime", "cats": ["*"] },
+    { "zh": "肉體，皮膚，柔軟組織，有機物", "en": "flesh, skin, soft tissue, organic matter", "cats": ["inorganic", "*"] },
+    { "zh": "雜亂背景，過曝，畸變", "en": "cluttered background, overexposed, distortion", "cats": ["*"] }
+  ]
+}

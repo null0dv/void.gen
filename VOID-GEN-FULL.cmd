@@ -17,15 +17,15 @@ if not defined PY (
 echo ================================================
 echo  VOID.GEN Full V3
 echo ================================================
-echo  TXT -^> IMG + IMG -^> TXT + Gallery
-echo  http://127.0.0.1:8080/sd-dashboard.full.html
+echo  TXT -^> IMG + IMG -^> IMG + IMG -^> TXT + Gallery
+echo  http://127.0.0.1:8080/sd-dashboard.full.html?v=28
 echo  Dir: %ROOT%
 echo  Python: %PY%
 echo  Close this window to stop the server.
 echo ================================================
 echo.
 
-start "" "http://127.0.0.1:8080/sd-dashboard.full.html"
+start "" "http://127.0.0.1:8080/sd-dashboard.full.html?v=28"
 "%PY%" -m http.server 8080 --bind 127.0.0.1 --directory "%ROOT%"
 set "EC=%ERRORLEVEL%"
 if not "%EC%"=="0" (

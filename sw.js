@@ -1,5 +1,5 @@
 // Bump CACHE when static assets change (Full V3 panel)
-const CACHE = "sd-panel-v27";
+const CACHE = "sd-panel-v28";
 const PRECACHE = [
   "./sd-dashboard.full.html",
   "./sd-dashboard.html",
@@ -31,10 +31,31 @@ self.addEventListener("activate", e => {
   self.clients.claim();
 });
 
+function isPanelHtml(url) {
+  return /sd-dashboard(\.full)?\.html/i.test(url);
+}
+
 self.addEventListener("fetch", e => {
   const url = e.request.url;
   if (url.includes("127.0.0.1:8188") || url.includes("localhost:8188")) return;
   if (e.request.method !== "GET") return;
+
+  // HTML: network-first so desktop shortcut always picks up panel updates
+  if (isPanelHtml(url)) {
+    e.respondWith(
+      fetch(e.request)
+        .then(resp => {
+          if (resp && resp.status === 200 && resp.type === "basic") {
+            const clone = resp.clone();
+            caches.open(CACHE).then(c => c.put(e.request, clone));
+          }
+          return resp;
+        })
+        .catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;

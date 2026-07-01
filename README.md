@@ -7,7 +7,7 @@
 ### Void.gen Full V3（本機完整版 · 推薦）
 
 雙擊 **`VOID-GEN-FULL.cmd`** 或 **`啟動 VOID.GEN FULL.bat`** → 瀏覽器開啟  
-**http://localhost:8080/sd-dashboard.full.html**（TXT→IMG、IMG→TXT、圖庫）
+**http://localhost:8080/sd-dashboard.full.html**（TXT→IMG、IMG→IMG、IMG→TXT、圖庫）
 
 ### VOID.RNG V3（獨立專案）
 
@@ -238,7 +238,7 @@ C:\ComfyUI_portable\ComfyUI\models\upscale_models\
 
 ## 功能一覽
 
-- TXT→IMG 生成 + IMG→TXT（WD14 反推標籤）
+- TXT→IMG 生成 + IMG→IMG（圖生圖）+ IMG→TXT（WD14 反推標籤）
 - 角色 Prompt 請用獨立專案 **VOID.RNG**（`void-rng/`），複製結果到 Full 左側 PROMPT
 - 主模型 + Refiner 雙模型管線
 - 最多 6 個 LoRA 同時疊加（可調強度）
