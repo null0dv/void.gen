@@ -1,6 +1,7 @@
 @echo off
 setlocal
 set "ROOT=%~dp0"
+if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
 cd /d "%ROOT%"
 title VOID.GEN Full V3 Server
 

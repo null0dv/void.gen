@@ -14,5 +14,7 @@ echo.
 echo  Make sure your phone is on the same WiFi.
 echo  Press Ctrl+C to stop the server.
 echo.
-"C:\ComfyUI_windows_portable\python_embeded\python.exe" -m http.server 3000 --bind 0.0.0.0 --directory "%~dp0"
+set "ROOT=%~dp0"
+if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
+"C:\ComfyUI_windows_portable\python_embeded\python.exe" -m http.server 3000 --bind 0.0.0.0 --directory "%ROOT%"
 pause
