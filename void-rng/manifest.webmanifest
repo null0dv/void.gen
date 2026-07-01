@@ -1,0 +1,13 @@
+{
+  "name": "VOID.RNG",
+  "short_name": "VOID.RNG",
+  "description": "Prompt · 角色 · 飾品辭庫生成器",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#080808",
+  "theme_color": "#080808",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

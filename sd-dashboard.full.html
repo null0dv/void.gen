@@ -1615,7 +1615,6 @@ async function _backfillGalleryRecords(records) {
       return rec;
     }));
     await dbBatchPut(full.filter(Boolean)).catch(() => {});
-    console.log('[void.gen] backfilled filename meta:', full.filter(Boolean).length);
   }
   localStorage.setItem(_GALLERY_BACKFILL_KEY, '1');
   return records;
@@ -3517,7 +3516,6 @@ async function startGenerate(allTasks = false, opts = {}) {
     setStatus(`GENERATING ${i+1}/${tasks.length} · ${tasks[i].title}`);
     try {
       const { dataUrls, files, seed, model } = await comfyuiGenerate(tasks[i]);
-      console.log('[void.gen] comfyuiGenerate resolved, dataUrls.length=', dataUrls.length, 'seed=', seed);
       const elapsed = ((Date.now()-t0)/1000).toFixed(1)+'s';
       await Promise.all(dataUrls.map(async (dataUrl, j) => {
         const title = tasks[i].title + (dataUrls.length>1 ? ` #${j+1}` : '');
@@ -3527,9 +3525,7 @@ async function startGenerate(allTasks = false, opts = {}) {
           sampler:document.getElementById('sampler-select').value, time:elapsed,
           filename: imgFile?.filename || '', subfolder: imgFile?.subfolder || '', outputType: imgFile?.type || 'output',
           loras:[0,1,2,3,4,5].map(k=>({ name:document.getElementById(`lora-sel-${k}`)?.value||'', strength:parseFloat(document.getElementById(`lora-sldr-${k}`)?.value||0.8) })).filter(l=>l.name) };
-        console.log('[void.gen] calling saveAndAddToGallery for', title, 'dataUrl starts:', dataUrl?.slice(0,30));
         await saveAndAddToGallery(dataUrl, title, meta);
-        console.log('[void.gen] saveAndAddToGallery done for', title);
         showPreviewFinal(dataUrl, meta);
       }));
       queueStatuses[i] = 'done'; ok += dataUrls.length;

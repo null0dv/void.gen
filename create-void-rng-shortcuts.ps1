@@ -2,6 +2,8 @@ $Root = 'C:\Users\User\Desktop\VS'
 $Rng  = Join-Path $Root 'void-rng'
 $Desk = [Environment]::GetFolderPath('Desktop')
 $Ico  = Join-Path $Root 'icon-rng.ico'
+$IcoRng = Join-Path $Rng 'icons\icon-512.png'
+if (-not (Test-Path -LiteralPath $Ico)) { $Ico = $IcoRng }
 if (-not (Test-Path -LiteralPath $Ico)) { $Ico = Join-Path $Root 'icon-192.png' }
 $Wsh  = New-Object -ComObject WScript.Shell
 
