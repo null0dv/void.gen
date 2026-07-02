@@ -2754,8 +2754,8 @@ function renderQueue() {
       </div>
       <div class="q-badge ${st}">${st.toUpperCase()}</div>
     </div>`;
-  }).join('') + (tasks.filter(t=>t.prompt.trim()).length > 1
-    ? `<div style="margin-top:10px;text-align:center"><button class="add-task-btn" style="width:100%;padding:8px" onclick="startGenerate(true)">RUN ALL ${tasks.filter(t=>t.prompt.trim()).length} TASKS</button></div>`
+  }).join('') + (tasks.filter(t=>_taskRunnable(t)).length > 1
+    ? `<div style="margin-top:10px;text-align:center"><button class="add-task-btn" style="width:100%;padding:8px" onclick="startGenerate(true)">RUN ALL ${tasks.filter(t=>_taskRunnable(t)).length} TASKS</button></div>`
     : '');
   const running = Object.values(queueStatuses).filter(s=>s==='running').length;
   cnt.textContent = running || tasks.length;
@@ -3448,11 +3448,15 @@ function _imagesFromHistoryOutputs(outputs, saveNodeId = _VOID_SAVE_NODE) {
   return _dedupeImages(Object.values(outputs).flatMap(o => o.images || []));
 }
 
+// img2img can run without a prompt (pure denoise re-draw); txt2img still needs one
+function _taskRunnable(t) {
+  return currentMode === 'img2img' || !!t?.prompt?.trim();
+}
 function _getGenerateTaskIndices(allTasks = false) {
-  const indexed = tasks.map((t, i) => ({ t, i })).filter(({ t }) => t.prompt.trim());
+  const indexed = tasks.map((t, i) => ({ t, i })).filter(({ t }) => _taskRunnable(t));
   if (!indexed.length) return [];
   if (allTasks) return indexed.map(x => x.i);
-  const idx = activeTask >= 0 && tasks[activeTask]?.prompt?.trim()
+  const idx = activeTask >= 0 && _taskRunnable(tasks[activeTask])
     ? activeTask
     : indexed[0].i;
   return [idx];
@@ -3604,7 +3608,7 @@ async function startGenerate(allTasks = false, opts = {}) {
   }
   const runIndices = _getGenerateTaskIndices(allTasks);
   if (!runIndices.length) { setStatus('ADD A PROMPT','warn'); return; }
-  const promptTaskCount = tasks.filter(t => t.prompt.trim()).length;
+  const promptTaskCount = tasks.filter(t => _taskRunnable(t)).length;
   if (!allTasks && promptTaskCount > 1) {
     setStatus(`ACTIVE TASK ONLY · ${promptTaskCount} tasks have prompts (QUEUE → RUN ALL)`, 'warn');
     setTimeout(() => setStatus('Void.gen'), 2800);
@@ -3622,9 +3626,7 @@ async function startGenerate(allTasks = false, opts = {}) {
   document.getElementById('preview-ph').style.display = 'none';
   queueStatuses = {};
   tasks.forEach((t, i) => {
-    if (!t.prompt.trim()) queueStatuses[i] = 'skipped';
-    else if (runIndices.includes(i)) queueStatuses[i] = 'pending';
-    else queueStatuses[i] = 'skipped';
+    queueStatuses[i] = runIndices.includes(i) ? 'pending' : 'skipped';
   });
   renderQueue();
   document.querySelectorAll('.center-tab')[1]?.classList.add('generating');
@@ -3635,7 +3637,7 @@ async function startGenerate(allTasks = false, opts = {}) {
   try {
   for (const i of runIndices) {
     if (stopRequested) { setStatus(`STOPPED · ${ok} done`,'warn'); break; }
-    if (!tasks[i].prompt.trim()) { queueStatuses[i]='error'; renderQueue(); continue; }
+    if (!_taskRunnable(tasks[i])) { queueStatuses[i]='error'; renderQueue(); continue; }
     saveToHistory(tasks[i].prompt);
     queueStatuses[i] = 'running'; renderQueue();
     setStatus(`GENERATING ${i+1}/${tasks.length} · ${tasks[i].title}`);
