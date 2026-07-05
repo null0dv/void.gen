@@ -3,24 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VOID.RNG V3 — Prompt · 角色 · 飾品生成器</title>
+<title>VOID.RNG V4 — Prompt · 角色 · 飾品生成器</title>
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#080808">
 <link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/ui-v4.css">
 <link rel="stylesheet" href="css/search.css">
+<link rel="stylesheet" href="css/search-v4.css">
 </head>
-<body>
+<body class="ui-v4">
 <div id="boot-error" role="alert"></div>
 <div class="topbar">
   <div class="logo">VOID<span>.RNG</span></div>
   <button class="tb-btn session-pill" id="session-pill" onclick="openSessionPanel()" title="切換工作階段">SESSION 1</button>
-  <div class="page-tabs" id="page-tabs">
-    <div class="page-tab on" data-page="style" onclick="switchPage('style',this)">風格 Prompt</div>
-    <div class="page-tab" data-page="char" onclick="switchPage('char',this)">角色 PROMPT</div>
-    <div class="page-tab" data-page="jewel" onclick="switchPage('jewel',this)">飾品 Prompt</div>
-    <div class="page-tab" data-page="space" onclick="switchPage('space',this)">場景·空間</div>
+  <div class="page-tabs tile-tabs" id="page-tabs">
+    <div class="page-tab on" data-page="style" onclick="switchPage('style',this)">風格</div>
+    <div class="page-tab" data-page="char" onclick="switchPage('char',this)">角色</div>
+    <div class="page-tab" data-page="jewel" onclick="switchPage('jewel',this)">飾品</div>
+    <div class="page-tab" data-page="space" onclick="switchPage('space',this)">空間</div>
   </div>
   <div class="topbar-actions" id="topbar-style">
     <button class="tb-btn" onclick="VoidSearch.focusSearch()">🔍 搜尋</button>
@@ -51,29 +53,36 @@
 </div>
 
 <!-- ═══ 全域關鍵字搜尋 ═══ -->
-<div class="global-search-wrap" id="global-search-wrap">
-  <div class="search-panel search-body">
+<div class="global-search-wrap collapsed" id="global-search-wrap">
+  <div class="search-compact-bar">
+    <button type="button" class="search-compact-trigger" onclick="VoidSearch.toggleExpand()" title="展開搜尋">
+      <span class="search-compact-icon">🔍</span><span class="search-compact-label">搜尋</span>
+    </button>
+    <input class="search-input search-compact-input" id="prompt-search-input" type="text"
+      placeholder="關鍵字…" autocomplete="off">
+    <button type="button" class="search-compact-apply" onclick="VoidSearch.applySearch()">套用</button>
+  </div>
+  <div class="search-expanded search-body">
+  <div class="search-panel">
     <div class="search-toolbar">
       <div class="search-toolbar-left">
-        <span class="search-collapse-btn" onclick="VoidSearch.toggleCollapse()" title="收合搜尋列">▼</span>
-        <span class="sec-label" style="margin:0">🔍 關鍵字</span>
+        <span class="search-collapse-btn" onclick="VoidSearch.toggleExpand()" title="收合搜尋">▲</span>
         <span class="search-page-badge" id="search-page-badge">風格</span>
       </div>
-      <div class="search-fill-row search-fill-inline">
-        <span class="chip compact" data-fill-mode="hit" onclick="VoidSearch.setFillMode('hit')">僅命中</span>
-        <span class="chip compact on" data-fill-mode="smart" onclick="VoidSearch.setFillMode('smart')">智慧</span>
-        <span class="chip compact" data-fill-mode="full" onclick="VoidSearch.setFillMode('full')">全抽</span>
+      <div class="search-fill-row search-fill-inline tile-grid cols-3 mini">
+        <span class="chip" data-fill-mode="hit" onclick="VoidSearch.setFillMode('hit')">僅命中</span>
+        <span class="chip on" data-fill-mode="smart" onclick="VoidSearch.setFillMode('smart')">智慧</span>
+        <span class="chip" data-fill-mode="full" onclick="VoidSearch.setFillMode('full')">全抽</span>
       </div>
     </div>
-    <div class="search-input-row">
-      <input class="search-input" id="prompt-search-input" type="text" placeholder="關鍵字或中文… / 聚焦 · Enter 套用" autocomplete="off">
+    <div class="search-input-row search-expanded-actions">
       <button class="search-btn ghost" onclick="VoidSearch.previewSearch()">預覽</button>
-      <button class="search-btn" onclick="VoidSearch.translateToBank()" title="中文翻譯為英文標籤並加入辭庫">翻譯</button>
+      <button class="search-btn" onclick="VoidSearch.translateToBank()" title="強制翻譯中文並加入辭庫（等同 Ctrl+Enter）">翻譯入庫</button>
       <button class="search-btn primary" onclick="VoidSearch.applySearch()">套用</button>
     </div>
     <div class="search-extra">
-    <div class="search-translate-preview empty" id="prompt-search-translate">輸入中文後顯示英文標籤預覽…</div>
-    <div class="search-status" id="prompt-search-status">輸入關鍵字，自動比對並補齊完整 Prompt</div>
+    <div class="search-translate-preview empty" id="prompt-search-translate">輸入中文後顯示英文標籤預覽 · 無匹配時自動翻譯入庫</div>
+    <div class="search-status" id="prompt-search-status">輸入關鍵字比對規則 · 無匹配則翻譯原始詞彙自動分類填入</div>
     <div class="search-plan empty" id="prompt-search-plan">輸入關鍵字後顯示將更新的區塊…</div>
     <div class="search-hits" id="prompt-search-hits"></div>
     <div class="search-quick" id="prompt-search-quick"></div>
@@ -106,76 +115,74 @@
     </details>
     </div>
   </div>
+  </div>
 </div>
 
 <!-- ═══ 風格 PROMPT 頁 ═══ -->
 <div class="view active" id="view-style">
   <div class="main">
-    <aside class="sidebar">
-      <div class="block ">
-        <div class="sec-label">生成模式</div>
-        <div class="chip-grid" id="mode-chips">
-          <span class="chip on" data-mode="full" onclick="setMode('full',this)">完整組合</span>
-          <span class="chip" data-mode="style" onclick="setMode('style',this)">僅風格代號</span>
-          <span class="chip" data-mode="scene" onclick="setMode('scene',this)">場景敘事</span>
-          <span class="chip" data-mode="chaos" onclick="setMode('chaos',this)">混沌混合</span>
+    <aside class="sidebar ui-rail">
+      <div class="ui-card">
+        <div class="ui-label">生成模式</div>
+        <div class="pick-grid" id="mode-chips">
+          <span class="pick-chip on" data-mode="full" onclick="setMode('full',this)">完整</span>
+          <span class="pick-chip" data-mode="style" onclick="setMode('style',this)">代號</span>
+          <span class="pick-chip" data-mode="scene" onclick="setMode('scene',this)">場景</span>
+          <span class="pick-chip" data-mode="chaos" onclick="setMode('chaos',this)">混沌</span>
         </div>
       </div>
-      <div class="block">
-        <div class="sec-label">風格代號數量</div>
-        <div class="param-row">
-          <span class="param-name">STYLE</span>
+      <div class="ui-card">
+        <div class="ui-label">風格代號</div>
+        <div class="param-row slim">
+          <span class="param-name">數量</span>
           <input type="range" class="slider" id="style-count" min="1" max="4" value="2" oninput="syncSlider('style-count')">
           <span class="param-val" id="style-count-val">2</span>
         </div>
-      </div>
-      <div class="block">
-        <div class="sec-label">語言</div>
-        <div class="chip-grid">
-          <span class="chip on" data-lang="zh" onclick="setLang('zh',this)">中文</span>
-          <span class="chip" data-lang="en" onclick="setLang('en',this)">English</span>
-          <span class="chip" data-lang="mix" onclick="setLang('mix',this)">混合</span>
+        <div class="ui-label" style="margin-top:10px">語言</div>
+        <div class="pick-grid cols-3">
+          <span class="pick-chip on" data-lang="zh" onclick="setLang('zh',this)">中文</span>
+          <span class="pick-chip" data-lang="en" onclick="setLang('en',this)">EN</span>
+          <span class="pick-chip" data-lang="mix" onclick="setLang('mix',this)">混合</span>
         </div>
       </div>
-      <div class="block ">
-        <div class="sec-label">包含區塊</div>
-        <label class="chk-row"><input type="checkbox" id="inc-quality" checked> 品質標籤</label>
-        <label class="chk-row"><input type="checkbox" id="inc-style" checked> 風格代號</label>
-        <label class="chk-row"><input type="checkbox" id="inc-subject" checked> 主題／角色</label>
-        <label class="chk-row"><input type="checkbox" id="inc-scene" checked> 場景</label>
-        <label class="chk-row"><input type="checkbox" id="inc-comp" checked> 構圖／鏡位</label>
-        <label class="chk-row"><input type="checkbox" id="inc-light" checked> 光線／氛圍</label>
-        <label class="chk-row"><input type="checkbox" id="inc-mood" checked> 情緒</label>
-        <label class="chk-row"><input type="checkbox" id="inc-detail" checked> 細節修飾</label>
+      <details class="ui-card ui-fold">
+        <summary class="ui-label">包含區塊</summary>
+        <div class="chk-grid">
+          <label class="chk-row"><input type="checkbox" id="inc-quality" checked> 品質</label>
+          <label class="chk-row"><input type="checkbox" id="inc-style" checked> 風格</label>
+          <label class="chk-row"><input type="checkbox" id="inc-subject" checked> 主題</label>
+          <label class="chk-row"><input type="checkbox" id="inc-scene" checked> 場景</label>
+          <label class="chk-row"><input type="checkbox" id="inc-comp" checked> 構圖</label>
+          <label class="chk-row"><input type="checkbox" id="inc-light" checked> 光線</label>
+          <label class="chk-row"><input type="checkbox" id="inc-mood" checked> 情緒</label>
+          <label class="chk-row"><input type="checkbox" id="inc-detail" checked> 細節</label>
+        </div>
+      </details>
+      <div class="ui-card">
+        <div class="ui-label">風格池</div>
+        <div class="mix-grid" id="pool-chips"></div>
       </div>
-      <div class="block">
-        <div class="sec-label">風格池篩選</div>
-        <div class="chip-grid" id="pool-chips"></div>
-      </div>
-      <button class="gen-btn" onclick="generateAll()">🎲 隨機生成 Prompt</button>
+      <button class="gen-btn tile-cta" onclick="generateAll()">隨機生成</button>
     </aside>
-    <section class="panel">
-      <div>
-        <div class="sec-label" style="display:flex;justify-content:space-between">
-          <span>輸出結果 <span class="meta">（可直接編輯）</span></span>
-          <span class="meta" id="gen-meta">—</span>
-        </div>
-        <textarea class="output-box output-edit empty" id="output" placeholder="點擊「隨機生成」或按空白鍵開始…" onblur="commitStyleOutputEdit()"></textarea>
+    <section class="panel ui-panel">
+      <div class="ui-card ui-output-card">
+        <div class="ui-head"><span class="ui-title">Prompt</span><span class="meta" id="gen-meta">—</span></div>
+        <textarea class="output-box output-edit empty" id="output" placeholder="點擊生成或按空白鍵…" onblur="commitStyleOutputEdit()"></textarea>
       </div>
-      <div class="actions-row">
-        <button class="tb-btn primary" onclick="copyStyleOutput()">複製 Prompt</button>
-        <button class="tb-btn" onclick="generateAll()">重抽全部</button>
-        <button class="tb-btn" onclick="addStyleHistory()">加入歷史</button>
-        <button class="tb-btn" onclick="clearStyleHistory()">清空歷史</button>
+      <div class="action-tiles">
+        <button class="action-tile primary" onclick="copyStyleOutput()">複製</button>
+        <button class="action-tile" onclick="generateAll()">重抽</button>
+        <button class="action-tile" onclick="addStyleHistory()">歷史</button>
+        <button class="action-tile" onclick="clearStyleHistory()">清空</button>
       </div>
-      <div>
-        <div class="sec-label">各區塊（可直接編輯 · ↻ 重抽 · 雙擊鎖定）</div>
+      <details class="ui-card ui-fold" open>
+        <summary class="ui-label">區塊細調</summary>
         <div class="slot-grid" id="slots"></div>
-      </div>
-      <div>
-        <div class="sec-label">歷史紀錄</div>
+      </details>
+      <details class="ui-card ui-fold">
+        <summary class="ui-label">歷史紀錄</summary>
         <div class="hist-list" id="hist-list"><div class="meta">尚無紀錄</div></div>
-      </div>
+      </details>
     </section>
   </div>
 </div>
@@ -183,125 +190,116 @@
 <!-- ═══ 角色生成表頁 ═══ -->
 <div class="view" id="view-char">
   <div class="main">
-    <aside class="sidebar">
-      
-      <div class="standalone-char-sidebar">
-      <details class="sidebar-fold embed-char-quick" open><summary><span class="sec-label">快速</span></summary>
-      <div class="block">
-        <div class="sec-label">風格調性</div>
-        <div class="chip-grid">
-          <span class="chip" id="char-tone-balance" onclick="setCharTone('balance')">均衡</span>
-          <span class="chip on" id="char-tone-cute" onclick="setCharTone('cute')">可愛</span>
-          <span class="chip" id="char-tone-spicy" onclick="setCharTone('spicy')">色氣</span>
-          <span class="chip" id="char-tone-tempt" onclick="setCharTone('tempt')">誘惑</span>
-          <span class="chip" id="char-tone-sex" onclick="setCharTone('sex')">SEX</span>
+    <aside class="sidebar mix-rail">
+      <div class="standalone-char-sidebar mix-sidebar sidebar-scroll embed-char-quick">
+      <section class="mix-core" data-rail-nav="tone">
+        <div class="mix-hd">調性</div>
+        <div class="pick-grid cols-3">
+          <span class="pick-chip" id="char-tone-balance" onclick="setCharTone('balance')">均衡</span>
+          <span class="pick-chip on" id="char-tone-cute" onclick="setCharTone('cute')">可愛</span>
+          <span class="pick-chip" id="char-tone-spicy" onclick="setCharTone('spicy')">色氣</span>
+          <span class="pick-chip" id="char-tone-tempt" onclick="setCharTone('tempt')">誘惑</span>
+          <span class="pick-chip" id="char-tone-contrast" onclick="setCharTone('contrast')">反差</span>
+          <span class="pick-chip" id="char-tone-sex" onclick="setCharTone('sex')">SEX</span>
         </div>
-        <div class="param-row" style="margin-top:10px;margin-bottom:0">
-          <span class="param-name" id="char-tone-intensity-name">調性強度</span>
+        <div class="mix-slider">
+          <span class="mix-slider-lbl" id="char-tone-intensity-name">強度</span>
           <input type="range" class="slider" id="char-tone-intensity" min="1" max="5" value="3" oninput="syncCharIntensity()">
-          <span class="param-val" id="char-tone-intensity-val">3</span>
+          <span class="mix-slider-val" id="char-tone-intensity-val">3</span>
         </div>
-        <div class="meta" id="char-tone-level-hint" style="margin-top:4px">Lv3 · 中等色氣</div>
-      </div>
-      <div class="block ">
-        <div class="sec-label">生成模式</div>
-        <div class="chip-grid">
-          <span class="chip on" id="char-mode-mix" onclick="setCharMode('mix')">混合亂數</span>
-          <span class="chip" id="char-mode-learn" onclick="setCharMode('learn')">學習迭代</span>
-          <span class="chip" id="char-mode-template" onclick="setCharMode('template')">完整範本</span>
+        <div class="mix-hint" id="char-tone-level-hint">Lv3</div>
+        <div class="mix-hd">引擎</div>
+        <div class="pick-grid cols-3">
+          <span class="pick-chip on" id="char-mode-mix" onclick="setCharMode('mix')">混合</span>
+          <span class="pick-chip" id="char-mode-learn" onclick="setCharMode('learn')">學習</span>
+          <span class="pick-chip" id="char-mode-template" onclick="setCharMode('template')">範本</span>
+          <span class="pick-chip on" id="char-fmt-structured" onclick="setCharFmt('structured')">分段</span>
+          <span class="pick-chip" id="char-fmt-flat" onclick="setCharFmt('flat')">純標籤</span>
         </div>
-      </div>
-      <div class="block ">
-        <div class="sec-label">輸出格式</div>
-        <div class="chip-grid">
-          <span class="chip on" id="char-fmt-structured" onclick="setCharFmt('structured')">分段註解</span>
-          <span class="chip" id="char-fmt-flat" onclick="setCharFmt('flat')">純標籤串</span>
+      </section>
+      <details class="mix-zone" open data-rail-nav="outfit">
+        <summary class="mix-zone-hd"><span class="mix-zone-title">服裝</span><button type="button" class="mix-reset" onclick="event.preventDefault();resetCharSpicyOutfits()">清</button></summary>
+        <div class="mix-zone-body" id="char-spicy-outfit-chips"></div>
+      </details>
+      <details class="mix-zone" open data-rail-nav="pose">
+        <summary class="mix-zone-hd"><span class="mix-zone-title">姿勢</span><button type="button" class="mix-reset" onclick="event.preventDefault();resetCharPosePresets()">清</button></summary>
+        <div class="mix-zone-body" id="char-pose-chips"></div>
+      </details>
+      <details class="mix-zone" open data-rail-nav="action">
+        <summary class="mix-zone-hd"><span class="mix-zone-title">表情・動作</span><button type="button" class="mix-reset" onclick="event.preventDefault();resetCharSpicyActions()">清</button></summary>
+        <div class="mix-zone-body" id="char-spicy-action-chips"></div>
+      </details>
+      <details class="mix-zone" open data-rail-nav="body">
+        <summary class="mix-zone-hd"><span class="mix-zone-title">身材</span><button type="button" class="mix-reset" onclick="event.preventDefault();resetBodyFilters()">清</button></summary>
+        <div class="mix-zone-body mix-stack">
+          <div class="mix-hd">套組</div>
+          <div class="mix-grid" id="char-body-combo-chips"></div>
+          <div id="char-body-frame-chips"></div>
+          <div id="char-body-breast-chips"></div>
+          <div id="char-body-figure-chips"></div>
         </div>
+      </details>
+      <details class="mix-zone" data-rail-nav="job">
+        <summary class="mix-zone-hd"><span class="mix-zone-title">JOB</span><button type="button" class="mix-reset" onclick="event.preventDefault();resetCharJobTypes()">清</button></summary>
+        <div class="mix-zone-body" id="char-job-chips"></div>
+      </details>
+      <details class="mix-zone" data-rail-nav="env">
+        <summary class="mix-zone-hd"><span class="mix-zone-title">氛圍</span><button type="button" class="mix-reset" onclick="event.preventDefault();resetCharEnvPresets()">清</button></summary>
+        <div class="mix-zone-body" id="char-env-chips"></div>
+      </details>
+      <div class="pick-grid gen-pick">
+        <button type="button" class="pick-btn primary" onclick="generateChar()">生成</button>
+        <button type="button" class="pick-btn" onclick="exploreOrganicCombo()">延伸</button>
       </div>
-      <div class="block" style="margin-bottom:10px">
-        <div class="sec-label">一鍵預設</div>
-        <div class="chip-grid">
-          <span class="chip preset" onclick="applyQuickPreset('pure_selfie')">✦ 清純自拍</span>
-          <span class="chip preset" onclick="applyQuickPreset('spicy_selfie')">✦ 色氣撩人</span>
-          <span class="chip preset preset-hot" onclick="applyQuickPreset('super_spicy')">✦ 超級色氣</span>
-          <span class="chip preset" onclick="applyQuickPreset('full_nsfw')">✦ 成人全開</span>
-          <span class="chip preset preset-extreme " onclick="applyQuickPreset('sex_lover')">✦ 超愛做愛的寶貝</span>
-          <span class="chip preset " onclick="applyQuickPreset('pix_cute')">◆ PIX·清純式</span>
-          <span class="chip preset " onclick="applyQuickPreset('pix_tempt')">◆ PIX·誘惑式</span>
-          <span class="chip preset " onclick="applyQuickPreset('pix_cinematic')">◆ PIX·電影光</span>
+      <p class="mix-foot">複選混搭 · 僅「無」與其他互斥</p>
+      <details class="mix-zone mix-advanced">
+        <summary class="mix-zone-hd"><span class="mix-zone-title">進階</span></summary>
+        <div class="mix-zone-body">
+          <div class="mix-hd">輸出區塊</div>
+          <div class="chk-grid" id="char-inc-checks"></div>
+          <div class="bank-stats" id="bank-stats"></div>
+          <div class="meta" id="preference-stats">偏好訓練</div>
+          <div class="meta organic-stats" id="organic-explore-stats">有機延伸</div>
+          <textarea class="learn-textarea compact" id="quick-learn-input" placeholder="貼 prompt 學習…" oninput="debouncedQuickLearn()"></textarea>
+          <div class="quick-learn-preview" id="quick-learn-preview"></div>
+          <div class="pick-grid gen-pick">
+            <button type="button" class="pick-btn primary" onclick="quickLearnCommit()">入庫</button>
+            <button type="button" class="pick-btn" onclick="openLearnPanel()">詳細</button>
+          </div>
         </div>
-      </div>
       </details>
-      <details class="sidebar-fold body-fold" open>
-        <summary><span class="sec-label">身材・體型</span></summary>
-        <div class="chip-group">
-          <div class="chip-group-lbl">一鍵搭配</div>
-          <div class="chip-grid" id="char-body-combo-chips"></div>
-        </div>
-        <div id="char-body-frame-chips"></div>
-        <div id="char-body-breast-chips"></div>
-        <div id="char-body-figure-chips"></div>
-        <div class="meta" style="margin-top:6px">三欄 AND 篩選 · 連動主體/細節/服裝 · 一鍵預設自動配身材</div>
-      </details>
-      <details class="sidebar-fold" open>
-        <summary><span class="sec-label">JOB 類型</span></summary>
-        <div id="char-job-chips"></div>
-        <div class="meta" style="margin-top:6px">「無」= 無色情 · 外陰夾 = 陰唇夾弄（可穿內褲）</div>
-      </details>
-      <details class="sidebar-fold" open>
-        <summary><span class="sec-label">姿勢預設</span></summary>
-        <div id="char-pose-chips"></div>
-        <div class="meta" style="margin-top:6px">正常可愛自拍自動排除性交 · 可連動服裝類型</div>
-      </details>
-      <details class="sidebar-fold" open>
-        <summary><span class="sec-label">色氣服裝</span></summary>
-        <div id="char-spicy-outfit-chips"></div>
-        <div class="meta" style="margin-top:6px">可多選 · 「不篩選」= 不限制服裝類型</div>
-      </details>
-      <details class="sidebar-fold spicy-fold" open>
-        <summary><span class="sec-label sec-label-spicy">瑟瑟動作</span></summary>
-        <div id="char-spicy-action-chips"></div>
-        <div class="meta" style="margin-top:6px">影響姿勢與表情 · 可多選</div>
-      </details>
-      <div class="block ">
-        <div class="sec-label">包含區塊</div>
-        <div id="char-inc-checks"></div>
-      </div>
-      <div class="block ">
-        <div class="sec-label">辭庫統計</div>
-        <div class="bank-stats" id="bank-stats"></div>
-      </div>
-      <button type="button" class="gen-btn " onclick="generateChar()">🎲 亂數生成角色</button>
-      <button class="gen-btn " style="margin-top:8px;background:transparent" onclick="openLearnPanel()">📚 學習＋自動分類</button>
-      <div class="block " style="margin-top:12px;margin-bottom:0">
-        <div class="sec-label">快速學習</div>
-        <textarea class="learn-textarea" id="quick-learn-input" style="min-height:72px;font-size:10px" placeholder="貼上 prompt，自動分類詞彙…" oninput="debouncedQuickLearn()"></textarea>
-        <div class="learn-stats" id="quick-learn-stats"></div>
-        <div class="quick-learn-preview learn-tag-grid" id="quick-learn-preview"></div>
-        <div style="display:flex;gap:4px;margin-top:6px">
-          <button class="tb-btn primary" style="flex:1" onclick="quickLearnCommit()">自動分類並加入</button>
-          <button class="tb-btn" onclick="openLearnPanel()">詳細</button>
-        </div>
-      </div>
       </div><!-- /standalone-char-sidebar -->
     </aside>
-    <section class="panel">
-      <div class="char-prompt-compact">
-        <div class="sec-label" style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-          <span>Prompt</span>
-          <span class="meta" id="char-meta">—</span>
+    <section class="panel ui-panel">
+      <div class="char-compose-hero ui-card">
+        <input class="char-compose-input" id="char-compose-input" type="text"
+          placeholder="輸入關鍵字… 天真 內褲 自拍 · Enter 智慧補齊"
+          autocomplete="off" oninput="debouncedCharComposeHint()" onkeydown="onCharComposeKey(event)">
+        <div class="char-compose-tiles">
+          <button type="button" class="compose-tile" onclick="applyContrastPreset('innocent_panty')">天真內褲</button>
+          <button type="button" class="compose-tile" onclick="applyContrastPreset('dazed_tease')">呆呆色氣</button>
+          <button type="button" class="compose-tile" onclick="applyContrastPreset('pure_contrast')">清純反差</button>
+          <button type="button" class="compose-tile accent" onclick="collideOrganicCombo()">反差碰撞</button>
+          <button type="button" class="compose-tile" onclick="charComposeSmartFill()">智慧補齊</button>
+          <button type="button" class="compose-tile primary" onclick="charComposeSave()">存入辭庫</button>
         </div>
+        <div class="char-compose-hint meta" id="char-compose-hint">輸入關鍵字 · 智慧補齊空白區塊 · 或點方塊快速碰撞</div>
+      </div>
+      <div class="char-prompt-compact ui-card ui-output-card">
+        <div class="ui-head"><span class="ui-title">Prompt</span><span class="meta" id="char-meta">—</span></div>
         <div class="status-bar" id="char-status-bar"></div>
-        <textarea class="output-box output-edit empty" id="char-output" placeholder="🎲 重抽後可編輯…" onblur="commitCharOutputEdit()"></textarea>
+        <textarea class="output-box output-edit empty" id="char-output" placeholder="生成後可編輯…" onblur="commitCharOutputEdit()"></textarea>
       </div>
-      <div class="actions-row ">
-        <button class="tb-btn primary" onclick="copyCharOutput()">複製 Prompt</button>
-        <button class="tb-btn" onclick="generateChar()">重抽全部</button>
-        <button class="tb-btn" onclick="copyCharTagsOnly()">僅複製標籤</button>
-        <button class="tb-btn" onclick="addCharHistory()">加入歷史</button>
+      <div class="action-tiles">
+        <button class="action-tile primary" onclick="copyCharOutput()">複製</button>
+        <button class="action-tile" onclick="generateChar()">重抽</button>
+        <button class="action-tile" onclick="reinforceLikedCombo()">喜歡</button>
+        <button class="action-tile" onclick="exploreOrganicBatch(3)">探索×3</button>
+        <button class="action-tile" onclick="copyCharTagsOnly()">標籤</button>
+        <button class="action-tile" onclick="addCharHistory()">歷史</button>
       </div>
-      <details class="embed-char-slots-fold" open>
-        <summary><span class="sec-label">進階 · 各區塊細調（可捲動）</span></summary>
+      <details class="embed-char-slots-fold ui-card ui-fold">
+        <summary class="ui-label">區塊細調</summary>
         <div class="embed-char-slots-scroll">
           <div class="char-table-wrap">
             <div class="sec-label">角色欄位 · ↻ 重抽 · 雙擊鎖定</div>
@@ -312,10 +310,10 @@
           </div>
         </div>
       </details>
-      <div class="">
-        <div class="sec-label">角色歷史</div>
+      <details class="ui-card ui-fold">
+        <summary class="ui-label">角色歷史</summary>
         <div class="hist-list" id="char-hist-list"><div class="meta">尚無紀錄</div></div>
-      </div>
+      </details>
     </section>
 </div>
 </div>
@@ -323,63 +321,53 @@
 <!-- ═══ 飾品 PROMPT 頁 ═══ -->
 <div class="view" id="view-jewel">
   <div class="main">
-    <aside class="sidebar">
-      <div class="block">
-        <div class="sec-label">產品類別</div>
-        <div class="chip-grid" id="jewel-cat-chips"></div>
+    <aside class="sidebar ui-rail">
+      <div class="ui-card">
+        <div class="ui-label">產品類別</div>
+        <div class="mix-grid" id="jewel-cat-chips"></div>
       </div>
-      <div class="block">
-        <div class="sec-label">生成模式</div>
-        <div class="chip-grid" id="jewel-mode-chips">
-          <span class="chip on" data-jmode="full" onclick="setJewelMode('full',this)">完整組合</span>
-          <span class="chip" data-jmode="product" onclick="setJewelMode('product',this)">產品特寫</span>
-          <span class="chip" data-jmode="interior" onclick="setJewelMode('interior',this)">室內情境</span>
-          <span class="chip" data-jmode="studio" onclick="setJewelMode('studio',this)">電商棚拍</span>
+      <div class="ui-card">
+        <div class="ui-label">生成模式</div>
+        <div class="pick-grid" id="jewel-mode-chips">
+          <span class="pick-chip on" data-jmode="full" onclick="setJewelMode('full',this)">完整</span>
+          <span class="pick-chip" data-jmode="product" onclick="setJewelMode('product',this)">特寫</span>
+          <span class="pick-chip" data-jmode="interior" onclick="setJewelMode('interior',this)">室內</span>
+          <span class="pick-chip" data-jmode="studio" onclick="setJewelMode('studio',this)">棚拍</span>
+        </div>
+        <div class="ui-label" style="margin-top:10px">語言 · 格式</div>
+        <div class="pick-grid cols-3">
+          <span class="pick-chip on" data-jlang="zh" onclick="setJewelLang('zh',this)">中文</span>
+          <span class="pick-chip" data-jlang="en" onclick="setJewelLang('en',this)">EN</span>
+          <span class="pick-chip" data-jlang="mix" onclick="setJewelLang('mix',this)">混合</span>
+          <span class="pick-chip on" id="jewel-fmt-structured" onclick="setJewelFmt('structured')">分段</span>
+          <span class="pick-chip" id="jewel-fmt-flat" onclick="setJewelFmt('flat')">純標籤</span>
         </div>
       </div>
-      <div class="block">
-        <div class="sec-label">語言</div>
-        <div class="chip-grid">
-          <span class="chip on" data-jlang="zh" onclick="setJewelLang('zh',this)">中文</span>
-          <span class="chip" data-jlang="en" onclick="setJewelLang('en',this)">English</span>
-          <span class="chip" data-jlang="mix" onclick="setJewelLang('mix',this)">混合</span>
-        </div>
-      </div>
-      <div class="block">
-        <div class="sec-label">輸出格式</div>
-        <div class="chip-grid">
-          <span class="chip on" id="jewel-fmt-structured" onclick="setJewelFmt('structured')">分段註解</span>
-          <span class="chip" id="jewel-fmt-flat" onclick="setJewelFmt('flat')">純標籤串</span>
-        </div>
-      </div>
-      <div class="block">
-        <div class="sec-label">包含區塊</div>
-        <div id="jewel-inc-checks"></div>
-      </div>
-      <button class="gen-btn" onclick="generateJewel()">🎲 隨機生成飾品 Prompt</button>
+      <details class="ui-card ui-fold">
+        <summary class="ui-label">包含區塊</summary>
+        <div class="chk-grid" id="jewel-inc-checks"></div>
+      </details>
+      <button class="gen-btn tile-cta" onclick="generateJewel()">隨機生成</button>
     </aside>
-    <section class="panel">
-      <div>
-        <div class="sec-label" style="display:flex;justify-content:space-between">
-          <span>輸出 Prompt <span class="meta">（可直接編輯）</span></span>
-          <span class="meta" id="jewel-meta">—</span>
-        </div>
-        <textarea class="output-box output-edit empty" id="jewel-output" placeholder="選擇類別後點「隨機生成」或按空白鍵…" onblur="commitJewelOutputEdit()"></textarea>
+    <section class="panel ui-panel">
+      <div class="ui-card ui-output-card">
+        <div class="ui-head"><span class="ui-title">Prompt</span><span class="meta" id="jewel-meta">—</span></div>
+        <textarea class="output-box output-edit empty" id="jewel-output" placeholder="選擇類別後生成…" onblur="commitJewelOutputEdit()"></textarea>
       </div>
-      <div class="actions-row">
-        <button class="tb-btn primary" onclick="copyJewelOutput()">複製 Prompt</button>
-        <button class="tb-btn" onclick="generateJewel()">重抽全部</button>
-        <button class="tb-btn" onclick="copyJewelTagsOnly()">僅複製標籤</button>
-        <button class="tb-btn" onclick="addJewelHistory()">加入歷史</button>
+      <div class="action-tiles">
+        <button class="action-tile primary" onclick="copyJewelOutput()">複製</button>
+        <button class="action-tile" onclick="generateJewel()">重抽</button>
+        <button class="action-tile" onclick="copyJewelTagsOnly()">標籤</button>
+        <button class="action-tile" onclick="addJewelHistory()">歷史</button>
       </div>
-      <div>
-        <div class="sec-label">各區塊（可直接編輯 · ↻ 重抽 · 雙擊鎖定）</div>
+      <details class="ui-card ui-fold" open>
+        <summary class="ui-label">區塊細調</summary>
         <div class="slot-grid" id="jewel-slots"></div>
-      </div>
-      <div>
-        <div class="sec-label">歷史紀錄</div>
+      </details>
+      <details class="ui-card ui-fold">
+        <summary class="ui-label">歷史紀錄</summary>
         <div class="hist-list" id="jewel-hist-list"><div class="meta">尚無紀錄</div></div>
-      </div>
+      </details>
     </section>
   </div>
 </div>
@@ -387,80 +375,72 @@
 <!-- ═══ 場景·空間 PROMPT 頁 ═══ -->
 <div class="view" id="view-space">
   <div class="main">
-    <aside class="sidebar">
-      <div class="block">
-        <div class="sec-label">主題篩選</div>
-        <div class="chip-grid" id="space-cat-chips"></div>
+    <aside class="sidebar ui-rail">
+      <div class="ui-card">
+        <div class="ui-label">主題篩選</div>
+        <div class="mix-grid" id="space-cat-chips"></div>
       </div>
-      <div class="block">
-        <div class="sec-label">風格代號池</div>
-        <div class="chip-grid" id="space-style-pool-chips"></div>
-        <div class="param-row" style="margin-top:10px;margin-bottom:0">
+      <div class="ui-card">
+        <div class="ui-label">風格代號池</div>
+        <div class="mix-grid" id="space-style-pool-chips"></div>
+        <div class="param-row slim" style="margin-top:8px">
           <span class="param-name">代號數</span>
           <input type="range" class="slider" id="space-style-count" min="1" max="4" value="2" oninput="syncSlider('space-style-count')">
           <span class="param-val" id="space-style-count-val">2</span>
         </div>
-        <div class="meta" id="space-style-code-hint" style="margin-top:6px;line-height:1.5">n · Ns · fractanull · fw · bone · mb · Xg · lsd1 · fp · psy · fx · lw · cbd · cat</div>
+        <div class="ui-hint" id="space-style-code-hint">n · Ns · fractanull · fw · bone · mb · Xg · lsd1 · fp · psy · fx · lw · cbd · cat</div>
       </div>
-      <div class="block">
-        <div class="sec-label">生成模式</div>
-        <div class="chip-grid" id="space-mode-chips">
-          <span class="chip on" data-smode="full" onclick="setSpaceMode('full',this)">完整組合</span>
-          <span class="chip" data-smode="fractal" onclick="setSpaceMode('fractal',this)">碎形體</span>
-          <span class="chip" data-smode="minimal" onclick="setSpaceMode('minimal',this)">極簡主義</span>
-          <span class="chip" data-smode="decon" onclick="setSpaceMode('decon',this)">解構主義</span>
-          <span class="chip" data-smode="void" onclick="setSpaceMode('void',this)">虛空無機</span>
+      <div class="ui-card">
+        <div class="ui-label">生成模式</div>
+        <div class="pick-grid" id="space-mode-chips">
+          <span class="pick-chip on" data-smode="full" onclick="setSpaceMode('full',this)">完整</span>
+          <span class="pick-chip" data-smode="fractal" onclick="setSpaceMode('fractal',this)">碎形</span>
+          <span class="pick-chip" data-smode="minimal" onclick="setSpaceMode('minimal',this)">極簡</span>
+          <span class="pick-chip" data-smode="decon" onclick="setSpaceMode('decon',this)">解構</span>
+          <span class="pick-chip" data-smode="void" onclick="setSpaceMode('void',this)">虛空</span>
+        </div>
+        <div class="ui-label" style="margin-top:10px">語言 · 格式</div>
+        <div class="pick-grid cols-3">
+          <span class="pick-chip on" data-slang="zh" onclick="setSpaceLang('zh',this)">中文</span>
+          <span class="pick-chip" data-slang="en" onclick="setSpaceLang('en',this)">EN</span>
+          <span class="pick-chip" data-slang="mix" onclick="setSpaceLang('mix',this)">混合</span>
+          <span class="pick-chip on" id="space-fmt-structured" onclick="setSpaceFmt('structured')">分段</span>
+          <span class="pick-chip" id="space-fmt-flat" onclick="setSpaceFmt('flat')">純標籤</span>
         </div>
       </div>
-      <div class="block">
-        <div class="sec-label">語言</div>
-        <div class="chip-grid">
-          <span class="chip on" data-slang="zh" onclick="setSpaceLang('zh',this)">中文</span>
-          <span class="chip" data-slang="en" onclick="setSpaceLang('en',this)">English</span>
-          <span class="chip" data-slang="mix" onclick="setSpaceLang('mix',this)">混合</span>
-        </div>
+      <details class="ui-card ui-fold">
+        <summary class="ui-label">包含區塊</summary>
+        <div class="chk-grid" id="space-inc-checks"></div>
+      </details>
+      <div class="tile-grid gen-tiles">
+        <button class="gen-btn tile-cta" onclick="generateSpaceCards()">生成 6 卡</button>
+        <button class="gen-btn tile-cta ghost" onclick="generateSpaceSingle()">重抽此卡</button>
       </div>
-      <div class="block">
-        <div class="sec-label">輸出格式</div>
-        <div class="chip-grid">
-          <span class="chip on" id="space-fmt-structured" onclick="setSpaceFmt('structured')">分段註解</span>
-          <span class="chip" id="space-fmt-flat" onclick="setSpaceFmt('flat')">純標籤串</span>
-        </div>
-      </div>
-      <div class="block">
-        <div class="sec-label">包含區塊</div>
-        <div id="space-inc-checks"></div>
-      </div>
-      <button class="gen-btn" onclick="generateSpaceCards()">🎲 隨機生成 6 張卡片</button>
-      <button class="gen-btn" style="margin-top:8px;background:transparent" onclick="generateSpaceSingle()">↻ 重抽目前卡片</button>
     </aside>
-    <section class="panel">
-      <div>
-        <div class="sec-label" style="display:flex;justify-content:space-between;align-items:center">
-          <span>六卡輸出 <span class="meta">（點卡片載入編輯 · 雙擊複製）</span></span>
-          <span class="meta" id="space-meta">—</span>
-        </div>
+    <section class="panel ui-panel">
+      <div class="ui-card">
+        <div class="ui-head"><span class="ui-title">六卡輸出</span><span class="meta" id="space-meta">—</span></div>
         <div class="space-card-grid" id="space-card-grid"></div>
       </div>
-      <div class="actions-row">
-        <button class="tb-btn primary" onclick="copySpaceActiveCard()">複製目前卡</button>
-        <button class="tb-btn" onclick="copySpaceAllCards()">複製全部 6 張</button>
-        <button class="tb-btn" onclick="copySpaceTagsOnly()">僅複製標籤</button>
-        <button class="tb-btn" onclick="feedSpaceActiveCardToBank()">此卡餵回辭庫</button>
-        <button class="tb-btn" onclick="addSpaceHistory()">加入歷史</button>
+      <div class="action-tiles">
+        <button class="action-tile primary" onclick="copySpaceActiveCard()">複製卡</button>
+        <button class="action-tile" onclick="copySpaceAllCards()">全部</button>
+        <button class="action-tile" onclick="copySpaceTagsOnly()">標籤</button>
+        <button class="action-tile" onclick="feedSpaceActiveCardToBank()">入庫</button>
+        <button class="action-tile" onclick="addSpaceHistory()">歷史</button>
       </div>
-      <div>
-        <div class="sec-label">各區塊（可直接編輯 · ↻ 重抽 · 雙擊鎖定）</div>
+      <details class="ui-card ui-fold" open>
+        <summary class="ui-label">區塊細調</summary>
         <div class="slot-grid" id="space-slots"></div>
+      </details>
+      <div class="ui-card ui-output-card">
+        <div class="ui-label">Prompt 預覽</div>
+        <textarea class="output-box output-edit empty" id="space-output" placeholder="選取卡片後顯示…" onblur="commitSpaceOutputEdit()"></textarea>
       </div>
-      <div>
-        <div class="sec-label">完整 Prompt 預覽</div>
-        <textarea class="output-box output-edit empty" id="space-output" placeholder="生成後顯示目前選取卡片…" onblur="commitSpaceOutputEdit()"></textarea>
-      </div>
-      <div>
-        <div class="sec-label">歷史紀錄</div>
+      <details class="ui-card ui-fold">
+        <summary class="ui-label">歷史紀錄</summary>
         <div class="hist-list" id="space-hist-list"><div class="meta">尚無紀錄</div></div>
-      </div>
+      </details>
     </section>
   </div>
 </div>
@@ -517,7 +497,7 @@
       </div>
     </div>
     <div class="learn-footer">
-      <span class="learn-hint">分類後存入辭庫（整段＋單詞）並自動切換「學習迭代」亂數生成。點標籤可手動調整歸類。</span>
+      <span class="learn-hint">分類後存入辭庫並訓練偏好模型（表情·動作·服裝組合）。之後用「偏好疊代」預測你喜歡的組合。點標籤可手動調整歸類。</span>
       <button class="tb-btn primary" onclick="commitLearn()">✓ 加入辭庫</button>
       <button class="tb-btn" onclick="applyLearnToCurrent()">套用到目前角色</button>
       <button class="tb-btn" onclick="closeLearnPanel()">取消</button>
@@ -531,6 +511,7 @@
 <script src="js/search.js"></script>
 <script src="js/data-loader.js"></script>
 <script src="js/rng-engine.js" id="rng-engine-script"></script>
+<script src="js/preference-engine.js"></script>
 <script src="js/apply-latest-data.js"></script>
 <script src="js/app.js"></script>
 </body>

@@ -42,10 +42,13 @@
     "高挑": ["tall", "tall slender", "model proportions"],
     "豐滿": ["curvy", "curvy figure", "voluptuous"],
     "運動": ["athletic", "athletic build", "toned body"],
-    "微胖": ["chubby", "plump", "soft body"],
+
     "小胸": ["small breasts", "small breast"],
+    "小乳": ["small breasts", "small breast", "modest bust"],
     "貧乳": ["flat chest", "flat breasts"],
     "中胸": ["medium breasts", "natural bust"],
+    "正常美胸": ["medium breasts", "natural bust", "normal breasts", "balanced upper body"],
+    "美胸": ["medium breasts", "natural bust", "normal breasts"],
     "大胸": ["large breasts", "big breasts"],
     "巨乳": ["huge breasts", "massive breasts"]
   },

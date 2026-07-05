@@ -1,0 +1,659 @@
+/* VOID.RNG UI v4 — 極簡混搭 · pick 單選方格 + mix 複選網格 */
+
+.ui-v4 {
+  --surface: rgba(16, 16, 22, 0.94);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --gap: 8px;
+  --chrome-h: 108px;
+  --rail-strip-w: 52px;
+  --rail-panel-w: 380px;
+  background: var(--bg);
+}
+
+/* ── 頂欄 ── */
+.ui-v4 .topbar {
+  height: 50px;
+  padding: 0 14px;
+  background: rgba(8, 8, 12, 0.95);
+  flex-shrink: 0;
+}
+
+.ui-v4 .page-tabs.tile-tabs {
+  gap: 3px;
+  padding: 3px;
+  border-radius: var(--radius-sm);
+}
+
+.ui-v4 .page-tab {
+  padding: 9px 14px;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ── 主版面：窄條 + 向右展開抽屜 ── */
+.ui-v4 .main.rail-layout {
+  grid-template-columns: var(--rail-strip-w) minmax(0, 1fr);
+  align-items: start;
+}
+
+.ui-v4 aside.rail-drawer {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  width: var(--rail-strip-w);
+  min-height: calc(100dvh - var(--chrome-h));
+  max-height: calc(100dvh - var(--chrome-h));
+  padding: 0;
+  border-right: 1px solid var(--line);
+  background: rgba(8, 8, 12, 0.92);
+  overflow: visible;
+  z-index: 30;
+}
+
+.ui-v4 aside.rail-drawer.is-open {
+  z-index: 120;
+  isolation: isolate;
+}
+
+.ui-v4 .rail-collapsed {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  height: 100%;
+  padding: 8px 5px;
+}
+
+.ui-v4 .rail-open-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 72px;
+  padding: 8px 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  background: #141414;
+  color: #585858;
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.ui-v4 .rail-open-btn:hover,
+.ui-v4 .rail-quick-btn:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #8a8a8a;
+  background: #1a1a1a;
+}
+
+.ui-v4 .rail-open-icon {
+  font-size: 15px;
+  line-height: 1;
+  color: #707070;
+}
+
+.ui-v4 .rail-open-label {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+.ui-v4 .rail-quick-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.ui-v4 .rail-quick-nav::-webkit-scrollbar { display: none; }
+
+.ui-v4 .rail-quick-btn {
+  min-height: 36px;
+  padding: 6px 2px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.02);
+  color: #484848;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+
+.ui-v4 .rail-expanded-panel {
+  position: fixed;
+  left: var(--rail-strip-w);
+  top: var(--chrome-h);
+  width: min(var(--rail-panel-w), calc(100vw - var(--rail-strip-w) - 8px));
+  height: calc(100dvh - var(--chrome-h));
+  max-height: calc(100dvh - var(--chrome-h));
+  display: flex;
+  flex-direction: column;
+  background: rgba(10, 10, 14, 0.98);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 12px 0 40px rgba(0, 0, 0, 0.5);
+  transform: translateX(calc(-100% - var(--rail-strip-w)));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s, visibility 0.2s;
+  z-index: 121;
+  overflow: hidden;
+}
+
+.ui-v4 aside.rail-drawer.is-open .rail-expanded-panel {
+  transform: translateX(0);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.ui-v4 .rail-panel-scroll {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+}
+
+.ui-v4 .rail-panel-scroll::-webkit-scrollbar { width: 6px; }
+.ui-v4 .rail-panel-scroll::-webkit-scrollbar-thumb {
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.ui-v4 .rail-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(10, 10, 14, 0.97);
+}
+
+.ui-v4 .rail-panel-title {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #8a8a8a;
+}
+
+.ui-v4 .rail-close-btn {
+  padding: 5px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
+  background: #141414;
+  color: #585858;
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s;
+}
+
+.ui-v4 .rail-close-btn:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #8a8a8a;
+}
+
+.ui-v4 .rail-panel-body {
+  overflow: visible;
+  padding: 10px;
+}
+
+.ui-v4 .rail-panel-body .mix-sidebar,
+.ui-v4 .rail-panel-body.sidebar-scroll {
+  padding: 0;
+  max-height: none;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.ui-v4 .rail-backdrop {
+  position: fixed;
+  left: calc(var(--rail-strip-w) + min(var(--rail-panel-w), calc(100vw - var(--rail-strip-w) - 8px)));
+  right: 0;
+  top: var(--chrome-h);
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 110;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s;
+}
+
+body.ui-v4.rail-open .rail-backdrop {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ui-v4 .panel.ui-panel {
+  min-height: 0;
+  padding: 12px 14px;
+  gap: var(--gap);
+}
+
+/* ── 卡片（風格/飾品/空間側欄） ── */
+.ui-v4 .ui-card {
+  padding: 11px 12px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.ui-v4 .ui-label,
+.ui-v4 .ui-title,
+.ui-v4 .mix-hd {
+  font-family: var(--sans);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.ui-v4 .ui-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.ui-v4 .ui-head .ui-title { margin-bottom: 0; }
+
+/* ── pick：單選大方格（調性、模式） ── */
+.ui-v4 .pick-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.ui-v4 .pick-grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ui-v4 .pick-grid.gen-pick { margin-top: 2px; }
+
+.ui-v4 .pick-chip,
+.ui-v4 .pick-btn,
+.ui-v4 .tile-grid .chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 8px 6px;
+  border: 1px solid var(--line2);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-align: center;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+  user-select: none;
+}
+
+.ui-v4 .pick-chip:hover,
+.ui-v4 .pick-btn:hover,
+.ui-v4 .tile-grid .chip:hover {
+  border-color: var(--accent2);
+  color: var(--text);
+}
+
+.ui-v4 .pick-chip.on,
+.ui-v4 .tile-grid .chip.on {
+  border-color: var(--accent2);
+  background: rgba(220, 220, 230, 0.09);
+  color: var(--text);
+}
+
+.ui-v4 .pick-btn {
+  border: 1px solid var(--line2);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.ui-v4 .pick-btn.primary {
+  border-color: rgba(220, 220, 230, 0.32);
+  background: rgba(220, 220, 230, 0.1);
+  color: var(--text);
+}
+
+/* ── mix：複選混搭網格（服裝/姿勢/動作…） ── */
+
+.ui-v4 .mix-core {
+  padding: 11px 12px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.ui-v4 .mix-core .mix-hd + .pick-grid { margin-bottom: 4px; }
+.ui-v4 .mix-core .mix-hd:not(:first-child) { margin-top: 10px; }
+
+.ui-v4 .mix-slider {
+  display: grid;
+  grid-template-columns: 40px 1fr 24px;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+
+.ui-v4 .mix-slider-lbl,
+.ui-v4 .mix-slider-val {
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.ui-v4 .mix-slider-val { text-align: right; color: var(--accent2); }
+
+.ui-v4 .mix-hint {
+  font-size: 9px;
+  color: var(--muted2);
+  margin-bottom: 2px;
+}
+
+.ui-v4 .mix-zone {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.ui-v4 .mix-zone > summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+}
+
+.ui-v4 .mix-zone > summary::-webkit-details-marker { display: none; }
+
+.ui-v4 .mix-zone-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.ui-v4 .mix-zone[open] > .mix-zone-hd {
+  border-bottom: 1px solid var(--line);
+}
+
+.ui-v4 .mix-zone-title {
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.ui-v4 .mix-reset {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border: 1px solid var(--line2);
+  border-radius: 99px;
+  background: transparent;
+  color: var(--muted2);
+  font-size: 9px;
+  font-family: var(--sans);
+  cursor: pointer;
+}
+
+.ui-v4 .mix-reset:hover {
+  color: var(--accent2);
+  border-color: var(--accent2);
+}
+
+.ui-v4 .mix-zone-body {
+  padding: 10px 10px 12px;
+}
+
+.ui-v4 .mix-stack > .mix-block + .mix-block {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.ui-v4 .mix-block + .mix-block { margin-top: 8px; }
+
+.ui-v4 .mix-label {
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  margin-bottom: 6px;
+}
+
+.ui-v4 .mix-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+  gap: 5px;
+}
+
+.ui-v4 .mix-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 5px 6px;
+  border: 1px solid var(--line2);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.015);
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-align: center;
+  line-height: 1.25;
+  cursor: pointer;
+  transition: all 0.12s;
+  user-select: none;
+  word-break: break-word;
+}
+
+.ui-v4 .mix-chip:hover {
+  border-color: var(--accent2);
+  color: var(--text);
+}
+
+.ui-v4 .mix-chip.on {
+  border-color: var(--accent2);
+  background: rgba(220, 220, 230, 0.08);
+  color: var(--text);
+}
+
+.ui-v4 .mix-chip.spicy.on {
+  border-color: rgba(255, 192, 203, 0.55);
+  background: rgba(255, 192, 203, 0.1);
+  color: #ffd8e4;
+}
+
+.ui-v4 .mix-chip.body.on {
+  border-color: rgba(160, 200, 255, 0.5);
+  background: rgba(140, 190, 255, 0.1);
+  color: #d8eaff;
+}
+
+.ui-v4 .mix-foot {
+  font-size: 8px;
+  color: var(--muted2);
+  text-align: center;
+  line-height: 1.4;
+  margin: 0 2px;
+}
+
+.ui-v4 .mix-advanced .bank-stats { margin-top: 10px; }
+.ui-v4 .mix-advanced .meta { margin-top: 4px; font-size: 9px; }
+
+/* ── 折疊（非角色頁） ── */
+.ui-v4 .ui-fold {
+  padding: 0;
+  overflow: hidden;
+}
+
+.ui-v4 .ui-fold > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 11px 12px;
+}
+
+.ui-v4 .ui-fold > summary::-webkit-details-marker { display: none; }
+
+.ui-v4 .ui-fold[open] > summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.ui-v4 .ui-fold .slot-grid,
+.ui-v4 .ui-fold .chk-grid,
+.ui-v4 .ui-fold .hist-list,
+.ui-v4 .ui-fold > :not(summary):not(.embed-char-slots-scroll) {
+  padding: 10px 12px 12px;
+}
+
+.ui-v4 .ui-fold .embed-char-slots-scroll {
+  padding: 0 12px 12px;
+  max-height: min(40vh, 320px);
+  overflow-y: auto;
+}
+
+/* ── 主區操作 ── */
+.ui-v4 .action-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.ui-v4 .action-tile {
+  min-height: 44px;
+  padding: 10px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-sm);
+  background: #141414;
+  color: #484848;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+
+.ui-v4 .action-tile:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: #1a1a1a;
+  color: #626262;
+}
+
+.ui-v4 .action-tile.primary {
+  border-color: rgba(255, 255, 255, 0.09);
+  background: #1c1c1c;
+  color: #585858;
+}
+
+.ui-v4 .action-tile.primary:hover {
+  border-color: rgba(255, 255, 255, 0.13);
+  background: #222222;
+  color: #707070;
+}
+
+.ui-v4 .char-compose-hero.ui-card {
+  padding: 12px;
+}
+
+.ui-v4 .char-compose-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.ui-v4 .compose-tile {
+  min-height: 48px;
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+}
+
+.ui-v4 .ui-output-card .output-box {
+  border: none;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-sm);
+  min-height: 130px;
+}
+
+.ui-v4 .chk-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px 8px;
+}
+
+.ui-v4 .chk-row {
+  margin: 0;
+  font-size: 10px;
+}
+
+.ui-v4 .slot-grid {
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 6px;
+}
+
+.ui-v4 .hist-list { max-height: 120px; }
+
+.ui-v4 .learn-textarea.compact {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 8px;
+  font-size: 10px;
+  border-radius: var(--radius-sm);
+}
+
+.ui-v4 .quick-learn-preview {
+  margin-top: 6px;
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+.ui-v4 .bank-stats {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+}
+
+@media (max-width: 900px) {
+  .ui-v4 { --rail-panel-w: 340px; }
+  .ui-v4 .main.rail-layout { grid-template-columns: var(--rail-strip-w) minmax(0, 1fr); }
+  .ui-v4 aside.rail-drawer {
+    position: sticky;
+    min-height: auto;
+    max-height: none;
+    border-bottom: none;
+  }
+  .ui-v4 .rail-expanded-panel {
+    width: min(var(--rail-panel-w), calc(100vw - var(--rail-strip-w)));
+  }
+  .ui-v4 .action-tiles { grid-template-columns: repeat(2, 1fr); }
+  .ui-v4 .char-compose-tiles { grid-template-columns: repeat(2, 1fr); }
+}

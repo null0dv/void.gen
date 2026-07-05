@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 6,
   "char": [
     "char-sections.json",
     "char-banks.json",
@@ -40,6 +40,7 @@
   "search": [
     "prompt-search-rules.json",
     "theme-kw.json",
-    "char-tag-library.json"
+    "char-tag-library.json",
+    "classify-rules.json"
   ]
 }

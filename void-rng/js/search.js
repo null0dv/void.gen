@@ -4,11 +4,14 @@
 
   const BODY_LABEL_MAP = {
     none: '不篩選',
-    petite: '嬌小', slim: '纖細', average: '標準', tall: '高挑', curvy: '豐滿', athletic: '運動', chubby: '微胖',
-    flat: '貧乳', small: '小胸', medium: '中胸', large: '大胸', huge: '巨乳',
+    petite: '嬌小', slim: '纖細', average: '標準', tall: '高挑', curvy: '豐滿', athletic: '運動',
+    flat: '貧乳', small: '小乳', medium: '正常美胸', large: '大胸', huge: '巨乳',
     slim_waist: '細腰', wide_hips: '寬臀', long_legs: '長腿', thick_thighs: '肉腿', hourglass: '沙漏', girlish: '少女感',
     petite_cute: '嬌小可愛', model_slim: '纖細長腿', curvy_sexy: '豐滿色氣', athletic_fit: '運動健美',
-    plush_soft: '肉感豐腴', petite_flat: '清純貧乳', busty_nsfw: '巨乳色氣', mature_onee: '御姐高挑',
+    plush_soft: '肉感豐腴', petite_flat: '清純貧乳', tall_slim_flat: '高挑纖細貧乳', tall_slim_small: '高挑纖細小乳',
+    tall_leggy_onee: '長腿姊姊', tall_leggy_flat: '姊姊貧乳', tall_leggy_small: '姊姊小胸',
+    tall_thick_legs: '高挑肉腿',
+    busty_nsfw: '巨乳色氣', mature_onee: '御姐高挑',
   };
 
   function bodyIdsToLabels(ids) {
@@ -22,10 +25,13 @@
       '高挑': { bodyFrame: ['tall'], bodyFigure: ['long_legs'] },
       '豐滿': { bodyFrame: ['curvy'], bodyFigure: ['wide_hips'] },
       '運動': { bodyFrame: ['athletic'], bodyFigure: ['slim_waist'] },
-      '微胖': { bodyFrame: ['chubby'], bodyFigure: ['thick_thighs'] },
+
       '小胸': { bodyBreast: ['small'] },
+      '小乳': { bodyBreast: ['small'] },
       '貧乳': { bodyBreast: ['flat'] },
       '中胸': { bodyBreast: ['medium'] },
+      '正常美胸': { bodyBreast: ['medium'] },
+      '美胸': { bodyBreast: ['medium'] },
       '大胸': { bodyBreast: ['large'] },
       '巨乳': { bodyBreast: ['huge'] },
     },
@@ -58,8 +64,10 @@
     fillMode: localStorage.getItem(STORAGE_FILL_MODE) || 'smart',
     debounceTimer: null,
     translateDebounce: null,
-    collapsed: false,
+    collapsed: localStorage.getItem('void-rng-search-collapsed') !== '0',
   };
+
+  const STORAGE_COLLAPSED = 'void-rng-search-collapsed';
 
   function escHtml(s) {
     return String(s ?? '')
@@ -78,6 +86,7 @@
       posePresets: new Set(),
       jobTypes: null,
       bodyCombo: null,
+      contrastPreset: null,
       bodyReset: false,
       bodyFrame: null,
       bodyBreast: null,
@@ -114,6 +123,7 @@
     if (fx.posePresets) fx.posePresets.forEach(id => e.posePresets.add(id));
     if (fx.jobTypes) e.jobTypes = new Set(fx.jobTypes);
     if (fx.bodyCombo) e.bodyCombo = fx.bodyCombo;
+    if (fx.contrastPreset) e.contrastPreset = fx.contrastPreset;
     if (fx.bodyReset) e.bodyReset = true;
     if (fx.bodyFrame) {
       if (!e.bodyFrame) e.bodyFrame = new Set();
@@ -227,15 +237,21 @@
     if (isExact) {
       return tokens.some(t => t.toLowerCase() === pat) || qLower === pat;
     }
+    if (tokens.some(t => t.toLowerCase() === pat) || qLower === pat) return true;
+    const isCjk = /[\u4e00-\u9fff]/.test(pat);
+    if (isCjk) {
+      if (pat.length <= 1) return tokens.some(t => t === pat);
+      return tokens.some(t => t.includes(pat) || pat.includes(t));
+    }
+    if (pat.length <= 4) {
+      const re = new RegExp(`\\b${pat.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      if (re.test(qLower)) return true;
+    }
     if (qLower.includes(pat)) return true;
     return tokens.some(t => {
       const tl = t.toLowerCase();
-      if (tl === pat || tl.includes(pat)) return true;
-      if (pat.includes(tl)) {
-        if (/[\u4e00-\u9fff]/.test(pat)) return tl.length >= 1;
-        return pat.split(/\s+/).includes(tl);
-      }
-      return false;
+      if (tl.includes(pat)) return true;
+      return pat.split(/\s+/).includes(tl);
     });
   }
 
@@ -270,31 +286,27 @@
     tempt_high_collar: '高角度', tempt_low_upskirt: '低角度', tempt_sit_legs: '坐姿露腿', tempt_jump_skirt: '跳躍',
   };
 
-  function resolvePoseJobMutex(effects) {
-    if (!effects.jobTypes?.size || effects.jobTypes.has('none')) return;
-    if (!effects.posePresets?.size) return;
-    const cleared = [...effects.posePresets].filter(id => SAFE_SELFIE_POSE_IDS.has(id));
-    if (!cleared.length) return;
-    cleared.forEach(id => effects.posePresets.delete(id));
-    if (!effects.posePresets.size) effects.posePresets.add('all');
-    effects._poseClearedForJob = cleared.map(id => POSE_PRESET_LABELS[id] || id);
+  function resolvePoseJobMutex() {}
+
+  const TONE_PRIORITY = { sex: 4, tempt: 3, spicy: 2, cute: 1 };
+
+  function resolveToneFromMatches(matches, effects) {
+    const tones = matches
+      .filter(m => m.rule.effects?.tone)
+      .map(m => ({ tone: m.rule.effects.tone, score: m.score || 0 }));
+    if (!tones.length) return;
+    tones.sort((a, b) => (TONE_PRIORITY[b.tone] || 0) - (TONE_PRIORITY[a.tone] || 0) || b.score - a.score);
+    effects.tone = tones[0].tone;
   }
 
   function detectConflicts(matches, effects) {
     const conflicts = [];
-    const tones = matches.filter(m => m.rule.effects?.tone).map(m => m.rule.effects.tone);
-    if (new Set(tones).size > 1) conflicts.push(`調性衝突：${tones.join(' vs ')}（採用最高權重）`);
     const presets = matches.filter(m => m.rule.isPreset).map(m => m.rule.label);
     if (presets.length > 1) conflicts.push(`預設衝突：${presets.join(' vs ')}（僅套用最高分）`);
     if (effects.jobTypes?.has('none') && matches.some(m => m.rule.effects?.jobTypes?.some(j => j !== 'none'))) {
       conflicts.push('JOB 衝突：無 vs 有（採用有 JOB 的規則）');
     }
-    if (effects._poseClearedForJob?.length) {
-      const jobs = effects.jobTypes ? [...effects.jobTypes].filter(j => j !== 'none').join('+') : '';
-      conflicts.push(`POSE·自拍（${effects._poseClearedForJob.join('+')}）與 JOB（${jobs || '有'}）衝突（已清除自拍預設，保留 JOB）`);
-    }
-    const cute = effects.posePresets && [...effects.posePresets].some(id => id.startsWith('cute_'));
-    if (cute && effects.tone === 'sex') conflicts.push('調性衝突：可愛自拍 vs SEX（建議降低調性）');
+
     return conflicts;
   }
 
@@ -337,7 +349,9 @@
     matches = applyMutexRules(matches, effects);
 
     let presetApplied = false;
+    const toneRules = matches.filter(m => m.rule.id?.startsWith('tone_'));
     matches.forEach(m => {
+      if (m.rule.id?.startsWith('tone_')) return;
       if (m.rule.isPreset) {
         if (!presetApplied) {
           mergeRuleEffects(effects, m.rule);
@@ -347,6 +361,7 @@
         mergeRuleEffects(effects, m.rule);
       }
     });
+    if (toneRules.length) resolveToneFromMatches(toneRules, effects);
 
     if (effects.jobTypes?.size && !effects.jobTypes.has('none')) {
       const noneRule = matches.find(m => m.rule.effects?.jobTypes?.includes('none'));
@@ -371,6 +386,7 @@
     const { effects, conflicts } = parsed;
     const parts = [];
     if (effects.preset) parts.push(`預設·${effects.preset}`);
+    if (effects.contrastPreset) parts.push(`反差·${effects.contrastPreset}`);
     if (effects.tone) parts.push(`調性·${effects.tone}`);
     if (effects.intensity) parts.push(`強度·Lv${effects.intensity}`);
     if (effects.posePresets.size) parts.push(`姿勢·${[...effects.posePresets].join('+')}`);
@@ -390,6 +406,7 @@
     if (effects.negativeHints?.length || effects.sectionHints.negative?.length) {
       parts.push('負向標籤');
     }
+    if (effects.action === 'collide') parts.push('反差碰撞');
     if (effects.regenerate) parts.push('重抽全部');
     effects.reroll.forEach(r => parts.push(`重抽·${r}`));
     const fill = effects.fillMode || state.fillMode;
@@ -443,7 +460,7 @@
       group: '學習辭庫',
       label: `學習 · ${t.label}`,
       keys: [t.label],
-      weight: 3,
+      weight: 2,
       effects: { hints: { [t.section]: t.hints } },
     }));
   }
@@ -463,12 +480,29 @@
 
   function getEl(id) { return document.getElementById(id); }
 
+  function setSearchCollapsed(collapsed) {
+    const wrap = getEl('global-search-wrap');
+    if (!wrap) return;
+    state.collapsed = collapsed;
+    wrap.classList.toggle('collapsed', collapsed);
+    try { localStorage.setItem(STORAGE_COLLAPSED, collapsed ? '1' : '0'); } catch (_) {}
+    requestAnimationFrame(() => {
+      if (typeof global.syncSearchChromeHeight === 'function') global.syncSearchChromeHeight();
+    });
+  }
+
+  function openSearch() {
+    setSearchCollapsed(false);
+    syncSearchActive();
+  }
+
   function syncSearchActive() {
     const wrap = getEl('global-search-wrap');
     const inp = getEl('prompt-search-input');
     if (!wrap) return;
     const q = inp?.value?.trim() || '';
     const focused = document.activeElement === inp;
+    if (focused || q.length > 0) setSearchCollapsed(false);
     wrap.classList.toggle('search-active', focused || q.length > 0);
   }
 
@@ -544,8 +578,10 @@
       : '（無明確匹配）';
     if (statusEl) {
       statusEl.textContent = parsed.matches.length
-        ? `找到 ${parsed.matches.length} 條規則 · 預覽後按「套用」`
-        : '無規則匹配，套用將以描述填入';
+        ? `找到 ${parsed.matches.length} 條規則 · Enter 套用`
+        : (typeof global.VoidTranslate !== 'undefined' && global.VoidTranslate.hasCjk(parsed.query || ''))
+          ? '無規則匹配 · Enter 將自動翻譯原始詞彙並入庫填入'
+          : '無規則匹配 · Enter 將翻譯/填入原始描述';
       statusEl.classList.toggle('warn', conflicts.length > 0);
     }
     state.lastPlan = parsed;
@@ -606,8 +642,8 @@
       const statusEl = getEl('prompt-search-status');
       if (statusEl && typeof global.VoidTranslate !== 'undefined' && global.VoidTranslate.hasCjk(query)) {
         statusEl.textContent = parsed.matches.length
-          ? `中文輸入 · 找到 ${parsed.matches.length} 條規則 · Ctrl+Enter 翻譯入庫`
-          : '中文輸入 · Ctrl+Enter 翻譯英文並加入辭庫 · Enter 套用規則';
+          ? `中文 · 命中 ${parsed.matches.length} 條 · Enter 套用 · Ctrl+Enter 強制翻譯入庫`
+          : '中文 · 無匹配 · Enter 自動翻譯入庫並填入 Prompt';
       }
     }, 150);
   }
@@ -621,13 +657,100 @@
     toast('已更新預覽（尚未套用）');
   }
 
-  function applySearch(forcedQuery, opts = {}) {
+  function splitTags(text) {
+    if (typeof global.splitPromptTags === 'function') return global.splitPromptTags(text);
+    return String(text || '').split(/[,，\n]+/).map(t => t.trim()).filter(Boolean);
+  }
+
+  function shouldAutoTranslate(parsed, query) {
+    if (!query || query.length < 2) return false;
+    if (!parsed.matches.length) return true;
+    return parsed.effects.actions?.length === 1
+      && parsed.effects.actions[0] === '自由描述';
+  }
+
+  function registerTranslatedRule(query, english, page) {
+    if (!query || !english) return;
+    const hints = {};
+    const tags = splitTags(english);
+    if (page === 'char' && typeof global.classifyTag === 'function') {
+      tags.forEach(tag => {
+        const sec = global.classifyTag(tag);
+        if (!hints[sec]) hints[sec] = [];
+        if (!hints[sec].includes(tag)) hints[sec].push(tag);
+      });
+    } else {
+      const sec = page === 'jewel' ? 'jewel' : 'subject';
+      hints[sec] = tags;
+    }
+    saveCustomRule({
+      label: `翻譯·${query.slice(0, 18)}`,
+      keys: [query, ...query.split(/[\s,，、+]+/).filter(Boolean)],
+      effects: { hints },
+    });
+    if (typeof global.VoidTranslate !== 'undefined' && global.VoidTranslate.addDictEntry) {
+      global.VoidTranslate.addDictEntry(query, tags, page === 'char' ? 'subject' : page);
+    }
+  }
+
+  async function autoTranslateAndApply(query, parsed, fillMode) {
+    if (typeof global.VoidTranslate === 'undefined') return false;
+    const statusEl = getEl('prompt-search-status');
+    if (statusEl) statusEl.textContent = '無規則匹配 · 翻譯原始詞彙並自動分類入庫…';
+    try {
+      const result = await global.VoidTranslate.translate(query, { preferGrok: true });
+      if (!result?.english?.trim()) {
+        toast('翻譯結果為空，請換個描述或設定 Grok API');
+        return false;
+      }
+      renderTranslatePreview(result);
+      registerTranslatedRule(query, result.english, state.page);
+      if (handlers.onTranslateToBank) {
+        const n = await handlers.onTranslateToBank(result, {
+          query,
+          page: state.page,
+          fillMode,
+          autoFallback: true,
+          conflicts: parsed.conflicts,
+        });
+        state.lastQuery = query;
+        if (!state.recent.includes(query)) state.recent.unshift(query);
+        state.recent = state.recent.slice(0, 12);
+        const handler = handlers[state.page];
+        const preview = getEl('prompt-search-preview');
+        const text = handler?.buildPrompt?.() || result.english;
+        if (preview) {
+          preview.textContent = text || '（尚無內容）';
+          preview.classList.toggle('empty', !text);
+        }
+        if (statusEl) {
+          statusEl.textContent = `已翻譯入庫 · ${result.method === 'grok' ? 'Grok' : '辭庫'} · ${n || 0} 詞 · 下次可直接搜尋`;
+        }
+        handlers.onSessionSave?.();
+        renderUI();
+        toast(`無匹配規則 · 已翻譯並填入 ${n || 0} 個新詞`);
+        return true;
+      }
+    } catch (e) {
+      if (statusEl) statusEl.textContent = '翻譯失敗';
+      toast('翻譯失敗：' + (e.message || e));
+    }
+    return false;
+  }
+
+  async function applySearch(forcedQuery, opts = {}) {
     const query = (forcedQuery ?? getEl('prompt-search-input')?.value ?? '').trim();
     if (!query) return toast('請輸入關鍵字');
     const parsed = opts.plan || parseSearchQuery(query, state.page);
     if (!parsed.matches.length && query.length < 2) return toast('找不到符合的關鍵字');
 
     const fillMode = parsed.effects.fillMode || state.fillMode;
+
+    if (shouldAutoTranslate(parsed, query) && !opts.skipAutoTranslate) {
+      const ok = await autoTranslateAndApply(query, parsed, fillMode);
+      if (ok) return;
+    }
+
     const handler = handlers[state.page];
     if (!handler?.apply) return toast('此頁面尚未註冊搜尋處理');
 
@@ -738,8 +861,8 @@
         : page === 'style'
           ? '輸入：混沌 賽博 海邊 不要文字…（中文可 Ctrl+Enter 翻譯入庫）'
           : page === 'space'
-            ? '輸入：碎形 解構 極簡 無機物 虛空…（Enter 套用 · 餵回辭庫用側欄按鈕）'
-            : '輸入：女僕 泳裝 高角度 嬌小蕾絲內衣…（Ctrl+Enter 翻譯入庫）';
+            ? '輸入：碎形 解構 極簡…（無匹配時 Enter 自動翻譯入庫）'
+            : '輸入中文或關鍵字…（無匹配時 Enter 自動翻譯原始詞彙並填入）';
     }
     onInput();
   }
@@ -755,11 +878,7 @@
   }
 
   function focusSearch() {
-    const wrap = getEl('global-search-wrap');
-    if (wrap?.classList.contains('collapsed')) {
-      wrap.classList.remove('collapsed');
-    }
-    wrap?.classList.add('search-active');
+    openSearch();
     setTimeout(() => {
       const inp = getEl('prompt-search-input');
       inp?.focus();
@@ -769,10 +888,20 @@
     }, 60);
   }
 
-  function toggleCollapse() {
-    const wrap = getEl('global-search-wrap');
-    if (wrap) wrap.classList.toggle('collapsed');
+  function toggleExpand() {
+    setSearchCollapsed(!state.collapsed);
+    if (!state.collapsed) {
+      setTimeout(() => {
+        getEl('prompt-search-input')?.focus();
+        syncSearchActive();
+        if (!getEl('prompt-search-input')?.value?.trim()) renderHotGroups();
+      }, 40);
+    } else {
+      syncSearchActive();
+    }
   }
+
+  function toggleCollapse() { toggleExpand(); }
 
   function addCustomFromForm() {
     const keys = getEl('custom-rule-keys')?.value?.trim();
@@ -830,15 +959,27 @@
       if (opts.initialPage) setPage(opts.initialPage);
       syncSearchActive();
     });
+    setSearchCollapsed(state.collapsed);
+    requestAnimationFrame(() => {
+      if (typeof global.syncSearchChromeHeight === 'function') global.syncSearchChromeHeight();
+    });
     const inp = getEl('prompt-search-input');
     if (inp) {
       inp.addEventListener('input', onInput);
       inp.addEventListener('keydown', onKeydown);
       inp.addEventListener('focus', () => {
+        openSearch();
         syncSearchActive();
         if (!inp.value.trim()) renderHotGroups();
       });
       inp.addEventListener('blur', () => setTimeout(syncSearchActive, 120));
+    }
+    const compactBar = document.querySelector('.search-compact-bar');
+    if (compactBar) {
+      compactBar.addEventListener('click', e => {
+        if (e.target.closest('.search-compact-trigger, .search-compact-apply')) return;
+        openSearch();
+      });
     }
   }
 
@@ -853,6 +994,8 @@
     setPage,
     setFillMode,
     focusSearch,
+    openSearch,
+    toggleExpand,
     toggleCollapse,
     previewSearch,
     applySearch,
@@ -871,6 +1014,7 @@
     restoreSession,
     exportSession,
     parseSearchQuery,
+    buildPlanSummary,
     renderUI,
   };
 })(window);

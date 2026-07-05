@@ -57,7 +57,6 @@
   "plush_soft": {
     "label": "肉感豐腴",
     "frame": [
-      "chubby",
       "curvy"
     ],
     "breast": [
@@ -83,6 +82,34 @@
       "slim_waist"
     ]
   },
+  "tall_slim_flat": {
+    "label": "高挑纖細貧乳",
+    "frame": [
+      "slim",
+      "tall"
+    ],
+    "breast": [
+      "flat"
+    ],
+    "figure": [
+      "long_legs",
+      "slim_waist"
+    ]
+  },
+  "tall_slim_small": {
+    "label": "高挑纖細小乳",
+    "frame": [
+      "slim",
+      "tall"
+    ],
+    "breast": [
+      "small"
+    ],
+    "figure": [
+      "long_legs",
+      "slim_waist"
+    ]
+  },
   "busty_nsfw": {
     "label": "巨乳色氣",
     "frame": [
@@ -96,6 +123,62 @@
       "hourglass",
       "wide_hips",
       "slim_waist"
+    ]
+  },
+  "tall_leggy_onee": {
+    "label": "長腿姊姊",
+    "frame": [
+      "tall",
+      "slim"
+    ],
+    "breast": [
+      "medium",
+      "large"
+    ],
+    "figure": [
+      "long_legs",
+      "slim_waist"
+    ]
+  },
+  "tall_leggy_flat": {
+    "label": "姊姊貧乳",
+    "frame": [
+      "tall"
+    ],
+    "breast": [
+      "flat"
+    ],
+    "figure": [
+      "long_legs",
+      "slim_waist"
+    ]
+  },
+  "tall_leggy_small": {
+    "label": "姊姊小胸",
+    "frame": [
+      "tall"
+    ],
+    "breast": [
+      "small"
+    ],
+    "figure": [
+      "long_legs",
+      "slim_waist"
+    ]
+  },
+  "tall_thick_legs": {
+    "label": "高挑肉腿",
+    "frame": [
+      "tall",
+      "curvy"
+    ],
+    "breast": [
+      "medium",
+      "large"
+    ],
+    "figure": [
+      "thick_thighs",
+      "wide_hips"
     ]
   },
   "mature_onee": {

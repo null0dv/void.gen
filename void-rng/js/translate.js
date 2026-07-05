@@ -52,8 +52,8 @@
 
   const BODY_EN = {
     petite: 'petite body', slim: 'slim figure', average: 'average build', tall: 'tall slender',
-    curvy: 'curvy figure', athletic: 'athletic build', chubby: 'chubby soft body',
-    flat: 'flat chest', small: 'small breasts', medium: 'medium breasts',
+    curvy: 'curvy figure', athletic: 'athletic build',
+    flat: 'flat chest', small: 'small breasts', medium: 'medium breasts, natural bust',
     large: 'large breasts', huge: 'huge breasts',
     slim_waist: 'slim waist', wide_hips: 'wide hips', long_legs: 'long legs',
     thick_thighs: 'thick thighs', hourglass: 'hourglass figure', girlish: 'girlish charm',
@@ -264,6 +264,15 @@
       unmatched;
   }
 
+  function addDictEntry(zh, en, section) {
+    const tags = Array.isArray(en) ? en : [String(en || '').trim()];
+    const phrase = String(zh || '').trim();
+    if (!phrase || !tags.length) return false;
+    addEntry(phrase, tags, section || 'subject', 'user');
+    dedupeDict();
+    return true;
+  }
+
   function init() {
     return loadDict();
   }
@@ -273,6 +282,7 @@
     loadDict,
     translate,
     translateLocal,
+    addDictEntry,
     hasCjk,
     getApiKey,
     setApiKey,

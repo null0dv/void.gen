@@ -1,0 +1,129 @@
+{
+  "subject": {
+    "w": 1.0,
+    "kw": [
+      "1girl", "1boy", "2girls", "solo", "girl", "boy", "woman", "man",
+      "catgirl", "cat girl", "angel", "demon", "elf", "vampire", "witch",
+      "character", "idol", "cosplayer", "nekomimi", "fox girl", "bunny girl",
+      "petite body", "slim figure", "slim body", "curvy figure", "voluptuous body",
+      "athletic build", "toned body", "mature woman", "young woman",
+      "east asian", "asian", "fair skin", "smooth skin", "youthful charm",
+      "small breasts", "flat chest", "large breasts", "huge breasts", "medium breasts"
+    ],
+    "negative": [
+      "school uniform", "maid outfit", "bikini", "lingerie", "dress", "skirt",
+      "standing", "sitting", "selfie", "fellatio", "paizuri", "masterpiece"
+    ]
+  },
+  "face": {
+    "w": 1.15,
+    "kw": [
+      "eyes", "eye color", "heterochromia", "smile", "expression", "face",
+      "blush", "cheek", "cheeks", "lips", "gaze", "looking at viewer",
+      "wink", "tongue", "teary", "pout", "iris", "eyelash", "eyelashes",
+      "bedroom eyes", "sultry gaze", "seductive smile", "ahegao", "open mouth",
+      "parted lips", "biting lip", "embarrassed expression", "flushed face"
+    ],
+    "negative": ["hair", "ponytail", "braid", "outfit", "dress", "skirt", "standing pose"]
+  },
+  "details": {
+    "w": 1.0,
+    "kw": [
+      "hair", "bangs", "braid", "ponytail", "twin tails", "twintails", "tail",
+      "cat ears", "animal ears", "horn", "horns", "wings", "halo",
+      "ribbon", "hair clip", "hair ornament", "ahoge", "hime cut", "bob cut",
+      "silver hair", "white hair", "black hair", "blonde hair", "pink hair",
+      "messy hair", "wet hair", "long hair", "short hair", "hair color",
+      "petite frame", "slim waist", "delicate collarbone", "sweat droplets"
+    ],
+    "negative": ["school uniform", "bikini", "selfie", "fellatio", "masterpiece", "indoor"]
+  },
+  "outfit": {
+    "w": 1.2,
+    "kw": [
+      "dress", "skirt", "pleated skirt", "miniskirt", "hoodie", "shirt", "blouse",
+      "bikini", "swimsuit", "one-piece swimsuit", "stockings", "thigh-high",
+      "panties", "bra", "lingerie", "lace lingerie", "lace bra", "lace panties",
+      "uniform", "school uniform", "maid outfit", "maid dress", "leotard",
+      "apron", "jacket", "crop top", "sweater", "knit sweater", "fabric",
+      "neckline", "sheer", "transparent", "see-through", "lace", "garter belt",
+      "cosplay", "micro bikini", "ruffled", "bow tie", "choker",
+      "wet fabric", "wet shirt", "sideboob", "cleavage", "bodycon", "latex",
+      "fishnet", "bodystocking", "keyhole sweater", "halter", "backless",
+      "tube top", "hot pants", "qipao", "cheongsam", "side slit",
+      "bustier", "camisole", "towel wrap", "negligee", "pajama", "yukata",
+      "kimono", "nurse uniform", "bunny leotard", "gothic lolita"
+    ],
+    "negative": [
+      "standing", "sitting", "kneeling", "selfie", "looking at viewer",
+      "fellatio", "paizuri", "masterpiece", "indoor", "outdoor", "blush"
+    ]
+  },
+  "pose": {
+    "w": 1.05,
+    "kw": [
+      "pose", "standing", "sitting", "lying", "kneeling", "squatting",
+      "selfie", "mirror selfie", "angle", "shot", "from above", "from below",
+      "high angle", "low angle", "dutch angle", "close-up", "full body",
+      "upper body", "cowboy shot", "bust shot", "portrait",
+      "arm", "leg", "legs", "thigh", "thighs", "crossed legs",
+      "arched back", "looking back", "peace sign", "head tilt",
+      "covering breasts", "arm across chest", "skirt lift", "lifting skirt",
+      "shirt lift", "collarbone", "neckline", "unbuttoned", "off-shoulder",
+      "from behind", "hip cocked", "foreshortening", "worm eye",
+      "smartphone", "pov", "biting lip", "wall lean", "wet hair",
+      "silhouette", "boudoir", "adjusting stocking", "twirling", "bent over",
+      "jumping", "mid-air", "spread legs", "all fours", "on bed",
+      "straddling", "mating press", "cowgirl position", "missionary"
+    ],
+    "negative": [
+      "school uniform", "maid outfit", "bikini", "lace bra", "masterpiece",
+      "anime style", "golden hour", "blonde hair", "pink eyes"
+    ]
+  },
+  "job": {
+    "w": 1.35,
+    "kw": [
+      "handjob", "fellatio", "blowjob", "oral sex", "deepthroat", "cunnilingus",
+      "paizuri", "titjob", "titfuck", "fingering", "footjob", "soles",
+      "breast squeeze", "licking penis", "licking pussy", "stroking",
+      "penis in mouth", "penis between breasts", "hand on penis",
+      "pussyjob", "pussy job", "labia", "vulva", "outercourse",
+      "grinding on penis", "through panties", "no penetration",
+      "saliva trail", "drool", "cum", "ejaculation"
+    ],
+    "negative": ["selfie", "school uniform", "masterpiece", "outdoor"]
+  },
+  "env": {
+    "w": 1.0,
+    "kw": [
+      "indoor", "outdoor", "room", "bedroom", "bathroom", "beach", "forest",
+      "city", "street", "window", "background", "lighting", "daylight",
+      "night", "neon", "bokeh", "studio", "atmosphere", "sunset",
+      "golden hour", "soft light", "rim light", "ambient", "setting",
+      "sky", "ocean", "cafe", "classroom", "love hotel", "onsen"
+    ],
+    "negative": ["dress", "skirt", "blush", "smile", "fellatio"]
+  },
+  "styleRef": {
+    "w": 1.0,
+    "kw": [
+      "anime", "illustration", "photorealistic", "realistic", "painting",
+      "watercolor", "digital art", "cel-shaded", "style", "aesthetic",
+      "moe", "pixiv", "eroge", "concept art", "cinematic", "oil painting",
+      "fan-service", "fan service", "glossy", "brush", "game cg", "doujin"
+    ],
+    "negative": ["standing", "bikini", "selfie", "bedroom"]
+  },
+  "quality": {
+    "w": 1.25,
+    "kw": [
+      "masterpiece", "best quality", "ultra detailed", "ultra-detailed",
+      "high resolution", "highres", "absurdres", "8k", "4k", "sharp focus",
+      "detailed", "perfect anatomy", "perfect hands", "perfect face",
+      "no text", "no watermark", "raw photo", "intricate", "high quality",
+      "quality", "nsfw", "explicit"
+    ],
+    "negative": []
+  }
+}

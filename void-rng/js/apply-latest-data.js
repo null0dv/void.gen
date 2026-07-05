@@ -69,5 +69,12 @@
     if (payload['slot-labels'] && global.SLOT_LABELS) {
       replaceObject(global.SLOT_LABELS, payload['slot-labels']);
     }
+
+    if (typeof global.applyClassifyRulesPayload === 'function' && payload['classify-rules']) {
+      global.applyClassifyRulesPayload(payload['classify-rules']);
+    }
+    if (typeof global.buildClassifyTagIndex === 'function') {
+      global.CLASSIFY_TAG_INDEX = global.buildClassifyTagIndex(payload['char-tag-library']);
+    }
   };
 })(window);
