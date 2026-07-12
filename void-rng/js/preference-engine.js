@@ -351,26 +351,45 @@
     return weighted[0].tpl;
   }
 
+  function hasActiveOutfitFilter() {
+    return typeof global.getActiveSpicyOutfitIds === 'function'
+      && global.getActiveSpicyOutfitIds().length > 0;
+  }
+
   function pickPreferredForSection(key, contextTags, base) {
     if (key === 'face') {
       const tags = pickPreferredTags(key, contextTags, 2, 5);
       if (tags) return tags;
     }
     if (key === 'outfit') {
-      if (Math.random() < 0.55) {
+      // 使用者有服裝篩選時，走專用 rollOutfitSection，避免偏好標籤亂拼稀釋準確度
+      if (hasActiveOutfitFilter() && typeof global.rollOutfitSection === 'function') {
+        return global.rollOutfitSection();
+      }
+      if (Math.random() < 0.35) {
+        const entry = pickPreferredBankEntry(key, contextTags);
+        if (entry) return entry;
+      }
+      if (Math.random() < 0.4) {
         const tags = pickPreferredTags(key, contextTags, 3, 7);
         if (tags) return tags;
       }
       const entry = pickPreferredBankEntry(key, contextTags);
       if (entry) return entry;
+      if (typeof global.rollOutfitSection === 'function') return global.rollOutfitSection();
     }
     if (key === 'pose') {
       const entry = pickPreferredBankEntry(key, contextTags);
       if (entry) return entry;
       if (typeof global.rollPoseSection === 'function') return global.rollPoseSection();
     }
-    if (base?.[key] && Math.random() < 0.45) return base[key];
-    if (typeof global.rollCharTags === 'function') {
+    if (base?.[key] && Math.random() < 0.45) {
+      if (key === 'outfit' && hasActiveOutfitFilter() && typeof global.ensureOutfitSelectionAnchors === 'function') {
+        return global.ensureOutfitSelectionAnchors(base[key], global.getActiveSpicyOutfitIds());
+      }
+      return base[key];
+    }
+    if (key !== 'outfit' && typeof global.rollCharTags === 'function') {
       const rolled = global.rollCharTags(key);
       if (rolled) return rolled;
     }

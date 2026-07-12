@@ -122,7 +122,7 @@
 <div class="view active" id="view-style">
   <div class="main">
     <aside class="sidebar ui-rail">
-      <div class="ui-card">
+      <div class="ui-card" data-rail-nav="mode">
         <div class="ui-label">生成模式</div>
         <div class="pick-grid" id="mode-chips">
           <span class="pick-chip on" data-mode="full" onclick="setMode('full',this)">完整</span>
@@ -131,7 +131,7 @@
           <span class="pick-chip" data-mode="chaos" onclick="setMode('chaos',this)">混沌</span>
         </div>
       </div>
-      <div class="ui-card">
+      <div class="ui-card" data-rail-nav="style">
         <div class="ui-label">風格代號</div>
         <div class="param-row slim">
           <span class="param-name">數量</span>
@@ -145,7 +145,7 @@
           <span class="pick-chip" data-lang="mix" onclick="setLang('mix',this)">混合</span>
         </div>
       </div>
-      <details class="ui-card ui-fold">
+      <details class="ui-card ui-fold" data-rail-nav="inc">
         <summary class="ui-label">包含區塊</summary>
         <div class="chk-grid">
           <label class="chk-row"><input type="checkbox" id="inc-quality" checked> 品質</label>
@@ -158,11 +158,13 @@
           <label class="chk-row"><input type="checkbox" id="inc-detail" checked> 細節</label>
         </div>
       </details>
-      <div class="ui-card">
+      <div class="ui-card" data-rail-nav="pool">
         <div class="ui-label">風格池</div>
         <div class="mix-grid" id="pool-chips"></div>
       </div>
-      <button class="gen-btn tile-cta" onclick="generateAll()">隨機生成</button>
+      <div class="rail-sticky-cta">
+        <button class="gen-btn tile-cta" onclick="generateAll()">隨機生成</button>
+      </div>
     </aside>
     <section class="panel ui-panel">
       <div class="ui-card ui-output-card">
@@ -247,12 +249,7 @@
         <summary class="mix-zone-hd"><span class="mix-zone-title">氛圍</span><button type="button" class="mix-reset" onclick="event.preventDefault();resetCharEnvPresets()">清</button></summary>
         <div class="mix-zone-body" id="char-env-chips"></div>
       </details>
-      <div class="pick-grid gen-pick">
-        <button type="button" class="pick-btn primary" onclick="generateChar()">生成</button>
-        <button type="button" class="pick-btn" onclick="exploreOrganicCombo()">延伸</button>
-      </div>
-      <p class="mix-foot">複選混搭 · 僅「無」與其他互斥</p>
-      <details class="mix-zone mix-advanced">
+      <details class="mix-zone mix-advanced" data-rail-nav="advanced">
         <summary class="mix-zone-hd"><span class="mix-zone-title">進階</span></summary>
         <div class="mix-zone-body">
           <div class="mix-hd">輸出區塊</div>
@@ -268,6 +265,13 @@
           </div>
         </div>
       </details>
+      <div class="rail-sticky-cta">
+        <div class="pick-grid gen-pick">
+          <button type="button" class="pick-btn primary" onclick="generateChar()">生成</button>
+          <button type="button" class="pick-btn" onclick="exploreOrganicCombo()">延伸</button>
+        </div>
+        <p class="mix-foot">複選混搭 · 僅「無」與其他互斥</p>
+      </div>
       </div><!-- /standalone-char-sidebar -->
     </aside>
     <section class="panel ui-panel">
@@ -322,11 +326,11 @@
 <div class="view" id="view-jewel">
   <div class="main">
     <aside class="sidebar ui-rail">
-      <div class="ui-card">
+      <div class="ui-card" data-rail-nav="cats">
         <div class="ui-label">產品類別</div>
         <div class="mix-grid" id="jewel-cat-chips"></div>
       </div>
-      <div class="ui-card">
+      <div class="ui-card" data-rail-nav="mode">
         <div class="ui-label">生成模式</div>
         <div class="pick-grid" id="jewel-mode-chips">
           <span class="pick-chip on" data-jmode="full" onclick="setJewelMode('full',this)">完整</span>
@@ -343,11 +347,13 @@
           <span class="pick-chip" id="jewel-fmt-flat" onclick="setJewelFmt('flat')">純標籤</span>
         </div>
       </div>
-      <details class="ui-card ui-fold">
+      <details class="ui-card ui-fold" data-rail-nav="inc">
         <summary class="ui-label">包含區塊</summary>
         <div class="chk-grid" id="jewel-inc-checks"></div>
       </details>
-      <button class="gen-btn tile-cta" onclick="generateJewel()">隨機生成</button>
+      <div class="rail-sticky-cta">
+        <button class="gen-btn tile-cta" onclick="generateJewel()">隨機生成</button>
+      </div>
     </aside>
     <section class="panel ui-panel">
       <div class="ui-card ui-output-card">
@@ -376,11 +382,11 @@
 <div class="view" id="view-space">
   <div class="main">
     <aside class="sidebar ui-rail">
-      <div class="ui-card">
+      <div class="ui-card" data-rail-nav="cats">
         <div class="ui-label">主題篩選</div>
         <div class="mix-grid" id="space-cat-chips"></div>
       </div>
-      <div class="ui-card">
+      <div class="ui-card" data-rail-nav="pool">
         <div class="ui-label">風格代號池</div>
         <div class="mix-grid" id="space-style-pool-chips"></div>
         <div class="param-row slim" style="margin-top:8px">
@@ -390,7 +396,7 @@
         </div>
         <div class="ui-hint" id="space-style-code-hint">n · Ns · fractanull · fw · bone · mb · Xg · lsd1 · fp · psy · fx · lw · cbd · cat</div>
       </div>
-      <div class="ui-card">
+      <div class="ui-card" data-rail-nav="mode">
         <div class="ui-label">生成模式</div>
         <div class="pick-grid" id="space-mode-chips">
           <span class="pick-chip on" data-smode="full" onclick="setSpaceMode('full',this)">完整</span>
@@ -408,13 +414,15 @@
           <span class="pick-chip" id="space-fmt-flat" onclick="setSpaceFmt('flat')">純標籤</span>
         </div>
       </div>
-      <details class="ui-card ui-fold">
+      <details class="ui-card ui-fold" data-rail-nav="inc">
         <summary class="ui-label">包含區塊</summary>
         <div class="chk-grid" id="space-inc-checks"></div>
       </details>
-      <div class="tile-grid gen-tiles">
-        <button class="gen-btn tile-cta" onclick="generateSpaceCards()">生成 6 卡</button>
-        <button class="gen-btn tile-cta ghost" onclick="generateSpaceSingle()">重抽此卡</button>
+      <div class="rail-sticky-cta">
+        <div class="tile-grid gen-tiles">
+          <button class="gen-btn tile-cta" onclick="generateSpaceCards()">生成 6 卡</button>
+          <button class="gen-btn tile-cta ghost" onclick="generateSpaceSingle()">重抽此卡</button>
+        </div>
       </div>
     </aside>
     <section class="panel ui-panel">

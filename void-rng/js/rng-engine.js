@@ -91,6 +91,7 @@ function switchPage(page, el) {
     try { localStorage.setItem(PAGE_STORAGE_KEY, page); } catch (_) {}
   }
   syncRailDrawerState();
+  scheduleRailBadgeSync();
 }
 window.switchPage = switchPage;
 
@@ -569,6 +570,7 @@ function importStyleConfig(){
 }
 function renderPoolChips(){
   document.getElementById('pool-chips').innerHTML=POOLS.map(p=>`<span class="mix-chip${activePools.has(p.id)?' on':''}" onclick="togglePool('${p.id}')">${p.label}</span>`).join('');
+  scheduleRailBadgeSync();
 }
 function togglePool(id){
   if(id==='all')activePools=new Set(['all']);
@@ -818,6 +820,7 @@ function renderJewelCatChips() {
   el.innerHTML = JEWEL_CATEGORIES.map(c =>
     `<span class="mix-chip${jewelActiveCats.has(c.id) ? ' on' : ''}" onclick="toggleJewelCat('${c.id}')">${c.label}</span>`
   ).join('');
+  scheduleRailBadgeSync();
 }
 
 function renderJewelIncChecks() {
@@ -1293,6 +1296,7 @@ function renderSpaceStylePoolChips() {
   el.innerHTML = POOLS.map(p =>
     `<span class="mix-chip${spaceStylePools.has(p.id) ? ' on' : ''}" onclick="toggleSpaceStylePool('${p.id}')">${p.label}</span>`
   ).join('');
+  scheduleRailBadgeSync();
 }
 
 function renderSpaceStyleCodeHint() {
@@ -1309,6 +1313,7 @@ function renderSpaceCatChips() {
   el.innerHTML = SPACE_CATEGORIES.map(c =>
     `<span class="mix-chip${spaceActiveCats.has(c.id) ? ' on' : ''}" onclick="toggleSpaceCat('${c.id}')">${c.label}</span>`
   ).join('');
+  scheduleRailBadgeSync();
 }
 
 function renderSpaceIncChecks() {
@@ -1822,6 +1827,11 @@ const DEFAULT_CHAR_BANKS = {
     'cow print bikini, holstein pattern, farm girl cosplay, playful minimal swimwear',
     'striped thigh-highs and oversized sweater, bare thighs, cozy home loungewear tease',
     'open cardigan over lace bralette, loose knit layers, soft bedroom casual seduction',
+    'silk kimono robe, loose sash, elegant traditional japanese layers, bare shoulder hint',
+    'nun habit, black and white sister robes, modest religious dress, rosary accessory',
+    'police uniform, peaked cap, fitted officer jacket, authority cosplay styling',
+    'teacher blazer and blouse, pencil skirt, glasses optional, academic professional look',
+    'soft pajama set, button-up sleep shirt, loose sleep shorts, cozy nightwear',
   ],
   pose: [
     'standing pose, both hands holding and pulling cat-ear hood, body slightly tilted, seductive cute pose',
@@ -2124,42 +2134,130 @@ const SPICY_OUTFIT_GROUPS = [
 ];
 
 const SPICY_OUTFIT_MARKERS = {
-  wet:      ['wet clothes','wet shirt','wet fabric','clinging','soaked','transparent when wet'],
-  sheer:    ['sheer','transparent','see-through','semi-transparent'],
-  lingerie: ['lingerie','lace lingerie','lace bra','bra and panties','underwear set','negligee','bodysuit','bralette'],
-  garter:   ['garter belt','garter straps','thigh-high stockings','over-knee socks'],
-  miniskirt:['miniskirt','micro skirt','short hemline','pleated skirt','tennis skirt'],
-  bodycon:  ['bodycon','tight dress','hip-hugging','race queen suit','glossy bodysuit'],
-  keyhole:  ['keyhole sweater','open chest','sideboob','deep v'],
-  fishnet:  ['fishnet','fishnets','mesh legwear'],
-  school:   ['school uniform','pleated skirt','sailor','serafuku','buruma','gym bloomers'],
-  maid:     ['maid outfit','maid dress','frilled apron'],
-  nurse:    ['nurse uniform','nurse cap','nurse dress'],
-  bunny:    ['bunny girl','bunny leotard','playboy bunny'],
-  bikini:   ['bikini','string bikini','swimsuit','cow print bikini','santa bikini'],
-  qipao:    ['qipao','cheongsam','side slit'],
-  ol:       ['office lady','pencil skirt','blazer','office blazer'],
-  gothic:   ['gothic lolita','gothic','corset dress','bonnet','victorian','black lace trim'],
-  idol:     ['idol stage','idol outfit','cheerleader','sparkly mini','stage outfit','performance wear'],
-  yukata:   ['yukata','obi sash','kimono','festival wear'],
-  witch:    ['witch hat','witch dress','halloween','striped thigh-highs'],
-  gym:      ['gym bloomers','buruma','tennis skirt','yoga shorts','athletic crop','track suit','sporty'],
-  apron:    ['apron','naked apron','frilled apron'],
-  cosplay:  ['cosplay','devil costume','angel costume','santa bikini','cow print','horns','halo accessory','Halloween'],
-  stockings:['thigh-high stockings','pantyhose','sheer stockings','black stockings','garter stockings'],
-  dress:    ['dress','one-piece dress','sundress','flared dress','cocktail dress','evening dress'],
-  crop_top: ['crop top','midriff','bare midriff','short top','navel'],
-  off_shoulder:['off-shoulder','off shoulder','bare shoulders','one shoulder'],
-  latex:    ['latex','latex suit','shiny latex','rubber suit'],
-  leather:  ['leather','leather jacket','leather skirt','biker'],
-  one_piece_swim:['one-piece swimsuit','competition swimsuit','school swimsuit'],
-  sweater:  ['sweater','knit sweater','oversized sweater','turtleneck'],
-  hoodie:   ['hoodie','hooded','sweatshirt'],
-  pajama:   ['pajamas','pajama','sleepwear','nightwear'],
-  kimono:   ['kimono','furisode','traditional japanese'],
-  nun:      ['nun','nun habit','sister outfit'],
-  police:   ['police','police uniform','officer'],
-  teacher:  ['teacher','glasses teacher','blazer teacher'],
+  wet:      ['wet white shirt','wet clothes','wet shirt','wet fabric','clinging to skin','soaked','transparent when wet','濕身','濕透','濕衫'],
+  sheer:    ['semi-transparent','see-through','sheer fabric','sheer dress','sheer negligee','transparent fabric','透視','透明'],
+  lingerie: ['lace lingerie','lingerie set','lace bra','bra and panties','underwear set','negligee','bralette','underwear selfie','蕾絲內衣','內衣套裝','lingerie'],
+  garter:   ['garter belt','garter straps','garter peek','吊帶襪','吊帶'],
+  stockings:['thigh-high stockings','sheer stockings','black stockings','fishnet pantyhose','pantyhose','knee socks','絲襪','過膝襪','thigh-highs'],
+  miniskirt:['micro skirt','miniskirt','mini skirt','short hemline','pleated mini','tennis skirt','迷你裙','超短裙'],
+  dress:    ['maxi dress','evening dress','sundress','cocktail dress','one-piece dress','flared dress','gown','連身裙','洋裝'],
+  bodycon:  ['bodycon mini','bodycon dress','bodycon','hip-hugging fabric','race queen suit','包臀'],
+  keyhole:  ['keyhole sweater','virgin killer','open chest cutout','open chest','sideboob','deep v','deep V','開胸'],
+  crop_top: ['crop top','cropped','bare midriff','midriff','navel exposed','short top','tube top','短上衣','露臍'],
+  off_shoulder:['off-shoulder','off shoulder','bare shoulders','one shoulder','slipping neckline','露肩'],
+  fishnet:  ['fishnet bodystocking','fishnet pantyhose','fishnets','fishnet','mesh legwear','網襪'],
+  latex:    ['latex tight','latex suit','shiny latex','latex dress','rubber suit','膠衣','乳膠'],
+  leather:  ['leather micro','leather skirt','leather jacket','leather bikini','biker','皮革'],
+  school:   ['school uniform','serafuku','sailor collar','sailor uniform','student look','校服','水手服','制服裙'],
+  maid:     ['maid outfit','maid dress','frilled apron','女僕'],
+  nurse:    ['nurse dress','nurse uniform','nurse cap','護士'],
+  bunny:    ['bunny leotard','playboy bunny','bunny girl','兔女郎'],
+  bikini:   ['micro bikini','string bikini','santa bikini','cow print bikini','bikini','比基尼'],
+  one_piece_swim:['competitive swimsuit','competition swimsuit','one-piece swimsuit','school swimsuit','連身泳裝','競泳'],
+  qipao:    ['cheongsam','qipao','mandarin collar','旗袍'],
+  ol:       ['office blazer','pencil skirt','office lady','professional OL','OL seduction','ol look'],
+  gothic:   ['gothic lolita','corset dress','victorian gothic','gothic','哥德'],
+  idol:     ['idol stage outfit','cheerleader uniform','sparkly mini','performance wear','idol outfit','偶像'],
+  yukata:   ['yukata','obi sash','summer festival wear','浴衣'],
+  kimono:   ['furisode','kimono','traditional japanese kimono','和服'],
+  witch:    ['witch hat','witch dress','魔女'],
+  gym:      ['gym bloomers','buruma','yoga shorts','athletic crop','tennis skirt and polo','sporty fit physique','運動'],
+  sweater:  ['knit sweater','oversized sweater','oversized knit','keyhole sweater','turtleneck','毛衣'],
+  hoodie:   ['cropped hoodie','oversized pastel hoodie','hoodie','hooded sweatshirt','帽T','連帽'],
+  pajama:   ['sleepwear','nightwear','pajama','pajamas','silky pajama','camisole sleep','睡衣','睡袍'],
+  apron:    ['naked apron','frilled apron','apron only','圍裙'],
+  nun:      ['nun habit','sister outfit','nun dress','修女'],
+  police:   ['police uniform','officer uniform','police officer','警察'],
+  teacher:  ['glasses teacher','blazer teacher','teacher outfit','教師'],
+  cosplay:  ['devil costume','angel costume','Halloween cosplay','cosplay costume','角色扮演'],
+};
+
+/** 選定服裝類型時，若文案缺關鍵特徵就注入的短錨點（保證可見） */
+const SPICY_OUTFIT_ANCHORS = {
+  wet: 'wet fabric clinging to skin',
+  sheer: 'sheer see-through fabric',
+  lingerie: 'lace lingerie',
+  garter: 'garter belt',
+  stockings: 'thigh-high stockings',
+  miniskirt: 'micro miniskirt',
+  dress: 'dress',
+  bodycon: 'bodycon mini dress',
+  keyhole: 'keyhole open chest',
+  crop_top: 'crop top, bare midriff',
+  off_shoulder: 'off-shoulder neckline',
+  fishnet: 'fishnet legwear',
+  latex: 'shiny latex',
+  leather: 'leather outfit',
+  school: 'school uniform',
+  maid: 'maid outfit, frilled apron',
+  nurse: 'nurse uniform',
+  bunny: 'bunny leotard',
+  bikini: 'bikini',
+  one_piece_swim: 'one-piece swimsuit',
+  qipao: 'qipao, cheongsam',
+  ol: 'office lady outfit, pencil skirt',
+  gothic: 'gothic lolita dress',
+  idol: 'idol stage outfit',
+  yukata: 'yukata',
+  kimono: 'kimono',
+  witch: 'witch hat and dress',
+  gym: 'athletic sportswear',
+  sweater: 'knit sweater',
+  hoodie: 'hoodie',
+  pajama: 'sleepwear pajamas',
+  apron: 'apron',
+  nun: 'nun habit',
+  police: 'police uniform',
+  teacher: 'teacher outfit',
+  cosplay: 'cosplay costume',
+};
+
+/** 辭庫完全無匹配時的完整 fallback 條目 */
+const SPICY_OUTFIT_FALLBACKS = {
+  wet: 'wet white shirt clinging to skin, soaked transparent fabric, no bra underneath, nipple outline hint',
+  sheer: 'sheer semi-transparent dress, see-through fabric layers, delicate lace underlayer visible',
+  lingerie: 'lace lingerie set, bra and matching panties, garter straps, delicate underwear styling',
+  garter: 'garter belt, sheer black stockings, lace panties, boudoir styling',
+  stockings: 'thigh-high stockings, sheer black hose, garter clips optional, leg emphasis',
+  miniskirt: 'micro miniskirt, short hemline, pleated skirt, thigh emphasis',
+  dress: 'fitted dress, elegant silhouette, flowing hem, feminine one-piece',
+  bodycon: 'bodycon mini dress, hip-hugging fabric, deep neckline, curve-accent silhouette',
+  keyhole: 'keyhole sweater, open chest cutout, sideboob peek, tight knit fabric',
+  crop_top: 'crop top, bare midriff, navel exposed, short hem top',
+  off_shoulder: 'off-shoulder top, bare shoulders, slipping neckline, collarbone emphasis',
+  fishnet: 'fishnet bodystocking, mesh legwear, layered erotic street style',
+  latex: 'latex tight dress, glossy black material, curve-hugging shiny silhouette',
+  leather: 'leather micro skirt, cropped leather top, edgy nightlife outfit',
+  school: 'school uniform, pleated skirt, blouse, sailor collar optional, student look',
+  maid: 'maid outfit, short frilled apron, thigh-highs, classic maid dress',
+  nurse: 'nurse dress uniform, white stockings, nurse cap, fitted clinical look',
+  bunny: 'bunny leotard, fishnet pantyhose, bow tie collar, playboy bunny aesthetic',
+  bikini: 'micro bikini, string top, side-tie bottom, minimal swimwear coverage',
+  one_piece_swim: 'competitive one-piece swimsuit, high leg cut, wet shine, athletic swimwear',
+  qipao: 'cheongsam qipao, high side slit, mandarin collar, silk fabric hugging hips',
+  ol: 'office blazer and pencil skirt, unbuttoned blouse, professional OL look',
+  gothic: 'gothic lolita dress, black lace trim, frilled petticoat, dark romantic fashion',
+  idol: 'idol stage outfit, sparkly mini skirt, crop top, colorful performance wear',
+  yukata: 'yukata, floral pattern, obi sash, summer festival wear',
+  kimono: 'kimono, traditional japanese layers, elegant sash, formal japanese dress',
+  witch: 'witch hat and dress, dark palette, striped thigh-highs, Halloween styling',
+  gym: 'athletic crop top and sports shorts, toned midriff, sporty activewear',
+  sweater: 'knit sweater, soft oversized knit, cozy silhouette',
+  hoodie: 'oversized hoodie, casual hooded top, loungewear styling',
+  pajama: 'cute sleepwear pajamas, soft nightwear, relaxed bedroom outfit',
+  apron: 'frilled apron over outfit, domestic apron styling',
+  nun: 'nun habit, modest sister outfit, traditional religious dress',
+  police: 'police uniform, officer styling, fitted authority look',
+  teacher: 'teacher blazer outfit, professional academic styling, glasses optional',
+  cosplay: 'themed cosplay costume, character-inspired outfit, costume details',
+};
+
+/** 有服裝篩選時，調性只加「質感」不覆寫服裝本體 */
+const TONE_OUTFIT_SOFT_ACCENTS = {
+  cute: ['ribbon accents', 'pastel color accents', 'kawaii styling details'],
+  spicy: ['form-fitting silhouette', 'subtle skin reveal', 'alluring fabric tension'],
+  tempt: ['teasing silhouette', 'fabric pulled slightly', 'suggestive styling'],
+  sex: ['disheveled clothing state', 'erotic fabric detail', 'explicit styling hints'],
 };
 
 /** 服裝類可複選，不再互斥 */
@@ -2808,6 +2906,7 @@ function setCharTone(tone) {
     document.getElementById('char-tone-' + id + '-v2')?.classList.toggle('on', id === charTone);
   });
   syncCharIntensity();
+  scheduleRailBadgeSync();
   saveActiveSession();
 }
 
@@ -2889,6 +2988,7 @@ function setCharMode(m) {
   document.getElementById('char-mode-mix')?.classList.toggle('on', m === 'mix');
   document.getElementById('char-mode-learn')?.classList.toggle('on', m === 'learn');
   document.getElementById('char-mode-template')?.classList.toggle('on', m === 'template');
+  scheduleRailBadgeSync();
 }
 
 function isDefaultTemplate(tpl) {
@@ -2957,12 +3057,20 @@ function generateCharLearnLegacy() {
     const hasBase = !!(base && base[s.key]);
     if (!pool.length && !hasBase) { charSlots[s.key] = ''; return; }
 
+    if (s.key === 'outfit' && getActiveSpicyOutfitIds().length) {
+      // 學習模式也必須尊重服裝篩選
+      charSlots[s.key] = rollOutfitSection();
+      return;
+    }
     if (hasBase && Math.random() < 0.42) {
-      charSlots[s.key] = applyToneBoost(s.key, base[s.key]);
+      const boosted = applyToneBoost(s.key, base[s.key]);
+      charSlots[s.key] = s.key === 'outfit'
+        ? ensureOutfitSelectionAnchors(boosted, getActiveSpicyOutfitIds())
+        : boosted;
     } else if (pool.length) {
       charSlots[s.key] = s.key === 'job' ? rollJobSection()
         : s.key === 'pose' ? rollPoseSection()
-        : s.key === 'outfit' && isCuteSelfieOutfitMode() ? rollCharSection('outfit')
+        : s.key === 'outfit' ? rollOutfitSection()
         : rollCharTags(s.key);
     } else {
       charSlots[s.key] = applyToneBoost(s.key, base[s.key]);
@@ -2982,6 +3090,7 @@ function setCharFmt(f) {
   charFmt = f;
   document.getElementById('char-fmt-structured')?.classList.toggle('on', f==='structured');
   document.getElementById('char-fmt-flat')?.classList.toggle('on', f==='flat');
+  scheduleRailBadgeSync();
   renderChar();
 }
 
@@ -3393,13 +3502,107 @@ function filterOutfitBankByPosePreset(bank) {
   return filtered.length ? filtered : bank;
 }
 
+function markerMatchesText(text, marker) {
+  const t = String(text || '').toLowerCase();
+  const k = String(marker || '').toLowerCase().trim();
+  if (!k) return false;
+  // 短英數 token 用邊界，避免 ol 命中 collar/gold、nun 誤傷等
+  if (/^[a-z0-9]{1,3}$/i.test(k)) {
+    try {
+      return new RegExp(`(?:^|[^a-z0-9])${k}(?:[^a-z0-9]|$)`, 'i').test(t);
+    } catch {
+      return t.includes(k);
+    }
+  }
+  return t.includes(k);
+}
+
 function scoreSpicyOutfitEntry(text) {
-  const t = text.toLowerCase();
   const scores = {};
   Object.entries(SPICY_OUTFIT_MARKERS).forEach(([id, keys]) => {
-    scores[id] = keys.reduce((n, k) => n + (t.includes(k) ? 1 : 0), 0);
+    scores[id] = keys.reduce((n, k) => {
+      if (!markerMatchesText(text, k)) return n;
+      const kL = String(k).toLowerCase();
+      // 較長關鍵字 = 更精準匹配，權重較高
+      const w = kL.length >= 14 ? 4 : kL.length >= 9 ? 3 : kL.length >= 5 ? 2 : 1;
+      return n + w;
+    }, 0);
   });
   return scores;
+}
+
+function getActiveSpicyOutfitIds() {
+  if (!charSpicyOutfits || charSpicyOutfits.has('none')) return [];
+  if (charSpicyOutfits.has('all')) return Object.keys(SPICY_OUTFIT_MARKERS);
+  return [...charSpicyOutfits].filter(id => id !== 'all' && id !== 'none' && SPICY_OUTFIT_MARKERS[id]);
+}
+
+function scoreOutfitEntryForSelection(entry, activeIds) {
+  if (!activeIds?.length) return 1;
+  const s = scoreSpicyOutfitEntry(entry);
+  let score = 0;
+  let hits = 0;
+  activeIds.forEach(id => {
+    const v = s[id] || 0;
+    if (v > 0) {
+      hits += 1;
+      score += v;
+    }
+  });
+  if (!hits) return 0;
+  // 多選時，命中越多越優先（lingerie+garter 優於只命中其一）
+  score += hits * hits * 2;
+  if (hits === activeIds.length) score += 8;
+  return score;
+}
+
+function pickWeightedScoredEntries(scored) {
+  if (!scored?.length) return '';
+  const weights = scored.map(x => Math.max(0.01, x.score * x.score));
+  const total = weights.reduce((s, w) => s + w, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < scored.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return scored[i].entry;
+  }
+  return scored[0].entry;
+}
+
+function buildOutfitFallbackFromSelection(activeIds) {
+  if (!activeIds?.length) return '';
+  // 多選時取 1～2 個 fallback 拼接，避免過長互斥
+  const ids = activeIds.length <= 2
+    ? activeIds
+    : activeIds.slice().sort(() => Math.random() - 0.5).slice(0, 2);
+  const parts = ids.map(id => SPICY_OUTFIT_FALLBACKS[id] || SPICY_OUTFIT_ANCHORS[id]).filter(Boolean);
+  return [...new Set(parts.join(', ').split(',').map(s => s.trim()).filter(Boolean))].join(', ');
+}
+
+function ensureOutfitSelectionAnchors(text, activeIds) {
+  if (!activeIds?.length) return text || '';
+  const missing = [];
+  activeIds.forEach(id => {
+    const markers = SPICY_OUTFIT_MARKERS[id] || [];
+    const anchor = SPICY_OUTFIT_ANCHORS[id];
+    const hit = markers.some(m => markerMatchesText(text, m))
+      || (anchor && markerMatchesText(text, anchor));
+    if (!hit && anchor) missing.push(anchor);
+  });
+  if (!missing.length) return text || '';
+  return text ? `${text}, ${missing.join(', ')}` : missing.join(', ');
+}
+
+function applyOutfitToneSoft(value) {
+  if (!value || charTone === 'balance') return value;
+  const tone = charTone === 'contrast' ? getEffectiveToneForSection('outfit') : charTone;
+  const pool = TONE_OUTFIT_SOFT_ACCENTS[tone];
+  if (!pool?.length || charToneIntensity < 3) return value;
+  // 只加一個短質感，不整段覆寫服裝
+  const accent = pool[Math.min(pool.length - 1, Math.floor((charToneIntensity - 3) / 1))];
+  if (!accent) return value;
+  const t = value.toLowerCase();
+  if (t.includes(accent.toLowerCase())) return value;
+  return `${value}, ${accent}`;
 }
 
 function textHasAnyMarker(text, markers) {
@@ -3544,9 +3747,28 @@ function syncOutfitPoseCoherence() {
     if (!charLocked.has('outfit') && charSlots.pose
         && textHasAnyMarker(charSlots.pose, POSE_NEEDS_SKIRT_MARKERS)
         && !outfitSupportsSkirtPose(charSlots.outfit)) {
-      let bank = getCharBankFiltered('outfit');
-      bank = bank.filter(e => outfitSupportsSkirtPose(e));
-      if (bank.length) charSlots.outfit = finalizeSlotText('outfit', applyToneBoost('outfit', pick(bank)));
+      // 優先在「已選服裝類型」內找可搭配裙子的條目，避免洗掉篩選
+      let bank = getCharBankFiltered('outfit').filter(e => outfitSupportsSkirtPose(e));
+      if (bank.length) {
+        const active = getActiveSpicyOutfitIds();
+        const picked = active.length ? pickOutfitFromSelection(bank) : pick(bank);
+        charSlots.outfit = finalizeSlotText(
+          'outfit',
+          ensureOutfitSelectionAnchors(
+            active.length ? applyOutfitToneSoft(picked) : applyToneBoost('outfit', picked),
+            active
+          )
+        );
+      } else if (getActiveSpicyOutfitIds().length) {
+        // 仍保留服裝類型，只補裙類錨點
+        charSlots.outfit = finalizeSlotText(
+          'outfit',
+          ensureOutfitSelectionAnchors(
+            `${charSlots.outfit || buildOutfitFallbackFromSelection(getActiveSpicyOutfitIds())}, pleated skirt`,
+            getActiveSpicyOutfitIds()
+          )
+        );
+      }
     }
     if (!charLocked.has('pose') && charSlots.outfit
         && textHasAnyMarker(charSlots.outfit, OUTFIT_EXPLICIT_MARKERS)
@@ -3557,8 +3779,13 @@ function syncOutfitPoseCoherence() {
         && !toneAllowsPureOutfit()
         && (textHasAnyMarker(charSlots.outfit, OUTFIT_EXPLICIT_MARKERS)
           || textHasAnyMarker(charSlots.outfit, OUTFIT_PRESET_MARKERS.cute_outfit_underwear))) {
-      let bank = filterOutfitBankByPosePreset(getCharBankFiltered('outfit'));
-      if (bank.length) charSlots.outfit = finalizeSlotText('outfit', applyToneBoost('outfit', pick(bank)));
+      // 有服裝篩選時不覆寫，改走 rollOutfitSection 維持準確度
+      if (getActiveSpicyOutfitIds().length) {
+        charSlots.outfit = rollOutfitSection();
+      } else {
+        let bank = filterOutfitBankByPosePreset(getCharBankFiltered('outfit'));
+        if (bank.length) charSlots.outfit = finalizeSlotText('outfit', applyToneBoost('outfit', pick(bank)));
+      }
     }
     if (!charLocked.has('pose') && charSlots.outfit && !outfitSupportsSkirtPose(charSlots.outfit)
         && textHasAnyMarker(charSlots.pose, POSE_NEEDS_SKIRT_MARKERS)) {
@@ -3569,21 +3796,68 @@ function syncOutfitPoseCoherence() {
 
 function filterOutfitBankBySpicy(bank) {
   if (!bank.length || charSpicyOutfits.has('none')) return bank;
-  const typeIds = Object.keys(SPICY_OUTFIT_MARKERS);
-  if (charSpicyOutfits.has('all')) {
-    const filtered = bank.filter(entry => {
-      const s = scoreSpicyOutfitEntry(entry);
-      return typeIds.some(id => s[id] > 0);
-    });
-    return filtered.length ? filtered : bank;
-  }
-  const active = [...charSpicyOutfits].filter(id => id !== 'all' && id !== 'none');
+  const active = getActiveSpicyOutfitIds();
   if (!active.length) return bank;
-  const filtered = bank.filter(entry => {
-    const s = scoreSpicyOutfitEntry(entry);
-    return active.some(id => s[id] > 0);
-  });
-  return filtered.length ? filtered : bank;
+
+  const scored = bank
+    .map(entry => ({ entry, score: scoreOutfitEntryForSelection(entry, active) }))
+    .filter(x => x.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  if (!scored.length) {
+    // 不回退全庫：回空陣列，由 rollOutfitSection 用 fallback 保證準確
+    return [];
+  }
+
+  // 只保留相對高分條目，避免弱匹配稀釋準確度
+  const max = scored[0].score;
+  const threshold = Math.max(2, max * 0.35);
+  const strong = scored.filter(x => x.score >= threshold);
+  return (strong.length ? strong : scored).map(x => x.entry);
+}
+
+function pickOutfitFromSelection(bank) {
+  const active = getActiveSpicyOutfitIds();
+  if (!bank?.length) return '';
+  if (!active.length) return pick(bank) || '';
+  const scored = bank
+    .map(entry => ({ entry, score: scoreOutfitEntryForSelection(entry, active) }))
+    .filter(x => x.score > 0);
+  if (!scored.length) return '';
+  return pickWeightedScoredEntries(scored);
+}
+
+function rollOutfitSection() {
+  const active = getActiveSpicyOutfitIds();
+  let bank = getCharBankFiltered('outfit');
+  let base = '';
+
+  if (active.length) {
+    // 有服裝篩選：只用完整條目加權抽取，禁止亂拼標籤
+    base = pickOutfitFromSelection(bank);
+    if (!base) base = buildOutfitFallbackFromSelection(active);
+    base = ensureOutfitSelectionAnchors(base, active);
+    if (isBodyFilterActive()) base = applyBodyHintsToSlot('outfit', base);
+    base = applyOutfitToneSoft(base);
+    return finalizeSlotText('outfit', base);
+  }
+
+  // 無篩選：保留少量標籤混搭，但以完整服裝條目為主
+  if (bank.length) {
+    if (Math.random() < 0.18) {
+      const tags = rollCharTags('outfit');
+      if (tags) base = tags;
+    }
+    if (!base) {
+      base = isBodyFilterActive()
+        ? (pickBodyScoredFromBank(bank) || pick(bank))
+        : pick(bank);
+    }
+  }
+  if (!base) return '';
+  if (isBodyFilterActive()) base = applyBodyHintsToSlot('outfit', base);
+  base = applyToneBoost('outfit', base);
+  return finalizeSlotText('outfit', base);
 }
 
 function scoreSpicyActionEntry(text, markerMap) {
@@ -3884,6 +4158,16 @@ function renderGroupedChips(containerId, groups, allItems, activeSet, toggleFn, 
     const mirror = document.getElementById(opts.mirrorId);
     if (mirror) mirror.innerHTML = html;
   }
+  scheduleRailBadgeSync();
+}
+
+let _railBadgeSyncTimer = null;
+function scheduleRailBadgeSync() {
+  if (_railBadgeSyncTimer) clearTimeout(_railBadgeSyncTimer);
+  _railBadgeSyncTimer = setTimeout(() => {
+    _railBadgeSyncTimer = null;
+    try { syncRailSelectionBadges(); } catch (_) {}
+  }, 40);
 }
 
 const EMBED_CHAR_TABS = ['frame', 'breast', 'leg', 'outfit', 'pose', 'nsfw'];
@@ -4048,6 +4332,7 @@ function renderCharBodyComboChips() {
     const combo = BODY_COMBOS[id];
     return `<span class="mix-chip body${activeId === id ? ' on' : ''}" onclick="applyBodyCombo('${id}')">${combo.label}</span>`;
   }).join('');
+  scheduleRailBadgeSync();
 }
 
 function renderCharBodyChips() {
@@ -4394,10 +4679,11 @@ function onCharComposeKey(e) {
 function rollCharSection(key) {
   if (key === 'job') return rollJobSection();
   if (key === 'pose') return rollPoseSection();
+  if (key === 'outfit') return rollOutfitSection();
   let bank = getCharBankFiltered(key);
   if (key === 'quality') bank = bank.map(sanitizeQualityText).filter(Boolean);
   if (!bank.length) return '';
-  const bodyScored = isBodyFilterActive() && ['subject', 'details', 'outfit'].includes(key);
+  const bodyScored = isBodyFilterActive() && ['subject', 'details'].includes(key);
   if (bodyScored) {
     const picked = pickBodyScoredFromBank(bank);
     if (!picked) return '';
@@ -5666,28 +5952,144 @@ function syncSearchChromeHeight() {
 }
 
 const RAIL_PAGE_LABELS = { style: '風格', char: '混搭', jewel: '飾品', space: '空間' };
-const CHAR_RAIL_QUICK = [
-  { label: '調', nav: 'tone' },
-  { label: '服', nav: 'outfit' },
-  { label: '姿', nav: 'pose' },
-  { label: '動', nav: 'action' },
-  { label: '材', nav: 'body' },
-  { label: 'J', nav: 'job' },
-  { label: '氛', nav: 'env' },
-];
+const RAIL_QUICK_BY_PAGE = {
+  style: [
+    { label: '模', nav: 'mode', title: '生成模式' },
+    { label: '風', nav: 'style', title: '風格代號' },
+    { label: '區', nav: 'inc', title: '包含區塊' },
+    { label: '池', nav: 'pool', title: '風格池' },
+  ],
+  char: [
+    { label: '調', nav: 'tone', title: '調性 · 引擎' },
+    { label: '服', nav: 'outfit', title: '服裝', tone: 'spicy' },
+    { label: '姿', nav: 'pose', title: '姿勢' },
+    { label: '動', nav: 'action', title: '表情·動作', tone: 'spicy' },
+    { label: '身', nav: 'body', title: '身材', tone: 'body' },
+    { label: '職', nav: 'job', title: 'JOB' },
+    { label: '氛', nav: 'env', title: '氛圍' },
+    { label: '進', nav: 'advanced', title: '進階' },
+  ],
+  jewel: [
+    { label: '類', nav: 'cats', title: '產品類別' },
+    { label: '模', nav: 'mode', title: '生成模式' },
+    { label: '區', nav: 'inc', title: '包含區塊' },
+  ],
+  space: [
+    { label: '題', nav: 'cats', title: '主題篩選' },
+    { label: '池', nav: 'pool', title: '風格代號池' },
+    { label: '模', nav: 'mode', title: '生成模式' },
+    { label: '區', nav: 'inc', title: '包含區塊' },
+  ],
+};
 
 function getRailPage(aside) {
   const view = aside?.closest('.view');
   return view?.id?.replace('view-', '') || 'char';
 }
 
-function buildCharRailQuickNav(container) {
+function countActiveRailChips(section) {
+  if (!section) return 0;
+  const chips = section.querySelectorAll('.mix-chip.on, .pick-chip.on');
+  let n = 0;
+  chips.forEach(chip => {
+    const t = (chip.textContent || '').trim();
+    // 預設「無 / 全部 / all」不算有效選取
+    if (!t || t === '無' || t === '全部' || /^all$/i.test(t)) return;
+    n++;
+  });
+  // 調性區：pick 一定有選中，用 pick 數當提示即可
+  if (section.matches?.('[data-rail-nav="tone"]')) {
+    return Math.max(n, section.querySelectorAll('.pick-chip.on').length);
+  }
+  return n;
+}
+
+function buildRailQuickNav(container, page) {
+  const items = RAIL_QUICK_BY_PAGE[page] || [];
+  if (!items.length) return;
   const nav = document.createElement('div');
   nav.className = 'rail-quick-nav';
-  nav.innerHTML = CHAR_RAIL_QUICK.map(item =>
-    `<button type="button" class="rail-quick-btn" data-rail-jump="${item.nav}" onclick="jumpRailSection('${item.nav}')" title="${item.label}">${item.label}</button>`
-  ).join('');
+  nav.innerHTML = items.map(item => {
+    const tone = item.tone ? ` data-tone="${item.tone}"` : '';
+    return `<button type="button" class="rail-quick-btn" data-rail-jump="${item.nav}"${tone} onclick="jumpRailSection('${item.nav}')" title="${item.title || item.label}">
+      <span class="rail-q-label">${item.label}</span>
+      <span class="rail-q-count" data-rail-count="${item.nav}"></span>
+    </button>`;
+  }).join('');
   container.appendChild(nav);
+}
+
+function syncRailSelectionBadges(aside) {
+  const target = aside || document.querySelector('.view.active aside.rail-drawer');
+  if (!target) return;
+  const body = target.querySelector('.rail-panel-body');
+  if (!body) return;
+  let total = 0;
+  body.querySelectorAll('[data-rail-nav]').forEach(section => {
+    const nav = section.getAttribute('data-rail-nav');
+    const count = countActiveRailChips(section);
+    // 調性/模式類固定有選中，不當作「混搭選取」計數
+    const skipBadge = nav === 'tone' || nav === 'mode' || nav === 'style' || nav === 'advanced';
+    const hasSel = !skipBadge && count > 0;
+
+    section.classList.toggle('has-sel', hasSel);
+    if (hasSel) total += count;
+
+    const title = section.querySelector('.mix-zone-title');
+    if (title) {
+      let badge = title.querySelector('.mix-zone-count');
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'mix-zone-count';
+        title.appendChild(badge);
+      }
+      badge.textContent = String(count);
+    }
+
+    const qBtn = target.querySelector(`.rail-quick-btn[data-rail-jump="${nav}"]`);
+    if (qBtn) {
+      qBtn.classList.toggle('has-sel', hasSel);
+      const cEl = qBtn.querySelector('.rail-q-count');
+      if (cEl) cEl.textContent = hasSel ? String(count) : '';
+    }
+  });
+
+  const meta = target.querySelector('.rail-panel-meta');
+  if (meta) meta.textContent = total > 0 ? `${total} 選` : '';
+}
+
+function bindRailScrollSpy(scrollEl, aside) {
+  if (!scrollEl || scrollEl.dataset.spyBound) return;
+  scrollEl.dataset.spyBound = '1';
+  let ticking = false;
+  const update = () => {
+    ticking = false;
+    const body = aside.querySelector('.rail-panel-body');
+    if (!body) return;
+    const sections = [...body.querySelectorAll('[data-rail-nav]')];
+    if (!sections.length) return;
+    const top = scrollEl.getBoundingClientRect().top;
+    let active = sections[0];
+    let best = Infinity;
+    sections.forEach(sec => {
+      const d = Math.abs(sec.getBoundingClientRect().top - top - 12);
+      if (d < best) { best = d; active = sec; }
+    });
+    const navId = active?.getAttribute('data-rail-nav');
+    aside.querySelectorAll('.rail-quick-btn').forEach(btn => {
+      btn.classList.toggle('on', btn.dataset.railJump === navId);
+    });
+    body.querySelectorAll('[data-rail-nav]').forEach(sec => {
+      sec.classList.toggle('rail-section-on', sec === active);
+    });
+  };
+  scrollEl.addEventListener('scroll', () => {
+    if (!ticking) {
+      ticking = true;
+      requestAnimationFrame(update);
+    }
+  }, { passive: true });
+  requestAnimationFrame(update);
 }
 
 function initRailDrawers() {
@@ -5724,11 +6126,11 @@ function initRailDrawers() {
     collapsed.className = 'rail-collapsed';
     collapsed.innerHTML = `<button type="button" class="rail-open-btn" onclick="openRailDrawer(this)" title="展開${label}標籤">
       <span class="rail-open-icon">›</span><span class="rail-open-label">${label}</span></button>`;
-    if (page === 'char') buildCharRailQuickNav(collapsed);
+    buildRailQuickNav(collapsed, page);
     const panel = document.createElement('div');
     panel.className = 'rail-expanded-panel';
     panel.innerHTML = `<div class="rail-panel-head">
-      <span class="rail-panel-title">${label} · 標籤</span>
+      <span class="rail-panel-title">${label} · 標籤<span class="rail-panel-meta"></span></span>
       <button type="button" class="rail-close-btn" onclick="closeRailDrawer()">‹ 收合</button>
     </div><div class="rail-panel-scroll"><div class="rail-panel-body"></div></div>`;
     const body = panel.querySelector('.rail-panel-body');
@@ -5740,6 +6142,11 @@ function initRailDrawers() {
   syncRailDrawerState();
   document.querySelectorAll('.rail-expanded-panel').forEach(ensureRailScrollWrap);
   bindRailPanelScroll();
+  document.querySelectorAll('aside.rail-drawer').forEach(aside => {
+    const scrollEl = getRailScrollEl(aside);
+    bindRailScrollSpy(scrollEl, aside);
+    syncRailSelectionBadges(aside);
+  });
 }
 
 function getRailScrollEl(aside) {
@@ -5779,7 +6186,10 @@ function syncRailDrawerState() {
   document.querySelectorAll('aside.rail-drawer').forEach(a => a.classList.remove('is-open'));
   if (document.body.classList.contains('rail-open')) {
     const active = document.querySelector('.view.active aside.rail-drawer');
-    if (active) active.classList.add('is-open');
+    if (active) {
+      active.classList.add('is-open');
+      syncRailSelectionBadges(active);
+    }
   }
 }
 
@@ -5790,7 +6200,8 @@ function openRailDrawer(trigger) {
   syncRailDrawerState();
   const aside = trigger?.closest('aside.rail-drawer') || document.querySelector('.view.active aside.rail-drawer');
   const scrollEl = getRailScrollEl(aside);
-  if (scrollEl) requestAnimationFrame(() => { scrollEl.scrollTop = 0; });
+  if (scrollEl) requestAnimationFrame(() => { scrollEl.scrollTop = scrollEl.scrollTop; });
+  syncRailSelectionBadges(aside);
 }
 
 function closeRailDrawer() {
@@ -5812,8 +6223,14 @@ function jumpRailSection(navId) {
   const target = body.querySelector(`[data-rail-nav="${navId}"]`);
   if (!target) return;
   if (target.tagName === 'DETAILS') target.open = true;
+  aside.querySelectorAll('.rail-quick-btn').forEach(btn => {
+    btn.classList.toggle('on', btn.dataset.railJump === navId);
+  });
+  body.querySelectorAll('[data-rail-nav]').forEach(sec => {
+    sec.classList.toggle('rail-section-on', sec.getAttribute('data-rail-nav') === navId);
+  });
   requestAnimationFrame(() => {
-    const top = target.getBoundingClientRect().top - scrollEl.getBoundingClientRect().top + scrollEl.scrollTop - 8;
+    const top = target.getBoundingClientRect().top - scrollEl.getBoundingClientRect().top + scrollEl.scrollTop - 10;
     scrollEl.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
   });
 }
@@ -5921,6 +6338,7 @@ window.openRailDrawer = openRailDrawer;
 window.closeRailDrawer = closeRailDrawer;
 window.toggleRailDrawer = toggleRailDrawer;
 window.jumpRailSection = jumpRailSection;
+window.syncRailSelectionBadges = syncRailSelectionBadges;
 (function exposeVoidRngApi() {
   const fns = [
     'switchPage', 'generateChar', 'generateAll', 'generateJewel', 'generateSpaceCards', 'toast',
