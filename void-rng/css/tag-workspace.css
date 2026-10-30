@@ -1,0 +1,6 @@
+.workspace-link { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; }
+.ui-v4 .workspace-heading { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; padding: 18px; }
+.workspace-heading strong { color: #e4e4ec; font-size: 16px; font-weight: 500; }
+.workspace-heading p { margin-top: 8px; color: #a4a4ae; font-size: 12px; line-height: 1.7; }
+.ui-v4 .workspace-heading .workspace-link { color: #d1ebdf; border-color: #709c85; min-height: 40px; }
+.ui-v4 .page-tabs .workspace-link { color: #bed6c8; }

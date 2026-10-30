@@ -106,8 +106,12 @@
 
   async function dbClear() {
     const db = await _openDB();
-    return new Promise(res => {
-      db.transaction(_DB_STORE, 'readwrite').objectStore(_DB_STORE).clear().onsuccess = res;
+    return new Promise((res, rej) => {
+      const tx = db.transaction(_DB_STORE, 'readwrite');
+      tx.objectStore(_DB_STORE).clear();
+      tx.oncomplete = () => res();
+      tx.onerror = () => rej(tx.error || new Error('Gallery clear failed'));
+      tx.onabort = () => rej(tx.error || new Error('Gallery clear aborted'));
     });
   }
 

@@ -12,11 +12,13 @@
 <link rel="stylesheet" href="css/ui-v4.css">
 <link rel="stylesheet" href="css/search.css">
 <link rel="stylesheet" href="css/search-v4.css">
+<link rel="stylesheet" href="css/lexicon-ui.css">
 </head>
 <body class="ui-v4">
 <div id="boot-error" role="alert"></div>
 <div class="topbar">
   <div class="logo">VOID<span>.RNG</span></div>
+  <a class="tb-btn" href="p-format.html" style="text-decoration:none;white-space:nowrap">P 格式轉換</a>
   <button class="tb-btn session-pill" id="session-pill" onclick="openSessionPanel()" title="切換工作階段">SESSION 1</button>
   <div class="page-tabs tile-tabs" id="page-tabs">
     <div class="page-tab on" data-page="style" onclick="switchPage('style',this)">風格</div>
@@ -279,9 +281,9 @@
     <section class="panel ui-panel">
       <div class="char-compose-hero ui-card">
         <input class="char-compose-input" id="char-compose-input" type="text"
-          placeholder="輸入關鍵字… 天真 內褲 自拍 · Enter 智慧補齊"
+          placeholder="輸入描述，例如：雨天、城市、柔和光線 · Enter 補齊" aria-label="描述目前作品"
           autocomplete="off" oninput="debouncedCharComposeHint()" onkeydown="onCharComposeKey(event)">
-        <div class="char-compose-tiles">
+        <details class="compose-presets"><summary>預設組合與生成工具</summary><div class="char-compose-tiles">
           <button type="button" class="compose-tile" onclick="applyContrastPreset('innocent_panty')">天真內褲</button>
           <button type="button" class="compose-tile" onclick="applyContrastPreset('dazed_tease')">呆呆色氣</button>
           <button type="button" class="compose-tile" onclick="applyContrastPreset('pure_contrast')">清純反差</button>
@@ -290,13 +292,16 @@
           <button type="button" class="compose-tile" onclick="applyContrastPreset('nullcraft_red')">紅主導</button>
           <button type="button" class="compose-tile" onclick="applyContrastPreset('nullcraft_duo')">奈奈+小白</button>
           <button type="button" class="compose-tile" onclick="applyContrastPreset('nullcraft_weed')">WEED迷濛</button>
+          <button type="button" class="compose-tile" onclick="applyContrastPreset('roxy_migurdia')">Roxy Migurdia</button>
           <button type="button" class="compose-tile accent" onclick="collideOrganicCombo()">反差碰撞</button>
           <button type="button" class="compose-tile accent" onclick="runDrawCard()" title="進入抽卡模式並全自動生成視覺 prompt">🔥抽卡生成</button>
           <button type="button" class="compose-tile" onclick="charComposeSmartFill()">智慧補齊</button>
           <button type="button" class="compose-tile primary" onclick="charComposeSave()">存入辭庫</button>
         </div>
+        </details>
         <div class="char-compose-hint meta" id="char-compose-hint">輸入關鍵字 · 智慧補齊空白區塊 · 或點方塊快速碰撞 · 🔥抽卡＝全自動反差視覺</div>
       </div>
+      <div class="lexicon-strip"><div id="lexicon-overview" class="lexicon-metrics" aria-live="polite"></div><button type="button" class="tb-btn" onclick="openLexiconPanel()">詞庫與增長</button></div>
       <div class="char-prompt-compact ui-card ui-output-card">
         <div class="ui-head"><span class="ui-title">Prompt</span><span class="meta" id="char-meta">—</span></div>
         <div class="status-bar" id="char-status-bar"></div>
@@ -305,7 +310,7 @@
       <div class="action-tiles">
         <button class="action-tile primary" onclick="copyCharOutput()">複製</button>
         <button class="action-tile" onclick="generateChar()">重抽</button>
-        <button class="action-tile" onclick="reinforceLikedCombo()">喜歡</button>
+        <button class="action-tile" id="char-like-btn" onclick="reinforceLikedCombo()" title="將目前輸出加入辭庫並記住偏好；重複點擊不重複入庫">喜歡並入庫</button>
         <button class="action-tile" onclick="exploreOrganicBatch(3)">探索×3</button>
         <button class="action-tile" onclick="copyCharTagsOnly()">標籤</button>
         <button class="action-tile" onclick="addCharHistory()">歷史</button>
@@ -522,13 +527,23 @@
 </div>
 
 
-<div class="toast" id="toast"></div>
+<dialog id="lexicon-dialog" class="lexicon-dialog" aria-labelledby="lexicon-dialog-title">
+  <div class="lexicon-dialog-head"><h2 id="lexicon-dialog-title">詞庫與增長</h2><form method="dialog"><button class="tb-btn" aria-label="關閉詞庫面板">關閉</button></form></div>
+  <div id="lexicon-dialog-overview" class="lexicon-metrics"></div>
+  <p class="lexicon-help">唯一標籤跨分類去重；詞庫條目包含單詞與描述段；描述段是含多個標籤的條目。範本總數包含內建與個人範本。</p>
+  <h3>最近入庫</h3><div id="lexicon-activity" aria-live="polite"></div>
+  <p class="lexicon-help">資料保存在目前瀏覽器。增長從此次更新後的入庫開始記錄，探索代數不代表新增詞彙。</p>
+  <button class="tb-btn" onclick="exportCharBanks()">匯出詞庫備份</button>
+</dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="js/translate.js"></script>
 <script src="js/search.js"></script>
 <script src="js/data-loader.js"></script>
+<script src="js/lexicon-store.js"></script>
 <script src="js/rng-engine.js" id="rng-engine-script"></script>
 <script src="js/preference-engine.js"></script>
 <script src="js/apply-latest-data.js"></script>
+<script src="js/lexicon-ui.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

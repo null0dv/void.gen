@@ -4,7 +4,7 @@
 
   const SAMPLES_KEY = 'void-char-pref-samples';
   const ORGANIC_STATE_KEY = 'void-char-organic-state';
-  const MODEL_VERSION = 1;
+  const MODEL_VERSION = 2;
   const MAX_SAMPLES = 240;
   const COMBO_CORE = ['face', 'outfit', 'pose'];
   const COLLISION_DIMS = ['face', 'outfit', 'pose', 'env', 'styleRef', 'details'];
@@ -45,7 +45,7 @@
   }
 
   function normalizeTag(tag) {
-    return String(tag || '').toLowerCase().trim().slice(0, 96);
+    return global.VoidLexicon.key(tag);
   }
 
   function pairSectionKey(a, b) {
@@ -57,7 +57,8 @@
   }
 
   function tripleKey(t1, t2, t3) {
-    return [normalizeTag(t1), normalizeTag(t2), normalizeTag(t3)].sort().join('|||');
+    // Preserve face / outfit / pose positions; sorting reassigned tags to other sections.
+    return [normalizeTag(t1), normalizeTag(t2), normalizeTag(t3)].join('|||');
   }
 
   function loadStoredSamples() {
@@ -70,9 +71,7 @@
   }
 
   function saveStoredSamples(samples) {
-    try {
-      localStorage.setItem(SAMPLES_KEY, JSON.stringify(samples.slice(-MAX_SAMPLES)));
-    } catch (_) {}
+    localStorage.setItem(SAMPLES_KEY, JSON.stringify(samples.slice(-MAX_SAMPLES)));
   }
 
   function extractTagsFromSlots(slots) {
@@ -92,6 +91,16 @@
   function recordSample(slots, tags, meta) {
     if (!slots || !Object.values(slots).some(Boolean)) return;
     const samples = loadStoredSamples();
+    const signature = global.VoidLexicon.signature(slots);
+    const previous = samples.findIndex(sample => global.VoidLexicon.signature(sample.slots || {}) === signature);
+    if (previous >= 0) {
+      // Repeated clicks do not amplify the same sample; a like can upgrade a learned sample.
+      if (!meta?.liked || samples[previous].meta?.liked) return false;
+      samples[previous] = { ...samples[previous], meta: { ...samples[previous].meta, ...meta }, likedAt: Date.now() };
+      saveStoredSamples(samples);
+      invalidateModel();
+      return true;
+    }
     samples.push({
       v: MODEL_VERSION,
       ts: Date.now(),
@@ -101,6 +110,7 @@
     });
     saveStoredSamples(samples);
     invalidateModel();
+    return true;
   }
 
   function recordFromText(text, meta) {
@@ -813,8 +823,8 @@
     return true;
   }
 
-  function reinforceLiked() {
-    const slots = { ...getSlots() };
+  function reinforceLiked(currentSlots, options = {}) {
+    const slots = { ...(currentSlots || getSlots()) };
     if (!Object.values(slots).some(Boolean)) {
       global.toast?.('尚無可強化的組合');
       return false;
@@ -833,7 +843,7 @@
     invalidateModel();
     renderPreferenceStats();
     renderOrganicStatus();
-    global.toast?.('已標記喜歡 · 下次有機延伸將以此為種子');
+    if (!options.silent) global.toast?.('已標記喜歡 · 下次有機延伸將以此為種子');
     return true;
   }
 
@@ -964,7 +974,7 @@
       ? global.getUserLearnedTemplates().length : 0;
     const top = model.topCombos[0];
     const topLabel = top ? formatComboLabel(top) : '—';
-    el.innerHTML = `偏好樣本 ${stored} · 學習範本 ${learned} · 訓練權重 ${Math.round(model.sampleCount)}`
+    el.innerHTML = `偏好樣本 ${stored}/${MAX_SAMPLES} · 學習範本 ${learned} · 加權總量 ${Math.round(model.sampleCount)}`
       + (top ? `<br>熱門組合：${global.escHtml?.(topLabel) || topLabel}` : '');
   }
 

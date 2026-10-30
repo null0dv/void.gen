@@ -43,7 +43,7 @@ Prompt 亂數生成器已與 Full 分離，請到 **`void-rng/`** 目錄啟動�
 
 **步驟 1 — 下載 ComfyUI Windows Portable**
 
-前往 [ComfyUI Releases](https://github.com/comfyanonymous/ComfyUI/releases/latest)，下載 `ComfyUI_windows_portable_nvidia_*.7z`，解壓到 `C:\ComfyUI_portable`
+前往 [ComfyUI Releases](https://github.com/comfyanonymous/ComfyUI/releases/latest)，下載 `ComfyUI_windows_portable_nvidia_*.7z`。目前桌面版使用的安裝位置是 `C:\ComfyUI_windows_portable`。
 
 **步驟 2 — 設定啟動參數**
 
@@ -55,7 +55,7 @@ pause
 
 **步驟 3 — 下載 AI 模型**
 
-下載任一 `.safetensors` 模型，放到 `C:\ComfyUI_portable\ComfyUI\models\checkpoints\`
+下載任一 `.safetensors` 模型，放到 `C:\ComfyUI_windows_portable\ComfyUI\models\checkpoints\`
 
 </details>
 
@@ -76,7 +76,7 @@ pause
 
 ## 推薦設置（動漫 / 插畫風格）
 
-> 以下為測試過的穩定組合，適合動漫、插畫、二次元風格生成
+> 以下是目前桌面 `VOID.GEN FULL` 實際使用並已確認存在的模型組合，適合動漫、插畫、二次元風格生成。模型檔案不存放在 GitHub，請由原始模型頁面下載。
 
 ### 下載清單
 
@@ -85,9 +85,14 @@ pause
 | 主模型 (Checkpoint) | `novaAnimeXL_ilV180.safetensors` | [CivitAI](https://civitai.com/models/376130/nova-anime-xl) |
 | Refiner | `JANKUTrainedChenkinNoobai_v777.safetensors` | [CivitAI](https://civitai.com/models/1277670/janku-trained-chenkin-and-noobai-rouwei-illustrious-xl) |
 
-兩個檔案都放到：
+兩個檔案都放到目前使用中的 ComfyUI：
 ```
-C:\ComfyUI_portable\ComfyUI\models\checkpoints\
+C:\ComfyUI_windows_portable\ComfyUI\models\checkpoints\
+```
+
+目前低顯存啟動參數（RTX 3050 4GB）：
+```bat
+.\python_embeded\python.exe -s run_comfyui_pna.py --windows-standalone-build --lowvram --listen 0.0.0.0 --enable-cors-header * --fast --fp8_e4m3fn-unet --preview-method taesd
 ```
 
 ### 面板設定
@@ -115,7 +120,7 @@ C:\ComfyUI_portable\ComfyUI\models\checkpoints\
 
 放到：
 ```
-C:\ComfyUI_portable\ComfyUI\models\checkpoints\
+C:\ComfyUI_windows_portable\ComfyUI\models\checkpoints\
 ```
 
 | 模型 | 大小 | 適合 | 下載 |
@@ -136,7 +141,7 @@ Refiner 用於二階段生成，先用主模型跑大部分步數，再由 Refin
 
 放到：
 ```
-C:\ComfyUI_portable\ComfyUI\models\checkpoints\
+C:\ComfyUI_windows_portable\ComfyUI\models\checkpoints\
 ```
 
 > 和主模型放同一個資料夾
@@ -159,7 +164,7 @@ LoRA 是附加風格 / 人物 / 畫風的小型模型，可同時疊加最多 6 
 
 放到：
 ```
-C:\ComfyUI_portable\ComfyUI\models\loras\
+C:\ComfyUI_windows_portable\ComfyUI\models\loras\
 ```
 
 | 推薦來源 | 說明 |
@@ -183,7 +188,7 @@ VAE 影響圖片色彩和銳利度，大部分現代模型已內建良好的 VAE
 
 放到：
 ```
-C:\ComfyUI_portable\ComfyUI\models\vae\
+C:\ComfyUI_windows_portable\ComfyUI\models\vae\
 ```
 
 | 模型 | 適用 | 下載 |
@@ -201,7 +206,7 @@ C:\ComfyUI_portable\ComfyUI\models\vae\
 
 放到：
 ```
-C:\ComfyUI_portable\ComfyUI\models\upscale_models\
+C:\ComfyUI_windows_portable\ComfyUI\models\upscale_models\
 ```
 
 | 模型 | 適合 | 下載 |

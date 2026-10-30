@@ -11,8 +11,8 @@
 <meta name="apple-mobile-web-app-title" content="Void.gen">
 <link rel="apple-touch-icon" href="icon-192.png">
 <script src="js/void-boot.js"></script>
-<script src="js/void-gallery-db.js"></script>
-<script src="js/void-gen-flow.js"></script>
+<script src="js/void-gallery-db.js?v=29.3"></script>
+<script src="js/void-gen-flow.js?v=29.3"></script>
 <script src="js/void-jszip-loader.js"></script>
 <script src="js/void-pwa.js"></script>
 <script src="js/void-pixai.js"></script>
@@ -684,6 +684,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 }
 
 </style>
+<link rel="stylesheet" href="void-desktop.css?v=29.3">
 
 </head>
 <body>
@@ -1103,7 +1104,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 </div><!-- /main -->
 
 <div class="statusbar">
-  <div class="sb-item" id="sb-main">Void.gen · v28</div>
+  <div class="sb-item" id="sb-main">Void.gen · Desktop 29</div>
   <span id="vram-badge" title="GPU VRAM usage">VRAM —</span>
   <span id="sb-api-url" style="font-size:9px;color:var(--muted2);cursor:pointer;letter-spacing:.05em;margin-left:auto" onclick="changeApiUrl()" title="Click to change server URL">127.0.0.1:8188</span>
   <div class="sb-item" id="sb-backend">ComfyUI · 127.0.0.1:8188</div>
@@ -2183,6 +2184,8 @@ async function _ensureComfyWs() {
   return _comfyWs;
 }
 function setApiOnline(ok) {
+  window.voidApiOnline = ok;
+  window.dispatchEvent(new Event('void-connection-change'));
   document.getElementById('api-dot').className = 'status-dot ' + (ok ? 'online' : 'error');
   document.getElementById('api-text').textContent = ok ? 'ONLINE' : 'OFFLINE';
   document.getElementById('sb-backend').className = 'sb-item ' + (ok ? 'ok' : 'error');
@@ -2629,6 +2632,8 @@ async function runInterrogate() {
   const btn = document.getElementById('interrogate-btn');
   const outEl = document.getElementById('tagger-output');
   const outWrap = document.getElementById('tagger-output-wrap');
+  if (btn.disabled || innerWidth <= 900) return;
+  if (window.VoidGenFlow) VoidGenFlow.setState('generating');
   btn.textContent = 'ANALYZING…'; btn.disabled = true;
   outWrap.style.display = 'none';
   setStatus('UPLOADING TO WD14 TAGGER…');
@@ -2650,14 +2655,16 @@ async function runInterrogate() {
     if (!tags) throw new Error('No tags returned');
     outEl.textContent = tags;
     outWrap.style.display = 'block';
+    if (window.VoidGenFlow) VoidGenFlow.setState('done');
     setStatus('TAGS EXTRACTED — PRESS SEND TO FILL PROMPT', 'ok');
     setTimeout(() => setStatus('Void.gen'), 3000);
   } catch(e) {
     outEl.innerHTML = `<span style="color:var(--red)">${escHtml(e.message)}</span>`;
     outWrap.style.display = 'block';
+    if (window.VoidGenFlow) VoidGenFlow.setState('error');
     setStatus(`TAGGER ERROR · ${e.message}`, 'error');
   } finally {
-    btn.textContent = 'INTERROGATE'; btn.disabled = false;
+    btn.textContent = '辨識提示詞'; btn.disabled = false;
   }
 }
 function setSize(w, h, el) {
@@ -2731,11 +2738,18 @@ function saveTasks() {
   localStorage.setItem('sd-tasks', JSON.stringify(tasks));
   setStatus('SAVED', 'ok'); setTimeout(() => setStatus('Void.gen'), 1500);
 }
-function resetTasks() {
-  localStorage.removeItem('sd-tasks');
-  tasks = [{ title:'Image 1', prompt:'', negative:'low quality, blurry', batch:1 }];
-  activeTask = 0; renderTaskTabs(); renderTaskEditor(); renderQueue();
-  setStatus('RESET', 'ok'); setTimeout(() => setStatus('Void.gen'), 1500);
+async function resetTasks() {
+  if (isGenerating) { setStatus('請先停止生成，再重設任務', 'warn'); return; }
+  if (!await VoidDesktop.confirm('重設全部任務？', `將移除 ${tasks.length} 個任務的提示詞與名稱。模型設定及圖庫不受影響。`, '重設任務')) return;
+  if (isGenerating) return;
+  const backup = JSON.stringify(tasks);
+  localStorage.setItem('void-tasks-before-reset', backup);
+  tasks = [{ title:'Image 1', prompt:'', negative:'low quality, blurry', batch:currentBatch || 1 }];
+  localStorage.setItem('sd-tasks', JSON.stringify(tasks));
+  activeTask = 0; queueStatuses = {};
+  renderTaskTabs(); renderTaskEditor(); renderQueue();
+  VoidDesktop.refresh();
+  VoidDesktop.notify('任務已重設，可從更多選單復原。');
 }
 
 // ── QUEUE ─────────────────────────────────────────────────────────
@@ -2746,21 +2760,21 @@ function renderQueue() {
   if (!tasks.length) { empty.style.display='flex'; list.innerHTML=''; cnt.style.display='none'; return; }
   empty.style.display = 'none';
   list.innerHTML = tasks.map((t,i) => {
-    const st = queueStatuses[i] || 'pending';
+    const st = queueStatuses[i] || 'draft';
     return `<div class="queue-item">
       <div class="q-status ${st}"></div>
       <div class="q-info">
         <div class="q-title">${escHtml(t.title||'Untitled')}</div>
         <div class="q-meta">${escHtml((t.prompt||'(no prompt)').slice(0,50))}</div>
       </div>
-      <div class="q-badge ${st}">${st.toUpperCase()}</div>
+      <div class="q-badge ${st}">${({draft:'草稿',pending:'排隊中',running:'生成中',done:'已完成',error:'失敗',skipped:'未執行'})[st] || st}</div>
     </div>`;
   }).join('') + (tasks.filter(t=>_taskRunnable(t)).length > 1
     ? `<div style="margin-top:10px;text-align:center"><button class="add-task-btn" style="width:100%;padding:8px" onclick="startGenerate(true)">RUN ALL ${tasks.filter(t=>_taskRunnable(t)).length} TASKS</button></div>`
     : '');
-  const running = Object.values(queueStatuses).filter(s=>s==='running').length;
-  cnt.textContent = running || tasks.length;
-  cnt.style.display = 'inline';
+  const queued = Object.values(queueStatuses).filter(s => s === 'running' || s === 'pending').length;
+  cnt.textContent = queued;
+  cnt.style.display = queued ? 'inline' : 'none';
 }
 
 // ── GALLERY CARD ACTIONS (IDB-backed for full-res) ────────────────
@@ -2884,14 +2898,32 @@ async function deleteFromGallery(card) {
   }
   setTimeout(() => setStatus('Void.gen'), 2200);
 }
-function clearGallery() {
-  const grid = document.getElementById('gallery-grid');
-  grid.innerHTML = ''; grid.style.display = 'none';
-  _setGalleryEmptyVisible(true);
-  _galleryBuffer = [];
-  dbClear().catch(()=>{});
-  renderStorageBar();
-  setStatus('GALLERY CLEARED','ok'); setTimeout(()=>setStatus('Void.gen'),1500);
+async function clearGallery() {
+  if (window.voidGalleryClearing) return;
+  if (isGenerating) { setStatus('請先停止生成，再清空圖庫', 'warn'); return; }
+  if (!await VoidDesktop.confirm('清空瀏覽器圖庫？', '將清除這個瀏覽器儲存的全部圖片與圖庫記錄，無法復原。ComfyUI 輸出資料夾中的檔案不會刪除；請先下載需要的圖片。', '清空圖庫')) return;
+  if (isGenerating) return;
+  window.voidGalleryClearing = true;
+  VoidDesktop.refresh();
+  try {
+    await dbClear();
+    const grid = document.getElementById('gallery-grid');
+    grid.innerHTML = ''; grid.style.display = 'none';
+    _galleryBuffer = [];
+    _setGalleryEmptyVisible(true);
+    renderStorageBar();
+    lastResult = null;
+    document.getElementById('preview-img').style.display = 'none';
+    document.getElementById('preview-ph').style.display = '';
+    VoidDesktop.refresh();
+    VoidDesktop.notify('瀏覽器圖庫已清空。');
+  } catch (error) {
+    VoidDesktop.notify('圖庫清除失敗，畫面已保留。請重試。', true);
+    console.error('Gallery clear failed', error);
+  } finally {
+    window.voidGalleryClearing = false;
+    VoidDesktop.refresh();
+  }
 }
 function switchCenterTab(tab, el) {
   document.querySelectorAll('.center-tab').forEach(t => t.classList.remove('active'));
@@ -2920,6 +2952,7 @@ function switchCenterTab(tab, el) {
 
 // ── PREVIEW ───────────────────────────────────────────────────────
 function showPreviewFinal(dataUrl, meta={}) {
+  document.body.classList.add('has-preview');
   lastResult = { dataUrl, meta };
   const mobImg = document.getElementById('mob-preview-img');
   if (mobImg) { mobImg.src = dataUrl; mobImg.style.display = 'block'; }
@@ -2936,6 +2969,7 @@ function showPreviewFinal(dataUrl, meta={}) {
   document.getElementById('m-size').textContent = `${currentW} × ${currentH}`;
 }
 function showLivePreview(url) {
+  document.body.classList.add('has-preview');
   const img = document.getElementById('preview-img');
   if (img._purl) URL.revokeObjectURL(img._purl);
   img._purl = url; img.src = url; img.style.display = 'block';
@@ -3187,13 +3221,21 @@ function clearPrompt(idx) {
 }
 function sendTaggerToPrompt() {
   const text = document.getElementById('tagger-output').textContent;
-  if (!text || activeTask < 0) return;
+  if (!text.trim() || activeTask < 0 || !tasks[activeTask]) return;
   const ta = document.getElementById('te-prompt');
-  if (ta) { ta.value = text; tasks[activeTask].prompt = text; }
+  tasks[activeTask].prompt = text;
+  if (ta) { ta.value = text; _autoResize(ta); }
+  // SEND completes the tagging workflow and prepares a text-to-image task.
+  setMode('txt2img');
+  updateTokenCount();
+  localStorage.setItem('sd-tasks', JSON.stringify(tasks));
+  renderQueue();
+  if (window.VoidGenFlow) VoidGenFlow.setState('idle');
+  window.VoidDesktop?.refresh();
   const btn = document.getElementById('tagger-send-btn');
   btn.textContent = 'SENT!';
   setTimeout(() => btn.textContent = 'SEND', 1500);
-  setStatus('TAGS SENT TO PROMPT', 'ok');
+  setStatus('提示詞已送入 · 已切換為文生圖', 'ok');
   setTimeout(() => setStatus('Void.gen'), 2000);
 }
 function copyTaggerOutput() {
@@ -3950,7 +3992,9 @@ async function pollVRAM() {
     const d = await (await _fetchWithTimeout(`${COMFY_API}/system_stats`, 3000)).json();
     const gpu = d?.devices?.[0];
     if (!gpu) return;
-    const used = gpu.vram_used / (1024**3), total = gpu.vram_total / (1024**3);
+    const usedBytes = Number.isFinite(gpu.vram_used) ? gpu.vram_used : gpu.vram_total - gpu.vram_free;
+    const used = Math.max(0, usedBytes) / (1024**3), total = gpu.vram_total / (1024**3);
+    if (!Number.isFinite(used)) return;
     if (!total) return;
     const badge = document.getElementById('vram-badge');
     badge.style.display = 'inline';
@@ -4779,5 +4823,6 @@ window.toggleFav = toggleFav;
 window.setCardRating = setCardRating;
 window.deleteFromGallery = deleteFromGallery;
 </script>
+<script src="js/void-desktop.js?v=29.3"></script>
 </body>
 </html>

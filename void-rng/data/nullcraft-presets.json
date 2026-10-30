@@ -93,5 +93,14 @@
       "env": ["cozy-room", "weed haze", "pastel color bleed", "candle glow", "warm blanket tones"],
       "styleRef": ["weed-rp v2", "dreamy soft focus", "pastel bloom", "NullCraft"]
     }
+  },
+  "roxy_migurdia": {
+    "label": "Roxy Migurdia",
+    "fixed": {
+      "subject": "roxy migurdia, blue hair, long hair, braid, blue eyes, twin braids, hair between eyes"
+    },
+    "hints": {
+      "subject": ["roxy migurdia", "blue hair", "long hair", "braid", "blue eyes", "twin braids", "hair between eyes"]
+    }
   }
 }

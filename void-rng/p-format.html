@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0c0c0e">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'">
+  <title>VOID.RNG — P 格式轉換</title>
+  <link rel="icon" href="icons/favicon.png">
+  <link rel="stylesheet" href="css/p-format.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">VOID.RNG <span>P FORMAT</span></div>
+    <div class="top-tools"><a href="/" class="p-back-link">返回標籤工作台</a><span class="mode">本機分類 · 不需 API</span></div>
+  </header>
+  <main>
+    <div class="intro"><h1>貼上內容，整理成 P 格式。</h1><p>固定 8 個區塊 · 英文逗號標籤 · 保留原意與權重 · 缺少內容保留空白</p><p>輸入內容只在本機處理。支援英文 Prompt 與常見中文詞彙；未識別內容會另外列出供你確認。</p></div>
+    <div class="workspace">
+      <section class="pane">
+        <div class="pane-head"><label for="p-input">輸入 Prompt 或描述</label><span id="p-input-count">0 字</span></div>
+        <textarea id="p-input" placeholder="" spellcheck="false" maxlength="100000" autofocus></textarea>
+        <div class="actions"><button type="button" class="primary" id="p-run">轉成 P 格式</button><button type="button" id="p-clear">清空</button><small>Ctrl + Enter 立即轉換</small></div>
+      </section>
+      <section class="pane">
+        <div class="pane-head"><label for="p-output">P 格式輸出</label><span>8 BLOCKS · ENGLISH TAGS</span></div>
+        <textarea id="p-output" readonly spellcheck="false"></textarea>
+        <div class="actions"><button type="button" id="p-copy" disabled>複製 P 格式</button><small>標題與順序固定保留</small></div>
+      </section>
+    </div>
+    <p class="status" id="p-status" role="status" aria-live="polite">貼上 Prompt，會自動在本機分類。</p>
+    <section class="review" id="p-review-wrap" hidden aria-label="待確認內容"><h2>待確認內容</h2><pre id="p-review"></pre></section>
+    <details class="negative" id="p-negative-wrap" hidden><summary>負向提示詞（獨立保留）</summary><textarea id="p-negative" aria-label="負向提示詞" readonly></textarea><button type="button" id="p-copy-negative">複製負向提示詞</button></details>
+  </main>
+  <script src="js/lexicon-store.js"></script>
+  <script src="js/prompt-formatter.js"></script>
+  <script src="js/p-format-core.js"></script>
+  <script src="js/p-format-app.js"></script>
+</body>
+</html>

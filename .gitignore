@@ -34,3 +34,5 @@
 !js/void-gen-flow.js
 !js/void-jszip-loader.js
 !js/void-pwa.js
+!void-desktop.css
+!js/void-desktop.js

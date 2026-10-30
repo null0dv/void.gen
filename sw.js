@@ -1,14 +1,16 @@
 // Bump CACHE when static assets change (Full V3 panel)
-const CACHE = "sd-panel-v28";
+const CACHE = "sd-panel-desktop-v29.3";
 const PRECACHE = [
+  "./void-desktop.css?v=29.3",
+  "./js/void-desktop.js?v=29.3",
   "./sd-dashboard.full.html",
   "./sd-dashboard.html",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png",
   "./js/void-boot.js",
-  "./js/void-gallery-db.js",
-  "./js/void-gen-flow.js",
+  "./js/void-gallery-db.js?v=29.3",
+  "./js/void-gen-flow.js?v=29.3",
   "./js/void-jszip-loader.js",
   "./js/void-pwa.js"
 ];

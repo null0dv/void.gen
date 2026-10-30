@@ -14,7 +14,8 @@
     { "id": "sub07", "zh": "女騎士", "en": "female knight, warrior woman, armored woman, adventurer" },
     { "id": "sub08", "zh": "巫女", "en": "shrine maiden, miko, japanese priestess" },
     { "id": "sub09", "zh": "辣妹", "en": "gyaru, tanned woman, fashionable woman, blonde hair" },
-    { "id": "sub10", "zh": "地雷系女孩", "en": "jirai kei girl, ryousangata girl, melancholic cute woman" }
+    { "id": "sub10", "zh": "地雷系女孩", "en": "jirai kei girl, ryousangata girl, melancholic cute woman" },
+    { "id": "sub11", "zh": "Roxy Migurdia", "en": "roxy migurdia, blue hair, long hair, braid, blue eyes, twin braids, hair between eyes" }
   ],
   "face": [
     { "id": "f01", "zh": "看向觀眾", "en": "looking at viewer, eye contact, direct gaze" },

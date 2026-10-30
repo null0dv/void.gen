@@ -1,0 +1,58 @@
+/* Readable controls, compact tools, and a persistent vocabulary overview. */
+.ui-v4 {
+  --muted: #a1a1aa;
+  --muted2: #85858f;
+  --line2: rgba(255, 255, 255, .18);
+  --rail-strip-w: 76px;
+}
+.ui-v4 :is(.tb-btn, .search-btn, .search-compact-trigger, .search-compact-apply, .rail-quick-btn, .rail-open-btn, .rail-close-btn) {
+  color: #c2c2cb;
+  min-height: 36px;
+}
+.ui-v4 :is(button, summary, input, textarea, [tabindex]):focus-visible {
+  outline: 2px solid #bcdacb;
+  outline-offset: 3px;
+}
+.ui-v4 :is(.meta, .sec-label, .mix-foot, .char-compose-hint, .bank-stat-lbl, .status-pill) { color: #a1a1aa; }
+.ui-v4 .search-compact-input { color: #ededf0; font-size: 14px; }
+.ui-v4 .search-expanded { max-height: min(34dvh, 300px); overflow-y: auto; }
+.ui-v4 #view-char .panel.ui-panel { gap: 12px; padding: 20px 24px; min-width: 0; }
+.ui-v4 .char-compose-hero.ui-card { padding: 14px 16px; }
+.ui-v4 .char-compose-input { font-size: 14px; min-height: 44px; color: #ededf0; }
+.ui-v4 .compose-presets { margin-top: 10px; }
+.ui-v4 .compose-presets > summary { cursor: pointer; font-size: 13px; color: #c2c2cb; padding: 8px 0; }
+.ui-v4 .compose-presets .char-compose-tiles { margin-top: 8px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+.ui-v4 .compose-presets .compose-tile { min-height: 38px; padding: 9px; }
+.ui-v4 .char-compose-hint { margin-top: 8px; font-size: 12px; line-height: 1.65; }
+.ui-v4 .lexicon-strip { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.lexicon-metrics { display: flex; gap: 12px 24px; flex-wrap: wrap; font-size: 12px; color: #a1a1aa; }
+.lexicon-metrics strong { color: #efeff2; font-size: 17px; font-weight: 500; margin-right: 3px; font-variant-numeric: tabular-nums; }
+.ui-v4 .ui-output-card .output-box { min-height: 290px; height: clamp(290px, 42dvh, 600px); max-height: none; font-size: 14px; line-height: 1.85; resize: vertical; padding: 18px; }
+.ui-v4 .action-tiles { display: flex; flex-wrap: wrap; gap: 8px; }
+.ui-v4 .action-tile { min-width: 100px; min-height: 42px; flex: 0 1 auto; padding: 10px 18px; font-size: 13px; }
+.ui-v4 #char-like-btn { color: #d1ebdf; border-color: #709c85; background: #15231c; }
+.ui-v4 .rail-quick-btn { font-size: 12px; padding: 9px 3px; letter-spacing: 0; }
+.ui-v4 .status-pill { font-size: 11px; line-height: 1.6; }
+.lexicon-dialog { margin: auto; width: min(700px, calc(100vw - 32px)); max-height: 85dvh; overflow: auto; padding: 26px; background: #121216; color: #e2e2e2; border: 1px solid #41414b; border-radius: 14px; }
+.lexicon-dialog::backdrop { background: rgba(0, 0, 0, .7); }
+.lexicon-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
+.lexicon-dialog h2 { font-size: 20px; font-weight: 500; }
+.lexicon-dialog h3 { font-size: 14px; margin: 24px 0 12px; }
+.lexicon-help, #lexicon-activity { font-size: 13px; line-height: 1.8; color: #b6b6c0; margin: 18px 0; }
+#lexicon-activity ul { padding-left: 18px; }
+#lexicon-activity li { margin-top: 8px; }
+.ui-v4 .learn-tag.is-new { border-color: #658b75; }
+.ui-v4 .learn-tag.is-known { color: #aaaab4; }
+.ui-v4 .learn-tag button { font: inherit; }
+.ui-v4 .toast { max-width: min(760px, calc(100vw - 24px)); white-space: normal; line-height: 1.7; }
+@media (max-width: 700px) {
+  .ui-v4 { --rail-strip-w: 60px; }
+  .ui-v4 .topbar { height: auto; min-height: 56px; flex-wrap: wrap; padding: 10px; }
+  .ui-v4 .topbar-actions { flex-wrap: wrap; }
+  .ui-v4 #view-char .panel.ui-panel { padding: 12px; }
+  .ui-v4 .lexicon-metrics { gap: 8px 16px; }
+  .ui-v4 .lexicon-metrics strong { font-size: 15px; }
+  .ui-v4 .ui-output-card .output-box { min-height: 260px; font-size: 13px; }
+  .ui-v4 .action-tile { flex: 1 1 110px; }
+  .ui-v4 .search-expanded { max-height: 230px; }
+}

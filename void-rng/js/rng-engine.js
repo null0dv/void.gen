@@ -61,7 +61,8 @@ function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 1800);
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => t.classList.remove('show'), 4500);
 }
 const PAGE_STORAGE_KEY = 'void-rng-page';
 let currentPage = 'style';
@@ -3070,29 +3071,52 @@ function rollDrawSeed() {
   return seed;
 }
 
-function applyDrawBodyCombo(bodyId) {
+function applyDrawBodyCombo(bodyId, opts = {}) {
   const bodyMap = DRAW_VISUAL_MAP.body?.[bodyId];
   const comboId = bodyMap?.bodyCombo;
+  let rendered = false;
   if (comboId && BODY_COMBOS[comboId] && typeof setBodyComboState === 'function') {
-    setBodyComboState(comboId);
+    if (opts.deferRender) {
+      const combo = BODY_COMBOS[comboId];
+      charBodyFrame = new Set(combo.frame);
+      charBodyBreast = new Set(combo.breast);
+      charBodyFigure = new Set(combo.figure);
+    } else {
+      setBodyComboState(comboId);
+      rendered = true;
+    }
   } else {
     charBodyFrame = new Set(['petite']);
     charBodyBreast = new Set(bodyId === 'petite_flat' ? ['flat', 'small'] : ['small']);
     charBodyFigure = new Set(['girlish', 'slim_waist']);
   }
-  if (typeof renderCharBodyChips === 'function') renderCharBodyChips();
+  if (!opts.deferRender && !rendered && typeof renderCharBodyChips === 'function') renderCharBodyChips();
 }
 
-function enterDrawModeSettings() {
-  setCharTone('contrast');
+let drawControlRenderToken = 0;
+function scheduleDrawControlRender() {
+  const token = ++drawControlRenderToken;
+  const render = () => {
+    if (token !== drawControlRenderToken) return;
+    if (typeof renderCharBodyChips === 'function') renderCharBodyChips();
+    if (typeof renderCharJobChips === 'function') renderCharJobChips();
+    if (typeof renderCharPoseChips === 'function') renderCharPoseChips();
+    if (typeof renderCharSpicyOutfitChips === 'function') renderCharSpicyOutfitChips();
+    if (typeof renderCharSpicyActionChips === 'function') renderCharSpicyActionChips();
+  };
+  if (typeof requestIdleCallback === 'function') requestIdleCallback(render, { timeout: 160 });
+  else setTimeout(render, 0);
+}
+
+function enterDrawModeSettings(opts = {}) {
   const intEl = document.getElementById('char-tone-intensity');
   if (intEl) {
     intEl.value = 5;
-    syncCharIntensity();
   } else {
     charToneIntensity = 5;
     localStorage.setItem('void-char-tone-intensity', 5);
   }
+  setCharTone('contrast', { skipSave: true });
   charSpicyOutfits = new Set(['all']);
   charSpicyActions = new Set(['all']);
   charPosePresets = new Set(['all']);
@@ -3101,10 +3125,12 @@ function enterDrawModeSettings() {
   if (jobInc) jobInc.checked = true;
   const poseInc = document.getElementById('char-inc-pose');
   if (poseInc) poseInc.checked = true;
-  if (typeof renderCharJobChips === 'function') renderCharJobChips();
-  if (typeof renderCharPoseChips === 'function') renderCharPoseChips();
-  if (typeof renderCharSpicyOutfitChips === 'function') renderCharSpicyOutfitChips();
-  if (typeof renderCharSpicyActionChips === 'function') renderCharSpicyActionChips();
+  if (!opts.deferRender) {
+    if (typeof renderCharJobChips === 'function') renderCharJobChips();
+    if (typeof renderCharPoseChips === 'function') renderCharPoseChips();
+    if (typeof renderCharSpicyOutfitChips === 'function') renderCharSpicyOutfitChips();
+    if (typeof renderCharSpicyActionChips === 'function') renderCharSpicyActionChips();
+  }
 }
 
 function syncDrawModeUi() {
@@ -3135,7 +3161,9 @@ function updateDrawSeedHint() {
 }
 
 function generateCharDraw() {
-  enterDrawModeSettings();
+  // Batch state changes first. Rebuilding every chip group between mutations is
+  // noticeably expensive on large vocabularies and makes the draw button stall.
+  enterDrawModeSettings({ deferRender: true });
   const seed = rollDrawSeed();
   const map = DRAW_VISUAL_MAP || {};
   const typeMap = map.type?.[seed.type] || map.type?.human || {};
@@ -3156,11 +3184,10 @@ function generateCharDraw() {
     }
   }
 
-  applyDrawBodyCombo(seed.body);
+  applyDrawBodyCombo(seed.body, { deferRender: true });
 
   if (actionMap.spicyActions?.length) {
     charSpicyActions = new Set(actionMap.spicyActions);
-    if (typeof renderCharSpicyActionChips === 'function') renderCharSpicyActionChips();
   }
 
   const hair = pickDrawPool(map.hair_pool);
@@ -3172,7 +3199,6 @@ function generateCharDraw() {
     charJobTypes = new Set(['all']);
     const jobInc = document.getElementById('char-inc-job');
     if (jobInc) jobInc.checked = true;
-    if (typeof renderCharJobChips === 'function') renderCharJobChips();
   } else {
     charJobTypes = new Set(['none']);
     const jobInc = document.getElementById('char-inc-job');
@@ -3247,10 +3273,10 @@ function generateCharDraw() {
 
   syncPoseJobCoherence();
   syncOutfitPoseCoherence();
-  sanitizeNegativeFromSlots();
-  renderChar();
-  updateDrawSeedHint();
+  // Show the prompt first; repaint large control panels once the browser is idle.
+  renderChar({ refreshStats: false });
   saveActiveSession();
+  scheduleDrawControlRender();
   toast(`🔥抽卡 · ${drawSeedLabel('type', seed.type)} · ${drawSeedLabel('framing', seed.framing)} · ${drawSeedLabel('gap', seed.gap)}`);
   return true;
 }
@@ -3313,6 +3339,19 @@ const DEFAULT_TEMPLATES = [
 let charBanks = loadCharBanks();
 let charTemplates = loadCharTemplates();
 let charSlots = {};
+let charBankMetricsCache = { signature: '', value: null };
+
+function getCharBankSignature() {
+  return CHAR_SECTIONS.map(s => `${s.key}:${(charBanks[s.key] || []).length}`).join('|');
+}
+
+function getCharBankMetrics() {
+  const signature = getCharBankSignature();
+  if (charBankMetricsCache.signature !== signature || !charBankMetricsCache.value) {
+    charBankMetricsCache = { signature, value: VoidLexicon.metrics(charBanks) };
+  }
+  return charBankMetricsCache.value;
+}
 
 function getCharSlots() { return charSlots; }
 function setCharSlot(key, val) { charSlots[key] = val; }
@@ -3418,7 +3457,7 @@ function applyToneBoost(key, value) {
   return tags.length ? value + ', ' + tags.join(', ') : value;
 }
 
-function setCharTone(tone) {
+function setCharTone(tone, opts = {}) {
   charTone = normalizeCharTone(tone);
   localStorage.setItem('void-char-tone', charTone);
   ['balance', 'cute', 'spicy', 'tempt', 'sex', 'contrast'].forEach(id => {
@@ -3427,7 +3466,7 @@ function setCharTone(tone) {
   });
   syncCharIntensity();
   scheduleRailBadgeSync();
-  saveActiveSession();
+  if (!opts.skipSave) saveActiveSession();
 }
 
 function syncCharIntensity() {
@@ -3489,6 +3528,7 @@ function loadCharTemplates() {
   } catch { return [...DEFAULT_TEMPLATES]; }
 }
 function saveCharBanks() {
+  charBankMetricsCache.signature = '';
   if (typeof VoidSearch !== 'undefined') VoidSearch.rebuildLearnedRules(getLearnedSearchTags);
   const extra = {};
   CHAR_SECTIONS.forEach(s => {
@@ -3499,7 +3539,7 @@ function saveCharBanks() {
     extra[s.key] = list;
   });
   localStorage.setItem('void-char-banks', JSON.stringify(extra));
-  const savedTpl = charTemplates.filter(t => !DEFAULT_TEMPLATES.some(d => d.subject===t.subject && d.outfit===t.outfit));
+  const savedTpl = charTemplates.filter(t => !isDefaultTemplate(t));
   localStorage.setItem('void-char-templates', JSON.stringify(savedTpl));
 }
 
@@ -3520,7 +3560,11 @@ function setCharMode(m, opts = {}) {
 }
 
 function isDefaultTemplate(tpl) {
-  return DEFAULT_TEMPLATES.some(d => d.subject === tpl.subject && d.outfit === tpl.outfit);
+  if (isDefaultTemplate.count !== DEFAULT_TEMPLATES.length) {
+    isDefaultTemplate.signatures = new Set(DEFAULT_TEMPLATES.map(VoidLexicon.signature));
+    isDefaultTemplate.count = DEFAULT_TEMPLATES.length;
+  }
+  return isDefaultTemplate.signatures.has(VoidLexicon.signature(tpl));
 }
 
 function getUserLearnedTemplates() {
@@ -3664,7 +3708,8 @@ function sanitizeQualityText(text) {
 
 function finalizeSlotText(key, text) {
   if (!text) return text;
-  return key === 'quality' ? sanitizeQualityText(text) : stripNegativeFromText(text);
+  const cleaned = key === 'quality' ? sanitizeQualityText(text) : stripNegativeFromText(text);
+  return VoidLexicon.unique(splitPromptTags(cleaned)).join(', ');
 }
 
 function sanitizeNegativeFromSlots() {
@@ -5241,8 +5286,13 @@ function applyContrastPreset(id, opts = {}) {
   renderCharSpicyOutfitChips();
   renderCharSpicyActionChips();
   renderCharBodyChips();
+  Object.entries(preset.fixed || {}).forEach(([section, text]) => {
+    if (!charIsIncluded(section) || charLocked.has(section) || !text) return;
+    charSlots[section] = text;
+  });
   Object.entries(preset.hints || {}).forEach(([section, tags]) => {
     if (!charIsIncluded(section) || charLocked.has(section) || !tags?.length) return;
+    if (preset.fixed?.[section]) return;
     const picked = pickFromBankFiltered(section, tags) || tags.join(', ');
     charSlots[section] = finalizeSlotText(section, applyToneBoost(section, applyBodyHintsToSlot(section, picked)));
   });
@@ -5440,7 +5490,7 @@ function buildCharTagsOnly() {
     .join(', ');
 }
 
-function renderChar() {
+function renderChar(opts = {}) {
   sanitizeNegativeFromSlots();
   const text = buildCharPrompt();
   setOutputText('char-output', text, '請至少勾選一個區塊…');
@@ -5448,7 +5498,7 @@ function renderChar() {
   const lvlLabel = (INTENSITY_LABELS[charTone] || INTENSITY_LABELS.balance)[charToneIntensity] || '';
   const modeLabel = charModeLabel(charMode);
   const learnedN = getUserLearnedTemplates().length;
-  const tagTotal = CHAR_SECTIONS.reduce((n, s) => n + getSectionTagPool(s.key).length, 0);
+  const tagTotal = getCharBankMetrics().tags;
   const jobLabel = isJobDisabled()
     ? 'JOB無'
     : charIsIncluded('job')
@@ -5473,7 +5523,7 @@ function renderChar() {
     ? ` · ${drawSeedLabel('framing', charDrawSeed.framing)}/${drawSeedLabel('gap', charDrawSeed.gap)}`
     : '';
   document.getElementById('char-meta').textContent =
-    `${buildCharTagsOnly().length} 字 · ${modeLabel}${drawBit} · 範本${learnedN}`;
+    `${buildCharTagsOnly().length} 字 · ${modeLabel}${drawBit} · 學習範本 ${learnedN}`;
   const bar = document.getElementById('char-status-bar');
   if (bar) {
     const pills = [
@@ -5488,14 +5538,14 @@ function renderChar() {
       actionLabel ? `<span class="status-pill on" style="border-color:rgba(255,192,203,.4);color:#f0b8c8">${actionLabel}</span>` : '',
       `<span class="status-pill${isJobDisabled() ? ' safe' : ''}">NSFW ${jobLabel}</span>`,
       envLabel ? `<span class="status-pill on">背景 ${envLabel}</span>` : '',
-      `<span class="status-pill">詞庫 ${tagTotal}</span>`,
+      `<span class="status-pill" id="char-lexicon-pill">唯一標籤 ${tagTotal.toLocaleString()}</span>`,
       ...collectPresetConflictWarnings().slice(0, 3).map(w => `<span class="status-pill warn" title="${escHtml(w)}">⚠ ${escHtml(w)}</span>`),
     ].filter(Boolean).join('');
     bar.innerHTML = pills;
   }
   updateEmbedCharConflictHint();
   renderCharTable();
-  renderBankStats();
+  if (opts.refreshStats !== false) renderBankStats();
   updateDrawSeedHint();
 }
 
@@ -5573,9 +5623,10 @@ function renderBankStats() {
     : '內建';
   const head = `<div class="bank-stat bank-stat-ver"><div class="bank-stat-num">✓</div><div class="bank-stat-lbl">辭庫 ${ver}</div></div>`;
   document.getElementById('bank-stats').innerHTML = head + CHAR_SECTIONS.map(s =>
-    `<div class="bank-stat"><div class="bank-stat-num">${(charBanks[s.key]||[]).length}</div><div class="bank-stat-lbl">${s.zh}</div></div>`
+    `<div class="bank-stat"><div class="bank-stat-num">${(charBanks[s.key]||[]).length}</div><div class="bank-stat-lbl">${s.zh} · 條目</div></div>`
   ).join('');
   if (typeof VoidPreference !== 'undefined') VoidPreference.renderPreferenceStats();
+  if (typeof renderLexiconOverview === 'function') renderLexiconOverview();
 }
 
 function renderCharIncChecks() {
@@ -5740,11 +5791,7 @@ function detectSectionHeader(header) {
 }
 
 function splitPromptTags(text) {
-  return text
-    .replace(/\n+/g, ',')
-    .split(',')
-    .map(t => t.trim())
-    .filter(t => t && !t.startsWith('//') && t !== '❖');
+  return VoidLexicon.split(text);
 }
 
 function scoreTagForSection(tag, key) {
@@ -5854,8 +5901,11 @@ function setLearnAuto(on) {
 
 function renderLearnPreview(buckets) {
   const total = Object.values(buckets).reduce((n, a) => n + a.length, 0);
+  const existing = new Set(Object.values(charBanks).flatMap(values => values.flatMap(splitPromptTags)).map(VoidLexicon.key));
+  const incoming = VoidLexicon.unique(Object.values(buckets).flat());
+  const added = incoming.filter(tag => !existing.has(VoidLexicon.key(tag))).length;
   const statsHtml =
-    `<span>共 ${total} 個詞彙</span>` +
+    `<span>辨識 ${total} 個標籤 · 新詞 ${added} · 已收錄 ${incoming.length - added}</span>` +
     CHAR_SECTIONS.map(s => {
       const c = (buckets[s.key] || []).length;
       return c ? `<span>${s.zh} ${c}</span>` : '';
@@ -5865,7 +5915,7 @@ function renderLearnPreview(buckets) {
     const tags = buckets[s.key] || [];
     const tagHtml = tags.length
       ? tags.map((t, i) =>
-          `<span class="learn-tag" title="點擊移到其他區塊" onclick="moveLearnTag('${s.key}',${i})">${escHtml(t)}</span>`
+          `<button type="button" class="learn-tag ${existing.has(VoidLexicon.key(t)) ? 'is-known' : 'is-new'}" title="${existing.has(VoidLexicon.key(t)) ? '已收錄' : '新標籤'} · 點擊移到其他區塊" onclick="moveLearnTag('${s.key}',${i})">${escHtml(t)}</button>`
         ).join('')
       : '<span class="learn-tag empty">—</span>';
     return `<div class="learn-sec-box">
@@ -5987,45 +6037,22 @@ function commitLearnFromData(clearInputs) {
   if (!learnPreviewData) previewLearn();
   if (!learnPreviewData) return toast('請先輸入內容');
 
-  let added = 0;
-  let tagAdded = 0;
-  const newTpl = {};
-  CHAR_SECTIONS.forEach(s => {
-    const v = learnPreviewData[s.key];
-    if (!v || !v.trim()) return;
-    const trimmed = finalizeSlotText(s.key, v.trim());
-    if (!trimmed) return;
-    newTpl[s.key] = trimmed;
-    if (s.key === 'job' && !sanitizeJobBankEntry(trimmed)) return;
-    if (!charBanks[s.key].includes(trimmed)) {
-      charBanks[s.key].push(trimmed);
-      added++;
+  let change;
+  try {
+    change = persistCharVocabulary(learnPreviewData, 'learn');
+  } catch (error) {
+    console.error('Vocabulary save failed', error);
+    return toast('入庫失敗，輸入仍保留；請檢查瀏覽器儲存空間');
+  }
+  let preferenceSaved = false;
+  try {
+    if (typeof VoidPreference !== 'undefined') {
+      VoidPreference.recordSample(change.slots, null, captureLearnMeta('learn'));
+      VoidPreference.invalidateModel();
+      VoidPreference.renderPreferenceStats();
+      preferenceSaved = true;
     }
-  });
-
-  if (learnClassified) {
-    CHAR_SECTIONS.forEach(s => {
-      tagAdded += addTagsToBank(s.key, learnClassified[s.key] || []);
-    });
-  } else {
-    CHAR_SECTIONS.forEach(s => {
-      if (!learnPreviewData[s.key]) return;
-      tagAdded += addTagsToBank(s.key, splitPromptTags(learnPreviewData[s.key]));
-    });
-  }
-
-  if (newTpl.subject) {
-    const isDupe = charTemplates.some(t => t.subject === newTpl.subject && t.outfit === newTpl.outfit);
-    if (!isDupe) charTemplates.push({ ...newTpl });
-  }
-
-  saveCharBanks();
-  if (typeof VoidPreference !== 'undefined') {
-    VoidPreference.recordSample(newTpl, learnClassified, captureLearnMeta('learn'));
-    VoidPreference.invalidateModel();
-  }
-  setCharMode('learn');
-  generateChar();
+  } catch (error) { console.error('Preference save failed', error); }
   if (clearInputs) {
     const li = document.getElementById('learn-input');
     const qi = document.getElementById('quick-learn-input');
@@ -6043,7 +6070,7 @@ function commitLearnFromData(clearInputs) {
     if (qPreview) qPreview.innerHTML = done;
     if (qStats) qStats.innerHTML = '';
   }
-  toast(`已加入辭庫（${added} 段 · ${tagAdded} 詞）· 偏好模型已更新 · 可點「偏好疊代」`);
+  toast(`已加入辭庫 · ${vocabularySaveMessage(change)}${preferenceSaved ? ' · 偏好已更新' : ' · 偏好未儲存，請稍後重試'}`);
 }
 
 function commitLearn() { commitLearnFromData(true); }
@@ -6623,14 +6650,14 @@ const RAIL_QUICK_BY_PAGE = {
     { label: '池', nav: 'pool', title: '風格池' },
   ],
   char: [
-    { label: '調', nav: 'tone', title: '調性 · 引擎' },
-    { label: '服', nav: 'outfit', title: '服裝', tone: 'spicy' },
-    { label: '姿', nav: 'pose', title: '姿勢' },
-    { label: '動', nav: 'action', title: '表情·動作', tone: 'spicy' },
-    { label: '身', nav: 'body', title: '身材', tone: 'body' },
-    { label: '職', nav: 'job', title: 'JOB' },
-    { label: '氛', nav: 'env', title: '氛圍' },
-    { label: '進', nav: 'advanced', title: '進階' },
+    { label: '調性', nav: 'tone', title: '調性 · 引擎' },
+    { label: '服裝', nav: 'outfit', title: '服裝', tone: 'spicy' },
+    { label: '姿勢', nav: 'pose', title: '姿勢' },
+    { label: '表情', nav: 'action', title: '表情·動作', tone: 'spicy' },
+    { label: '身材', nav: 'body', title: '身材', tone: 'body' },
+    { label: 'JOB', nav: 'job', title: 'JOB' },
+    { label: '氛圍', nav: 'env', title: '氛圍' },
+    { label: '進階', nav: 'advanced', title: '進階' },
   ],
   jewel: [
     { label: '類', nav: 'cats', title: '產品類別' },
@@ -6981,11 +7008,7 @@ function exploreOrganicBatch(count) {
 }
 
 function reinforceLikedCombo() {
-  if (typeof VoidPreference === 'undefined') return toast('偏好引擎未載入');
-  if (VoidPreference.reinforceLiked()) {
-    saveActiveSession();
-    renderCharHistory();
-  }
+  saveLikedVocabulary();
 }
 
 function collideOrganicCombo() {
