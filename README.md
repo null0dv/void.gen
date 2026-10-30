@@ -85,6 +85,25 @@ pause
 | 主模型 (Checkpoint) | `novaAnimeXL_ilV180.safetensors` | [CivitAI](https://civitai.com/models/376130/nova-anime-xl) |
 | Refiner | `JANKUTrainedChenkinNoobai_v777.safetensors` | [CivitAI](https://civitai.com/models/1277670/janku-trained-chenkin-and-noobai-rouwei-illustrious-xl) |
 
+### 本機已安裝的 Checkpoint 推薦清單
+
+以下清單依 `C:\ComfyUI_windows_portable\ComfyUI\models\checkpoints\` 在 2026-10-30 的實際內容整理。連結已用本機檔案 SHA-256 或檔案 metadata 核對；模型檔不存放於本專案。
+
+| 本機檔名 | 系列／用途 | 推薦使用方式 | 下載頁面 |
+|----------|------------|--------------|----------|
+| `anikawaxl_v4.safetensors` | Illustrious 動漫 | 可愛角色、賽璐璐動畫風；建議 25–30 steps | [CivitAI · AniKawaXL V4](https://civitai.com/models/1282887?modelVersionId=2870022) |
+| `dreamshaper_8.safetensors` | SD 1.5 通用模型 | 插畫、寫實混合；請使用 SD 1.5 解析度與工作流，不能搭配 SDXL Refiner | [CivitAI · DreamShaper 8](https://civitai.com/models/4384?modelVersionId=128713) · [Hugging Face 直載](https://huggingface.co/Yntec/Dreamshaper8/resolve/main/dreamshaper_8.safetensors) |
+| `H-D2A2b.fp16.safetensors` | Illustrious 動漫 | Aüngir H-D2A2b；適合動漫人物與細節表現 | [CivitAI · H-D2A2b](https://civitai.com/models/1052681?modelVersionId=2635428) |
+| `JANKUTrainedChenkinNoobai_v777.safetensors` | Illustrious 動漫 | 目前 VOID FULL Refiner 選項；也可獨立作主模型 | [CivitAI · v7.77](https://civitai.com/models/1277670?modelVersionId=2786084) · [Hugging Face 直載](https://huggingface.co/LillyCherry/JANKUTrainedChenkinNoobai_v777/resolve/main/JANKUTrainedChenkinNoobai_v777.safetensors) |
+| `Kodo's Test models-OH-A3a.fp16.safetensors` | SDXL／PixAI 動漫 | Kodo 實驗模型 OH-A3a；使用 PixAI 模型頁取得模型 | [PixAI · Kodo's Test models／OH-A3a](https://pixai.art/ja/model/1815523442272197668/1849021327714996355) |
+| `novaAnimeXL_ilV180.safetensors` | Illustrious 動漫 | 目前 VOID FULL 預設主模型，適合動漫與插畫 | [CivitAI · Nova Anime XL IL v18.0](https://civitai.com/models/376130?modelVersionId=2837020) |
+| `sd_xl_base_1.0.safetensors` | 官方 SDXL Base | 通用基礎模型、測試相容性 | [Hugging Face 官方直載](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors) |
+| `sd_xl_refiner_1.0.safetensors` | 官方 SDXL Refiner | 搭配 SDXL Base，在生成後段細化 | [Hugging Face 官方直載](https://huggingface.co/stabilityai/stable-diffusion-xl-refiner-1.0/resolve/main/sd_xl_refiner_1.0.safetensors) |
+| `ZILv35-hy8-s2_00001_.safetensors` | 本機自製 SDXL checkpoint | 由 `ZILv35-CKNB-DS-mix2` 加入 `Hyper-SDXL-8steps-lora` 後於 ComfyUI 儲存；目前沒有可驗證的公開成品載點 | 無公開成品下載；[Hyper-SDXL 官方來源](https://huggingface.co/ByteDance/Hyper-SD) |
+
+> CivitAI 或 PixAI 可能要求登入並接受模型授權條款。`ZILv35-hy8-s2_00001_` 是本機衍生成品，不應冒用其他相似模型的下載連結。
+
+
 兩個檔案都放到目前使用中的 ComfyUI：
 ```
 C:\ComfyUI_windows_portable\ComfyUI\models\checkpoints\
