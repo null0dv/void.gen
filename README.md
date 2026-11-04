@@ -273,3 +273,9 @@ C:\ComfyUI_windows_portable\ComfyUI\models\upscale_models\
 - Gallery 圖片 + metadata hover 顯示
 - 全螢幕進度條
 - PWA 可安裝為桌面 APP
+
+## RTX 3050 動漫整合版
+
+雙擊 `Start-Anime.cmd` 開啟 FULL，在工具列按 RNG 即可把抽詞追加或寫入草稿。WD14 辨識結果也能送回 RNG。預設讀取與本倉庫同層的 ComfyUI Windows Portable。若安裝在其他路徑，使用 `Start-Anime.cmd -ComfyRoot "C:\ComfyUI_windows_portable"`。請在 Portable 安裝 Nova Anime XL、ComfyUI-WD14-Tagger 及其模型，並確保內建 Python 可載入 aiohttp 與 Pillow。
+
+本版使用本機 8081、8091、8190。輸入、輸出、圖庫與 ComfyUI 設定在第一次啟動時於本倉庫內建立。按啟動視窗的 Enter 可關閉本次服務。

@@ -19,6 +19,8 @@
 | `js/void-boot.js` | `file://` warning, early stubs |
 | `js/void-gallery-db.js` | IndexedDB: gallery, lora thumbs, folder handle |
 | `js/void-gen-flow.js` | Generation state on `body[data-void-gen-state]` |
+| `js/void-engines.js` | SD/SDXL, Qwen and MOSS engine selection, model discovery, graph building and gallery metadata restoration |
+| `js/void-recognition.js` | WD14, Qwen-VL and Florence-2 image recognition, output presets, bounded image upload, queue polling and cancellation |
 | `js/void-jszip-loader.js` | On-demand JSZip for gallery ZIP export |
 | `js/void-pwa.js` | Service worker registration |
 | `sd-dashboard.full.html` | UI shell + ComfyUI + gallery UI |

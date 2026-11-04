@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111216"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="/manifest.webmanifest"><link rel="icon" href="/icon.svg"><link rel="apple-touch-icon" href="/icon-192.png"><link rel="stylesheet" href="/style.css"><title>VOID · Pocket</title></head>
+<body>
+<header><a class="brand" href="/">VOID<span>POCKET</span></a><button id="connection" class="connection" aria-label="連線與設定"><i></i><span>連線中</span></button></header>
+<main>
+<section id="generate" class="page active" aria-labelledby="generate-title">
+  <div class="section-title"><div><p class="eyebrow">CREATE ON YOUR PC</p><h1 id="generate-title">把想法，變成畫面。</h1></div><span class="local-tag">本機生成</span></div>
+  <form id="generate-form">
+    <div class="two" role="group" aria-label="生成模式">
+      <button id="mode-text" type="button" aria-pressed="true">文生圖</button>
+      <button id="mode-image" type="button" aria-pressed="false">圖生圖</button>
+    </div>
+    <div class="engine-pills" style="grid-template-columns:repeat(4,1fr);margin-top:12px" role="group" aria-label="生圖引擎"><button type="button" data-engine="qwen" class="selected">Qwen</button><button type="button" data-engine="sd">SD / SDXL</button><button type="button" data-engine="moss">MOSS</button><button type="button" data-engine="klein">Klein 9B</button></div>
+    <div id="gen-source-settings" hidden>
+      <label class="upload-zone" for="gen-source"><img id="gen-source-preview" alt="圖生圖來源" hidden><span>＋ 上傳來源圖片</span></label>
+      <input id="gen-source" type="file" accept="image/*" hidden>
+      <label for="gen-klein-strength">寫實 LoRA 強度</label>
+      <input id="gen-klein-strength" type="number" min="0" max="2" step="any" value="0.8">
+    </div>
+    <label for="gen-model">模型</label><select id="gen-model" required><option value="">正在讀取模型…</option></select>
+    <label for="gen-prompt">想生成什麼？</label><textarea id="gen-prompt" rows="5" maxlength="20000" required placeholder="描述主體、場景、光線與你想要的風格…"></textarea>
+    <div class="label-row"><label>畫面比例</label><span id="size-label">1024 × 1024</span></div>
+    <div class="ratios"><button type="button" data-ratio="square" class="selected"><span class="ratio square"></span>方形</button><button type="button" data-ratio="portrait"><span class="ratio portrait"></span>直式</button><button type="button" data-ratio="landscape"><span class="ratio landscape"></span>橫式</button></div>
+    <div class="inline"><label for="gen-count">生成張數</label><select id="gen-count"><option value="1">1 張</option><option value="2">2 張 · 依序執行</option><option value="4">4 張 · 依序執行</option></select></div>
+    <details class="advanced"><summary>進階設定 <span>步數、種子與負向提示詞</span></summary><div class="advanced-body">
+      <div class="two"><div><label for="gen-steps">步數</label><input id="gen-steps" type="number" min="1" max="100" value="25"></div><div><label for="gen-cfg">CFG</label><input id="gen-cfg" type="number" min="0" max="30" step="0.1" value="1"></div></div>
+      <div class="two"><div><label for="gen-width">寬度</label><input id="gen-width" type="number" min="256" max="2048" step="32" value="1024"></div><div><label for="gen-height">高度</label><input id="gen-height" type="number" min="256" max="2048" step="32" value="1024"></div></div>
+      <label for="gen-seed">種子 <small>−1 為隨機</small></label><input id="gen-seed" type="number" min="-1" max="9007199254740991" value="-1">
+      <div id="native-sampler"><div class="two"><div><label for="gen-sampler">採樣器</label><select id="gen-sampler"></select></div><div><label for="gen-scheduler">排程</label><select id="gen-scheduler"></select></div></div></div>
+      <div id="moss-options" hidden><label for="gen-shift">MOSS shift</label><input id="gen-shift" type="number" min="0.01" max="100" step="any" value="5"></div>
+      <div id="lora-options" hidden><label for="gen-lora">LoRA</label><select id="gen-lora"><option value="">不使用</option></select><label for="gen-lora-strength">LoRA 強度</label><input id="gen-lora-strength" type="number" min="-2" max="2" step="0.1" value="0.8"></div>
+      <label for="gen-negative">負向提示詞</label><textarea id="gen-negative" rows="2" placeholder="不想出現的內容"></textarea>
+    </div></details>
+    <p id="gen-hint" class="hint">使用電腦的顯示卡生成，圖片保存在電腦。</p>
+    <div class="action-dock"><button id="generate-submit" class="primary" type="submit">開始生成 <span>↗</span></button></div>
+  </form>
+</section>
+<section id="recognize" class="page" aria-labelledby="recognize-title">
+  <div class="section-title"><div><p class="eyebrow">SEE INTO THE IMAGE</p><h1 id="recognize-title">從圖片，找到靈感。</h1></div></div>
+  <label for="rec-engine">辨識引擎</label><select id="rec-engine"><option value="qwen">Qwen-VL · 照片／詳細描述</option><option value="wd14">WD14 · 動漫標籤</option><option value="florence">Florence-2 · 輕量圖說</option></select>
+  <label class="upload-zone" for="rec-file"><img id="rec-preview" alt="待辨識的圖片" hidden><span id="upload-label"><b>＋</b>從相簿或相機選擇圖片<small>圖片只會送至你的電腦</small></span></label><input id="rec-file" type="file" accept="image/*" hidden>
+  <div id="rec-qwen"><label for="rec-style">輸出方式</label><select id="rec-style"><option value="prompt">英文生圖 prompt</option><option value="zh">繁體中文描述</option><option value="brief">簡短英文描述</option></select><details class="advanced"><summary>自訂辨識指令</summary><textarea id="rec-instruction" rows="3" maxlength="4000" placeholder="留空使用上述輸出方式"></textarea></details></div>
+  <div id="rec-florence" hidden><label for="rec-detail">描述詳細度</label><select id="rec-detail"><option value="more_detailed_caption">詳細</option><option value="detailed_caption">標準</option><option value="caption">簡短</option></select></div>
+  <div id="rec-wd14" hidden class="two"><div><label for="rec-threshold">一般標籤門檻</label><input id="rec-threshold" type="number" min="0.05" max="0.9" step="0.05" value="0.3"></div><div><label for="rec-character">角色標籤門檻</label><input id="rec-character" type="number" min="0.05" max="0.95" step="0.05" value="0.75"></div></div>
+  <div id="rec-result" class="result" hidden><div class="label-row"><strong>辨識結果</strong><span id="rec-result-engine"></span></div><textarea id="rec-text" rows="9" aria-label="辨識結果，可編輯"></textarea><div class="two"><button id="copy-caption">複製文字</button><button id="use-caption">送去生成 ↗</button></div></div>
+  <div class="action-dock"><button id="recognize-submit" class="primary">辨識提示詞 <span>↗</span></button></div>
+</section>
+<section id="motion" class="page" aria-labelledby="motion-title">
+  <div class="section-title"><div><p class="eyebrow">WAN 2.2 / IMAGE TO VIDEO</p><h1 id="motion-title">照片轉影片</h1></div></div>
+  <form id="motion-form">
+    <label class="upload-zone" for="motion-file"><img id="motion-preview" alt="影片起始圖片" hidden><span><b>＋</b>從手機相簿上傳圖片</span></label>
+    <input id="motion-file" type="file" accept="image/*" hidden>
+    <button id="motion-gallery" class="wide" type="button">從共用圖庫選擇</button>
+    <label for="motion-prompt">你想讓畫面怎麼動？</label>
+    <textarea id="motion-prompt" rows="4" maxlength="4000" required placeholder="例如：頭髮隨微風飄動，鏡頭緩慢推近。"></textarea>
+    <div class="two"><div><label for="motion-size">畫面比例</label><select id="motion-size"><option value="portrait">直式</option><option value="landscape">橫式</option><option value="square">方形</option></select></div><div><label for="motion-seconds">影片長度</label><select id="motion-seconds"><option value="5">約 5 秒</option><option value="10">約 10 秒（實驗）</option></select></div></div>
+    <p class="hint">影片由電腦生成。完成後可在「任務」播放或下載 MP4。</p>
+    <div class="action-dock"><button id="motion-submit" class="primary" type="submit" disabled>生成影片 ↗</button></div>
+  </form>
+</section>
+<section id="gallery" class="page" aria-labelledby="gallery-title">
+  <div class="section-title"><div><p class="eyebrow">YOUR LOCAL COLLECTION</p><h1 id="gallery-title">留住每一次靈感。</h1></div><button id="gallery-refresh" aria-label="更新圖庫">↻</button></div>
+  <div class="search-row"><input id="gallery-search" type="search" placeholder="搜尋提示詞或模型" aria-label="搜尋圖庫"><button id="favorites" aria-pressed="false">♡ 收藏</button></div>
+  <select id="gallery-album" aria-label="相簿" hidden><option value="">全部相簿</option></select>
+  <p id="gallery-count" class="hint"></p><div id="gallery-grid" class="gallery-grid"></div><button id="gallery-more" class="wide" hidden>載入更多</button><p id="gallery-empty" class="empty" hidden>電腦輸出的圖片會顯示在這裡。<br>也可從桌面版匯入收藏與舊圖。</p>
+</section>
+<section id="jobs" class="page" aria-labelledby="jobs-title">
+  <div class="section-title"><div><p class="eyebrow">LET YOUR PC DO THE WORK</p><h1 id="jobs-title">任務進度</h1></div><span id="jobs-count" class="local-tag">0 個執行中</span></div>
+  <p class="hint">任務保存在電腦，切換 App 或暫時斷線後可回來查看。</p><div id="jobs-list"></div><p id="jobs-empty" class="empty">還沒有手機任務。</p>
+</section>
+</main>
+<nav aria-label="主導覽"><button data-tab="generate" class="active"><span>✦</span>生成</button><button data-tab="motion"><span>▷</span>MOTION</button><button data-tab="recognize"><span>⌁</span>辨識</button><button data-tab="gallery"><span>▧</span>圖庫</button><button data-tab="jobs"><span>☷</span>任務<i id="job-badge" hidden></i></button></nav>
+<dialog id="settings-dialog"><div class="dialog-head"><h2>連線與設定</h2><button data-close="settings-dialog" aria-label="關閉設定">✕</button></div><p id="device-name"></p><p id="remote-info" class="hint"></p><label class="switch-row"><span>服務啟動時保持電腦可連線<small>允許關閉螢幕；不自動休眠</small></span><input id="keep-awake" type="checkbox" checked></label><p class="hint">手機與電腦需登入同一個 Tailscale 帳號。圖片和模型都留在電腦。</p><button id="copy-url" class="wide">複製手機連線網址</button></dialog>
+<dialog id="image-dialog"><div class="dialog-head"><strong id="image-title">圖片</strong><button data-close="image-dialog" aria-label="關閉圖片">✕</button></div><img id="image-full" alt="圖庫原圖"><p id="image-prompt"></p><p id="image-meta" class="hint"></p><div class="image-actions"><button id="image-favorite">♡ 收藏</button><a id="image-download" class="button" download>下載</a><button id="image-share">分享</button><button id="image-reuse">套用參數</button></div></dialog>
+<dialog id="video-dialog"><div class="dialog-head"><strong>影片預覽</strong><button data-close="video-dialog" aria-label="關閉影片">✕</button></div><video id="motion-player" controls playsinline preload="metadata"></video><a id="motion-download" class="button" download>下載 MP4</a></dialog>
+<div id="toast" role="status" hidden></div><script src="/app.js?v=4" defer></script>
+</body></html>

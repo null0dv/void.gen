@@ -11,11 +11,12 @@
 <meta name="apple-mobile-web-app-title" content="Void.gen">
 <link rel="apple-touch-icon" href="icon-192.png">
 <script src="js/void-boot.js"></script>
-<script src="js/void-gallery-db.js?v=29.3"></script>
+<script src="js/void-gallery-db.js?v=34"></script>
 <script src="js/void-gen-flow.js?v=29.3"></script>
 <script src="js/void-jszip-loader.js"></script>
 <script src="js/void-pwa.js"></script>
 <script src="js/void-pixai.js"></script>
+<script src="js/void-shared-gallery.js?v=1"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap');
 :root {
@@ -692,6 +693,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 <div class="topbar">
   <div class="logo">VOID<span>.gen</span> <span style="font-size:9px;letter-spacing:.12em;color:var(--muted)">FULL V3</span></div>
   <div class="topbar-right">
+    <button class="tb-btn" id="rng-open">🎲 RNG</button>
     <button class="tb-btn" id="folder-btn" onclick="selectOutputFolder()" title="選擇 ComfyUI 輸出資料夾">FOLDER</button>
     <button class="tb-btn" onclick="saveTasks()">SAVE</button>
     <button class="tb-btn" onclick="checkApi()">CHECK</button>
@@ -740,12 +742,42 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
             oninput="document.getElementById('denoise-val').textContent=parseFloat(this.value).toFixed(2);saveSettings()">
           <span class="param-val" id="denoise-val">0.75</span>
         </div>
+        <div id="klein-settings" hidden style="margin-top:8px">
+          <label for="klein-strength" class="sec-label">寫實 LoRA 強度</label>
+          <input id="klein-strength" class="size-input" type="number" min="0" max="2" step="0.05" value="0.8">
+        </div>
       </div>
 
       <div class="ss" id="img2txt-section" style="display:none">
+        <label class="sec-label" for="recognition-engine">辨識引擎</label>
+        <select class="sel" id="recognition-engine" aria-label="辨識引擎" style="margin-bottom:8px" onchange="VoidRecognition.selectEngine()">
+          <option value="wd14">WD14 · 動漫標籤</option>
+
+
+        </select>
+        <div id="recognition-info" role="status" style="font-size:12px;line-height:1.6;color:var(--muted);margin-bottom:10px"></div>
+        <div id="qwen-recognition-settings" hidden style="margin-bottom:10px">
+          <label class="sec-label" for="recognition-style">輸出方式</label>
+          <select class="sel" id="recognition-style" aria-label="辨識輸出方式" onchange="VoidRecognition.presetChanged()">
+            <option value="prompt">英文生圖 prompt</option>
+            <option value="zh">繁體中文描述</option>
+            <option value="brief">簡短英文描述</option>
+          </select>
+          <details style="margin-top:8px;font-size:12px"><summary>自訂辨識指令</summary>
+            <textarea id="recognition-instruction" aria-label="自訂辨識指令" rows="4" style="width:100%;margin-top:6px;background:var(--bg2);color:var(--text);border:1px solid var(--line2);padding:8px;resize:vertical" onchange="VoidRecognition.remember()"></textarea>
+          </details>
+        </div>
+        <div id="florence-recognition-settings" hidden style="margin-bottom:10px">
+          <label class="sec-label" for="florence-task">描述詳細度</label>
+          <select class="sel" id="florence-task" aria-label="Florence 描述詳細度" onchange="VoidRecognition.remember()">
+            <option value="caption">簡短</option>
+            <option value="detailed_caption">標準</option>
+            <option value="more_detailed_caption" selected>詳細</option>
+          </select>
+        </div>
         <div class="sec-label" style="margin-bottom:6px">
           SOURCE IMAGE
-          <span style="font-size:8px;color:var(--muted2);letter-spacing:.06em">WD14 LOCAL</span>
+          <span id="recognition-source-label" style="font-size:10px;color:var(--muted2)">本機辨識</span>
         </div>
         <div class="img-upload vis" id="img2txt-upload" onclick="triggerUpload2txt()"
           ondragover="event.preventDefault();this.style.borderColor='var(--muted)'"
@@ -755,6 +787,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
           <span class="ul">CLICK OR DROP</span>
         </div>
         <input type="file" id="file-input-2txt" accept="image/*" style="display:none" onchange="handleUpload2txt(this)">
+        <div id="wd14-settings">
         <div class="param-row" style="margin-top:10px;margin-bottom:4px">
           <span class="param-name">GENERAL</span>
           <input type="range" class="slider" id="tagger-threshold" min="0.05" max="0.9" step="0.05" value="0.30"
@@ -767,19 +800,21 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
             oninput="document.getElementById('tagger-char-threshold-val').textContent=parseFloat(this.value).toFixed(2)">
           <span class="param-val" id="tagger-char-threshold-val">0.75</span>
         </div>
+        </div>
         <button id="interrogate-btn" onclick="runInterrogate()"
           style="width:100%;padding:8px;background:var(--bg3);border:1px solid var(--line2);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:11px;letter-spacing:.08em;cursor:pointer">
           INTERROGATE
         </button>
+        <button id="recognition-cancel" class="tb-btn" hidden style="width:100%;margin-top:6px" onclick="VoidRecognition.cancel()">取消辨識</button>
         <div id="tagger-output-wrap" style="display:none;margin-top:8px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-            <span style="font-size:8px;color:var(--muted2);letter-spacing:.1em">RESULT</span>
+            <span id="recognition-result-label" style="font-size:12px;color:var(--muted2)">辨識結果</span>
             <div style="display:flex;gap:5px">
-              <span id="tagger-send-btn" class="icon-btn" onclick="sendTaggerToPrompt()">SEND</span>
+              <button class="icon-btn" id="rng-tags">送入 RNG</button><span id="tagger-send-btn" class="icon-btn" onclick="sendTaggerToPrompt()">SEND</span>
               <span id="tagger-copy-btn" class="icon-btn" onclick="copyTaggerOutput()">COPY</span>
             </div>
           </div>
-          <div id="tagger-output" style="background:var(--bg2);border:1px solid var(--line2);border-radius:5px;padding:8px;font-size:10px;color:var(--muted);line-height:1.6;font-family:var(--mono);word-break:break-word"></div>
+          <div id="tagger-output" style="background:var(--bg2);border:1px solid var(--line2);border-radius:5px;padding:8px;font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;word-break:break-word"></div>
         </div>
       </div>
 
@@ -797,6 +832,26 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
         </div>
       </div>
 
+      <div class="ss">
+        <div class="sec-label">生成引擎</div>
+        <select class="sel" id="engine-select" aria-label="生成引擎" onchange="VoidEngines.switchEngine(this.value)">
+          <option value="sd">SD / SDXL</option>
+
+
+
+        </select>
+        <div id="engine-components" hidden style="margin-top:10px">
+          <div class="sec-label">文字編碼器</div>
+          <select class="sel" id="engine-clip" aria-label="文字編碼器"></select>
+          <div class="sec-label" id="engine-vae-label" style="margin-top:8px">VAE</div>
+          <select class="sel" id="engine-vae" aria-label="VAE"></select>
+          <div id="moss-settings" hidden style="margin-top:8px">
+            <label for="moss-shift" class="sec-label">MOSS SHIFT</label>
+            <input id="moss-shift" class="size-input" aria-label="MOSS shift" type="number" min="0.01" max="100" step="0.1" value="5">
+          </div>
+          <div id="engine-status" role="status" style="margin-top:8px;color:var(--muted);font-size:12px;line-height:1.6">等待檢查模型</div>
+        </div>
+      </div>
       <div class="ss">
         <div class="sec-label">
           MODEL
@@ -904,7 +959,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
         </div>
       </div>
 
-      <div class="ss">
+      <div class="ss" id="image-batch-settings">
         <div class="sec-label">BATCH</div>
         <div class="batch-row">
           <div class="batch-btn active" onclick="setBatch(1,this)">×1</div>
@@ -1106,8 +1161,8 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 <div class="statusbar">
   <div class="sb-item" id="sb-main">Void.gen · Desktop 29</div>
   <span id="vram-badge" title="GPU VRAM usage">VRAM —</span>
-  <span id="sb-api-url" style="font-size:9px;color:var(--muted2);cursor:pointer;letter-spacing:.05em;margin-left:auto" onclick="changeApiUrl()" title="Click to change server URL">127.0.0.1:8188</span>
-  <div class="sb-item" id="sb-backend">ComfyUI · 127.0.0.1:8188</div>
+  <span id="sb-api-url" style="font-size:9px;color:var(--muted2);cursor:pointer;letter-spacing:.05em;margin-left:auto" onclick="changeApiUrl()" title="Click to change server URL">127.0.0.1:8190</span>
+  <div class="sb-item" id="sb-backend">ComfyUI · 127.0.0.1:8190</div>
 </div>
 
 <div class="modal-bg" id="modal-bg">
@@ -1283,7 +1338,7 @@ const _FOLDER_MANIFEST_PREFIX = 'void-folder-manifest-';
 const _GALLERY_BACKFILL_KEY = 'void-gallery-backfill-v3';
 let _folderFileIndex = null;
 let _filterGalleryDebounced = null;
-const _LOCAL_API = 'http://127.0.0.1:8188';
+const _LOCAL_API = 'http://127.0.0.1:8190';
 const GALLERY_PAGE = 40;
 const HIST_KEY      = 'void-gen-prompt-hist';
 const SNIPPETS_KEY  = 'void-gen-snippets';
@@ -1668,7 +1723,7 @@ async function loadSavedGallery() {
   try {
     const loader = typeof dbLoadGalleryList === 'function' ? dbLoadGalleryList : dbLoadAll;
     const all = await _backfillGalleryRecords(await loader());
-    const imgs = all.filter(r => r.source !== 'disk');
+    const imgs = await VoidSharedGallery.load(all.filter(r => r.source !== 'disk'));
     if (loader === dbLoadAll) imgs.sort((a, b) => (b.ts || 0) - (a.ts || 0));
     const first = imgs.splice(0, GALLERY_PAGE);
     _galleryBuffer = imgs.map(img => ({
@@ -1774,6 +1829,7 @@ async function selectOutputFolder() {
 function _folderSyncKey(name) { return _FOLDER_SYNC_PREFIX + (name || ''); }
 
 async function syncOutputFolder(handle, options = {}) {
+  if (VoidSharedGallery.isOnline()) { await loadSavedGallery(); return; }
   const force = !!options.force;
   handle = handle || await _getFolderHandle();
   if (!handle) return;
@@ -1859,8 +1915,8 @@ async function syncOutputFolder(handle, options = {}) {
 }
 
 // ── GALLERY DELETE (DB + output folder file) ──────────────────────
-const _DELETE_CONFIRM_MSG = '確定刪除此圖片？\n\n作品集紀錄與輸出資料夾內的原始檔案都會被刪除，此操作無法復原。';
-const _DELETE_CONFIRM_MULTI = n => `確定刪除 ${n} 張圖片？\n\n作品集紀錄與輸出資料夾內的原始檔案都會被刪除，此操作無法復原。`;
+const _DELETE_CONFIRM_MSG = '確定刪除此圖片？\n\n原始檔案會先移到電腦的 void-data/trash 回收區，成功後才移除圖庫紀錄；可從回收區復原。';
+const _DELETE_CONFIRM_MULTI = n => `確定刪除 ${n} 張圖片？\n\n原始檔案會先移到電腦的 void-data/trash 回收區，成功後才移除圖庫紀錄；可從回收區復原。`;
 
 async function _getCardDeleteInfo(card) {
   const meta = _metaFromCard(card);
@@ -1880,37 +1936,23 @@ async function _getCardDeleteInfo(card) {
   const cardTitle = card.dataset.title || '';
   if (!filename && /\.(png|jpe?g|webp)$/i.test(cardTitle)) filename = cardTitle;
   if (!filename && _folderFileIndex?.byName?.has(cardTitle)) filename = cardTitle;
-  if (!filename) {
-    const resolved = await _resolveFilenameFromFolder('', subfolder, parseInt(card.dataset.ts || meta.ts || 0));
-    if (resolved.filename) {
-      filename = resolved.filename;
-      subfolder = resolved.subfolder || subfolder;
-      if (id) {
-        const patched = { ...meta, filename, subfolder };
-        card.dataset.metaJson = JSON.stringify(patched);
-        dbUpdate(id, { meta: patched, filename }).catch(() => {});
-      }
-    }
-  }
   return { filename, subfolder, favKey: card.dataset.favKey || '', dbId: id || null };
 }
 
 async function _deleteOutputFile(filename, subfolder = '') {
-  if (!filename) return { ok: false, reason: 'no_filename' };
-  const handle = await _getFolderHandle();
-  if (!handle) return { ok: false, reason: 'no_folder' };
+  if (!filename) return { ok:false, reason:'此圖缺少原始檔名，請重新同步輸出資料夾後再刪除。' };
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 20000);
   try {
-    const perm = await handle.requestPermission({ mode: 'readwrite' });
-    if (perm !== 'granted') return { ok: false, reason: 'no_permission' };
-    let dir = handle;
-    const parts = (subfolder || '').split(/[/\\]/).filter(Boolean);
-    for (const part of parts) dir = await dir.getDirectoryHandle(part);
-    await dir.removeEntry(filename);
-    return { ok: true };
-  } catch (e) {
-    console.warn('[void.gen] delete output file failed', filename, e);
-    return { ok: false, reason: e?.message || 'delete_failed' };
-  }
+    const response = await fetch('http://127.0.0.1:8091/api/trash', {
+      method:'POST', headers:{'Content-Type':'application/json'}, signal:controller.signal,
+      body:JSON.stringify({filename,subfolder})
+    });
+    const result = await response.json();
+    return response.ok && result.ok ? result : {ok:false, reason:result.error || '原檔移至回收區失敗'};
+  } catch(error) {
+    return {ok:false, reason:'無法連線本機檔案服務，請執行 Start-VOID-Full.cmd 後重試。圖庫紀錄已保留。'};
+  } finally { clearTimeout(timer); }
 }
 
 function _purgeCardSideData(favKey) {
@@ -1946,8 +1988,9 @@ function _afterGalleryCardRemoved() {
 async function _deleteGalleryCard(card) {
   if (!card) return { ok: false };
   const info = await _getCardDeleteInfo(card);
-  if (info.dbId) await dbDelete(info.dbId).catch(() => {});
   const fileResult = await _deleteOutputFile(info.filename, info.subfolder);
+  if (!fileResult.ok) return {ok:false, fileDeleted:false, fileResult};
+  if (info.dbId) await dbDelete(info.dbId);
   _purgeCardSideData(info.favKey);
   const wasInLb = _lbCards.includes(card);
   card.remove();
@@ -2065,7 +2108,7 @@ function restoreImmediateSettings() {
   const _savedFolderName = localStorage.getItem('void-folder-name');
   if (_savedFolderName) _setFolderBtn(_savedFolderName, true);
   initGalleryOpen();
-  loadSavedGallery().then(() => syncOutputFolder());
+  loadSavedGallery().then(() => { if (!VoidSharedGallery.isOnline()) return syncOutputFolder(); });
   setTimeout(initMasonry, 100);
   initTheme();
   renderAlbumChips();
@@ -2095,7 +2138,7 @@ function _fetchWithTimeout(url, ms) {
 async function checkApi() {
   // Try current COMFY_API first; if it fails, auto-try localhost fallbacks
   const urlsToTry = [COMFY_API];
-  const fb1 = 'http://127.0.0.1:8188', fb2 = 'http://localhost:8188';
+  const fb1 = 'http://127.0.0.1:8190', fb2 = 'http://localhost:8190';
   if (COMFY_API !== fb1) urlsToTry.push(fb1);
   if (COMFY_API !== fb2) urlsToTry.push(fb2);
   for (const url of urlsToTry) {
@@ -2224,6 +2267,7 @@ async function _getModelList(force = false) {
   catch (e) { _modelListPromise = null; throw e; }
 }
 async function loadComfyModels(force = false) {
+  if (window.VoidEngines?.isActive()) return VoidEngines.loadModels();
   const selM = document.getElementById('model-select');
   let models = [];
   // retry up to 3 times
@@ -2238,6 +2282,7 @@ async function loadComfyModels(force = false) {
       if (attempt < 2) await new Promise(r => setTimeout(r, 2000));
     }
   }
+  if (window.VoidEngines?.isActive()) return;
   if (!models.length) { selM.innerHTML = '<option value="">— no models found —</option>'; return; }
 
   selM.innerHTML = models.map(m => `<option value="${m}">${m}</option>`).join('');
@@ -2543,6 +2588,8 @@ function syncParam(id, v) {
   if (id==='cfg')   document.getElementById('m-cfg').textContent   = v;
 }
 function setMode(mode, el) {
+  if (window.VoidRecognition?.isBusy()) { setStatus('請先完成或取消圖片辨識','warn'); return; }
+  if (mode === 'img2img' && window.VoidEngines && !VoidEngines.supportsImageEdit()) { setStatus('目前引擎支援文字生圖', 'warn'); return; }
   currentMode = mode;
   document.querySelectorAll('.mode-toggle .mode-btn').forEach(b => b.classList.remove('active'));
   (el || document.querySelector('.mode-toggle .mode-btn[data-mode="' + mode + '"]'))?.classList.add('active');
@@ -2550,6 +2597,7 @@ function setMode(mode, el) {
   const img2sec = document.getElementById('img2txt-section');
   if (img2imgSec) img2imgSec.style.display = mode === 'img2img' ? 'block' : 'none';
   if (img2sec) img2sec.style.display = mode === 'img2txt' ? 'block' : 'none';
+  window.VoidEngines?.modeChanged();
   saveSettings();
 }
 window.setMode = setMode;
@@ -2608,15 +2656,18 @@ function handleUpload2txt(input) {
   _load2txtFile(file);
 }
 function _load2txtFile(file) {
+  if (window.VoidRecognition?.isBusy()) { setStatus('請先完成或取消圖片辨識','warn'); return; }
   const reader = new FileReader();
   reader.onload = e => {
+    if (window.VoidRecognition?.isBusy()) return;
     img2txtBase64 = e.target.result.split(',')[1];
     const up = document.getElementById('img2txt-upload');
     up.classList.add('has-img');
     up.innerHTML = `<img src="${e.target.result}"><span class="ul" style="color:var(--text)">✓ LOADED</span>`;
     up.style.borderColor = '';
     document.getElementById('tagger-output-wrap').style.display = 'none';
-    runInterrogate();
+    if (document.getElementById('recognition-engine').value === 'wd14') runInterrogate();
+    else setStatus('圖片已載入，按「辨識提示詞」開始','ok');
   };
   reader.readAsDataURL(file);
 }
@@ -2628,44 +2679,7 @@ function handleDrop2txt(e) {
   _load2txtFile(file);
 }
 async function runInterrogate() {
-  if (!img2txtBase64) { setStatus('UPLOAD AN IMAGE FIRST','warn'); return; }
-  const btn = document.getElementById('interrogate-btn');
-  const outEl = document.getElementById('tagger-output');
-  const outWrap = document.getElementById('tagger-output-wrap');
-  if (btn.disabled || innerWidth <= 900) return;
-  if (window.VoidGenFlow) VoidGenFlow.setState('generating');
-  btn.textContent = 'ANALYZING…'; btn.disabled = true;
-  outWrap.style.display = 'none';
-  setStatus('UPLOADING TO WD14 TAGGER…');
-
-  try {
-    const name = await _uploadBase64ToComfyInput(img2txtBase64, 'wd14_input.png');
-
-    // Step 2: call the WD14-Tagger REST endpoint (uses installed wd-v1-4-moat-tagger-v2)
-    setStatus('ANALYZING WITH WD14 TAGGER…');
-    const genThreshold  = parseFloat(document.getElementById('tagger-threshold').value)      || 0.30;
-    const charThreshold = parseFloat(document.getElementById('tagger-char-threshold').value) || 0.75;
-    const tagResp = await _fetchWithTimeout(
-      `${COMFY_API}/pysssss/wd14tagger/tag?filename=${encodeURIComponent(name)}&type=input&threshold=${genThreshold}&character_threshold=${charThreshold}`,
-      120000
-    );
-    if (!tagResp.ok) throw new Error(`Tagger HTTP ${tagResp.status}`);
-    const tags = await tagResp.json();
-
-    if (!tags) throw new Error('No tags returned');
-    outEl.textContent = tags;
-    outWrap.style.display = 'block';
-    if (window.VoidGenFlow) VoidGenFlow.setState('done');
-    setStatus('TAGS EXTRACTED — PRESS SEND TO FILL PROMPT', 'ok');
-    setTimeout(() => setStatus('Void.gen'), 3000);
-  } catch(e) {
-    outEl.innerHTML = `<span style="color:var(--red)">${escHtml(e.message)}</span>`;
-    outWrap.style.display = 'block';
-    if (window.VoidGenFlow) VoidGenFlow.setState('error');
-    setStatus(`TAGGER ERROR · ${e.message}`, 'error');
-  } finally {
-    btn.textContent = '辨識提示詞'; btn.disabled = false;
-  }
+  return window.VoidRecognition?.run();
 }
 function setSize(w, h, el) {
   currentW = w; currentH = h;
@@ -2779,6 +2793,8 @@ function renderQueue() {
 
 // ── GALLERY CARD ACTIONS (IDB-backed for full-res) ────────────────
 async function _cardFullDataUrl(card) {
+  const sharedId = _metaFromCard(card).sharedId;
+  if (sharedId) return VoidSharedGallery.fullData(sharedId);
   const id = parseInt(card.dataset.dbId);
   if (id) {
     try {
@@ -2822,7 +2838,8 @@ function _addToGalleryInternal(thumbUrl, fullDataUrl, title, meta={}, dbId=null,
   card.dataset.ts    = meta.ts    || Date.now();
   card.dataset.model = (meta.model || '').replace(/\.(safetensors|ckpt|pt)$/i,'');
   card.dataset.title = title;
-  const favKey = dbId ? `db_${dbId}` : `ts_${card.dataset.ts}`;
+  const favKey = meta.sharedId ? `shared_${meta.sharedId}` : dbId ? `db_${dbId}` : `ts_${card.dataset.ts}`;
+  if (meta.sharedId) {if(meta.sharedFavorite)_favorites.add(favKey);else _favorites.delete(favKey);}
   card.dataset.favKey = favKey;
   if (_favorites.has(favKey)) card.classList.add('fav');
   card.dataset.metaJson = JSON.stringify(meta);
@@ -2852,7 +2869,7 @@ function _addToGalleryInternal(thumbUrl, fullDataUrl, title, meta={}, dbId=null,
       </div>
     </div>
     <div class="card-rating">${[1,2,3,4,5].map(i=>`<span class="rating-star ${i<=_initRating?'on':''}" data-rating="${i}" title="Rate ${i}">${i<=_initRating?'★':'☆'}</span>`).join('')}</div>`;
-  card.oncontextmenu = e => showCtxMenu(e, fullDataUrl, title, meta);
+  card.oncontextmenu = e => showCtxMenu(e, fullDataUrl || meta.sharedUrl, title, meta);
   if (!thumbUrl && dbId) {
     dbLoadById(dbId).then(rec => {
       const img = card.querySelector('img');
@@ -2881,23 +2898,18 @@ function _addToGalleryInternal(thumbUrl, fullDataUrl, title, meta={}, dbId=null,
   }
 }
 async function deleteFromGallery(card) {
-  if (!card) return;
+  if (!card || card._deleting) return;
   if (!confirm(_DELETE_CONFIRM_MSG)) return;
-  setStatus('DELETING…');
-  const result = await _deleteGalleryCard(card);
-  if (result.fileResult?.reason === 'no_folder') {
-    setStatus('REMOVED FROM GALLERY · NO FOLDER LINKED', 'warn');
-  } else if (result.fileResult?.reason === 'no_permission') {
-    setStatus('REMOVED FROM GALLERY · FOLDER WRITE DENIED', 'warn');
-  } else if (result.fileResult?.reason === 'no_filename') {
-    setStatus('REMOVED FROM GALLERY · FILE NAME UNKNOWN', 'warn');
-  } else if (result.fileDeleted) {
-    setStatus('DELETED · GALLERY + DISK FILE', 'ok');
-  } else {
-    setStatus('REMOVED FROM GALLERY · DISK FILE NOT FOUND', 'warn');
-  }
-  setTimeout(() => setStatus('Void.gen'), 2200);
+  card._deleting=true;
+  setStatus('正在將原檔移至回收區…');
+  try {
+    const result=await _deleteGalleryCard(card);
+    if (!result.ok) {setStatus(result.fileResult?.reason || '刪除失敗，紀錄已保留','error');return;}
+    setStatus(result.fileResult?.missing ? '原檔已不存在，已清除圖庫紀錄' : '已移除圖片與紀錄 · 原檔可從 void-data/trash 復原','ok');
+  } catch(error) {setStatus('刪除未完成：'+error.message,'error');}
+  finally {card._deleting=false;}
 }
+
 async function clearGallery() {
   if (window.voidGalleryClearing) return;
   if (isGenerating) { setStatus('請先停止生成，再清空圖庫', 'warn'); return; }
@@ -3077,14 +3089,9 @@ function lbDownload() {
 }
 async function lbDelete() {
   const card = _lbIdx >= 0 ? _lbCards[_lbIdx] : null;
-  if (!card) return;
-  if (!confirm(_DELETE_CONFIRM_MSG)) return;
-  setStatus('DELETING…');
-  const result = await _deleteGalleryCard(card);
-  if (result.fileDeleted) setStatus('DELETED · GALLERY + DISK FILE', 'ok');
-  else setStatus('REMOVED FROM GALLERY', 'warn');
-  setTimeout(() => setStatus('Void.gen'), 2200);
+  if (card) await deleteFromGallery(card);
 }
+
 function lbApplyAll() {
   const applied = restoreFromMeta(_lbMeta);
   const ta = document.getElementById('te-prompt');
@@ -3220,6 +3227,7 @@ function clearPrompt(idx) {
   if (ta) { ta.value = ''; updateTokenCount(); }
 }
 function sendTaggerToPrompt() {
+  if (window.VoidRecognition?.isBusy() || document.getElementById('tagger-send-btn').getAttribute('aria-disabled') === 'true') return;
   const text = document.getElementById('tagger-output').textContent;
   if (!text.trim() || activeTask < 0 || !tasks[activeTask]) return;
   const ta = document.getElementById('te-prompt');
@@ -3238,14 +3246,24 @@ function sendTaggerToPrompt() {
   setStatus('提示詞已送入 · 已切換為文生圖', 'ok');
   setTimeout(() => setStatus('Void.gen'), 2000);
 }
-function copyTaggerOutput() {
+async function copyTaggerOutput() {
+  if (window.VoidRecognition?.isBusy() || document.getElementById('tagger-copy-btn').getAttribute('aria-disabled') === 'true') return;
   const text = document.getElementById('tagger-output').textContent;
   if (!text) return;
-  navigator.clipboard.writeText(text).then(() => {
+  try {
+    try { await navigator.clipboard.writeText(text); }
+    catch {
+      const area = document.createElement('textarea');
+      area.value = text;
+      area.style.cssText = 'position:fixed;left:-9999px;top:0';
+      document.body.appendChild(area);
+      try { area.select(); if (!document.execCommand('copy')) throw new Error('Copy failed'); }
+      finally { area.remove(); }
+    }
     const btn = document.getElementById('tagger-copy-btn');
     btn.textContent = 'COPIED';
     setTimeout(() => btn.textContent = 'COPY', 1500);
-  }).catch(()=>{});
+  } catch { setStatus('複製失敗，請選取結果文字手動複製','error'); }
 }
 
 // ── CONTEXT MENU ─────────────────────────────────────────────────
@@ -3322,7 +3340,7 @@ function restoreFromMeta(meta) {
     if (btn) setMode('img2img', btn);
     applied.push('IMG2IMG');
   }
-  if (meta.negative && activeTask >= 0) {
+  if (meta.negative !== undefined && activeTask >= 0) {
     tasks[activeTask].negative = meta.negative;
     const taNeg = document.getElementById('te-neg');
     if (taNeg) { taNeg.value = meta.negative; updateNegTokenCount(); _autoResize(taNeg); }
@@ -3423,6 +3441,7 @@ function _stopResize() {
 
 // ── WORKFLOW ──────────────────────────────────────────────────────
 function buildWorkflow(task, modelName, seed, img2imgFile = null) {
+  if (window.VoidEngines?.isActive()) return VoidEngines.buildWorkflow(task, modelName, seed, img2imgFile);
   currentW = parseInt(document.getElementById('size-w').value) || currentW;
   currentH = parseInt(document.getElementById('size-h').value) || currentH;
   const w = currentW, h = currentH;
@@ -3540,6 +3559,7 @@ function _getGenerateTaskIndices(allTasks = false) {
 
 // ── COMFY GENERATE ────────────────────────────────────────────────
 async function comfyuiGenerate(task) {
+  if (window.VoidEngines?.isActive()) await VoidEngines.validate();
   const modelName = document.getElementById('model-select').value;
   if (!modelName) throw new Error('Please select a model');
   const seed = getEffectiveSeed();
@@ -3551,12 +3571,18 @@ async function comfyuiGenerate(task) {
     img2imgFilename = img2imgFile;
   }
   const { wf: workflow, saveNodeId } = buildWorkflow(task, modelName, seed, img2imgFile);
+  const generationMeta = window.VoidEngines?.isActive() ? VoidEngines.captureMeta(workflow, task) : undefined;
   const stagesInTask = Math.max(1, Object.values(workflow).filter(n =>
-    ['KSampler','KSamplerAdvanced'].includes(n.class_type)
+    ['KSampler','KSamplerAdvanced','MOSSOfficialSampler'].includes(n.class_type)
   ).length);
   let currentStage = 0, lastStepVal = -1;
 
-  const promptBody = JSON.stringify({ prompt: workflow, client_id: _COMFY_CLIENT_ID });
+  const promptBody = JSON.stringify({
+    prompt: workflow, client_id: _COMFY_CLIENT_ID,
+    ...(generationMeta?.engine === 'klein' && {
+      extra_data: {extra_pnginfo: {void_mobile: {...generationMeta, model:modelName, seed}}}
+    })
+  });
   const preQueue = [];
   const preKey = '__pre_' + Date.now();
   _comfyWsListeners[preKey] = (e) => preQueue.push(e);
@@ -3571,7 +3597,10 @@ async function comfyuiGenerate(task) {
   } finally {
     delete _comfyWsListeners[preKey];
   }
-  if (!promptResp.ok) throw new Error(`HTTP ${promptResp.status}`);
+  if (!promptResp.ok) {
+    const detail = await promptResp.json().catch(() => ({}));
+    throw new Error(detail.error?.message || `HTTP ${promptResp.status}`);
+  }
   const { prompt_id } = await promptResp.json();
 
   return new Promise((resolve, reject) => {
@@ -3586,9 +3615,10 @@ async function comfyuiGenerate(task) {
       fn(val);
     };
 
+    const timeoutMinutes = window.VoidEngines?.isActive() ? 30 : 4;
     const timeout = setTimeout(() => {
-      finish(reject, new Error('Generation timeout (4 min)'));
-    }, 4*60*1000);
+      finish(reject, new Error(`Generation timeout (${timeoutMinutes} min)`));
+    }, timeoutMinutes*60*1000);
 
     const previewHandler = async (event) => {
       try {
@@ -3612,7 +3642,7 @@ async function comfyuiGenerate(task) {
         return new Promise((res,rej) => { const rd=new FileReader(); rd.onload=()=>res(rd.result); rd.onerror=rej; rd.readAsDataURL(blob); });
       }));
       const files = images.map(img => ({ filename: img.filename, subfolder: img.subfolder || '', type: img.type || 'output' }));
-      finish(resolve, { dataUrls, files, seed, model: modelName });
+      finish(resolve, { dataUrls, files, seed, model: modelName, generationMeta });
     }
 
     async function _dispatchMsg(event) {
@@ -3654,6 +3684,9 @@ async function comfyuiGenerate(task) {
         if (msg.type==='execution_error' && msg.data.prompt_id===prompt_id) {
           finish(reject, new Error(msg.data.exception_message || 'ComfyUI error'));
         }
+        if (msg.type==='execution_interrupted' && msg.data.prompt_id===prompt_id) {
+          finish(reject, new Error('生成已取消'));
+        }
       } catch(e) { /* ignore parse errors */ }
     }
 
@@ -3676,6 +3709,7 @@ function stopGenerate() {
   _syncMobileGenBtn(false);
 }
 async function startGenerate(allTasks = false, opts = {}) {
+  if (window.VoidRecognition?.isBusy()) { setStatus('請先完成或取消圖片辨識','warn'); return; }
   if (isGenerating) return;
   if (!tasks.length) { setStatus('ADD A TASK FIRST','warn'); return; }
   if (currentMode === 'img2img' && !img2imgBase64) {
@@ -3721,19 +3755,23 @@ async function startGenerate(allTasks = false, opts = {}) {
     setStatus(`GENERATING ${i+1}/${tasks.length} · ${tasks[i].title}`);
     try {
       const _gen = (window.VoidPixai && VoidPixai.isActive()) ? VoidPixai.generate : comfyuiGenerate;
-      const { dataUrls, files, seed, model } = await _gen(tasks[i]);
+      const { dataUrls, files, seed, model, generationMeta } = await _gen(tasks[i]);
       const elapsed = ((Date.now()-t0)/1000).toFixed(1)+'s';
       await Promise.all(dataUrls.map(async (dataUrl, j) => {
         const title = tasks[i].title + (dataUrls.length>1 ? ` #${j+1}` : '');
         const imgFile = files?.[j];
         const meta = { prompt:tasks[i].prompt, negative:tasks[i].negative, seed, model,
+          engine: window.VoidEngines?.getEngine() || 'sd',
           mode: currentMode,
           denoise: currentMode === 'img2img' ? document.getElementById('denoise-slider')?.value : undefined,
           steps:document.getElementById('steps-num').value, cfg:document.getElementById('cfg-num').value,
           sampler:document.getElementById('sampler-select').value, time:elapsed,
+          scheduler:document.getElementById('scheduler-select').value,
+          width:currentW, height:currentH,
           filename: imgFile?.filename || '', subfolder: imgFile?.subfolder || '', outputType: imgFile?.type || 'output',
-          loras: (window.VoidPixai && VoidPixai.isActive()) ? VoidPixai.lorasMeta() :
-            [0,1,2,3,4,5].map(k=>({ name:document.getElementById(`lora-sel-${k}`)?.value||'', strength:parseFloat(document.getElementById(`lora-sldr-${k}`)?.value||0.8) })).filter(l=>l.name) };
+          loras: window.VoidEngines?.isActive() ? [] : (window.VoidPixai && VoidPixai.isActive()) ? VoidPixai.lorasMeta() :
+            [0,1,2,3,4,5].map(k=>({ name:document.getElementById(`lora-sel-${k}`)?.value||'', strength:parseFloat(document.getElementById(`lora-sldr-${k}`)?.value||0.8) })).filter(l=>l.name),
+          ...generationMeta };
         await saveAndAddToGallery(dataUrl, title, meta);
         showPreviewFinal(dataUrl, meta);
       }));
@@ -3853,7 +3891,10 @@ async function downloadZip() {
 function saveFavorites() {
   localStorage.setItem('void-gen-favs', JSON.stringify([..._favorites]));
 }
-function toggleFav(card) {
+async function toggleFav(card) {
+  if (card._favoriting) return;
+  const meta=_metaFromCard(card);
+  if(meta.sharedId){card._favoriting=true;try{await VoidSharedGallery.favorite(meta.sharedId,!_favorites.has(card.dataset.favKey));}catch(error){setStatus(error.message,'error');return;}finally{card._favoriting=false;}}
   const key = card.dataset.favKey;
   if (!key) return;
   const star = card.querySelector('.card-star');
@@ -4477,24 +4518,18 @@ function restoreFromMetaPng(meta) {
 
 // ── DELETE SELECTED ────────────────────────────────────────────────
 async function deleteSelected() {
-  const selected = [...document.querySelectorAll('.gallery-card.selected')];
-  if (!selected.length) return;
-  if (!confirm(_DELETE_CONFIRM_MULTI(selected.length))) return;
-  setStatus(`DELETING ${selected.length}…`);
-  let diskOk = 0, diskMiss = 0;
-  for (const card of selected) {
-    const r = await _deleteGalleryCard(card);
-    if (r.fileDeleted) diskOk++;
-    else diskMiss++;
-  }
-  document.getElementById('del-btn').style.display = 'none';
-  document.getElementById('zip-btn').style.display = 'none';
-  toggleSelectMode();
-  const msg = diskMiss
-    ? `DELETED ${selected.length} · ${diskOk} DISK FILES`
-    : `DELETED ${selected.length} · GALLERY + DISK`;
-  setStatus(msg, diskMiss ? 'warn' : 'ok');
-  setTimeout(() => setStatus('Void.gen'), 2500);
+  const selected=[...document.querySelectorAll('.gallery-card.selected')];
+  if (!selected.length || window.voidDeleteBusy || !confirm(_DELETE_CONFIRM_MULTI(selected.length))) return;
+  window.voidDeleteBusy=true;
+  let removed=0,failed=0,reason='';
+  try {
+    for (const card of selected) {
+      try {const result=await _deleteGalleryCard(card);if(result.ok)removed++;else {failed++;reason=result.fileResult?.reason || '刪除失敗';}}
+      catch(error){failed++;reason=error.message;}
+    }
+    if (!failed && gallerySelectMode) toggleSelectMode();
+    setStatus(failed ? `已移除 ${removed} 張，${failed} 張保留：${reason}` : `已移除 ${removed} 張 · 原檔已移至回收區`,failed?'error':'ok');
+  } finally {window.voidDeleteBusy=false;}
 }
 
 // ── THEME PRESETS ─────────────────────────────────────────────────
@@ -4823,6 +4858,14 @@ window.toggleFav = toggleFav;
 window.setCardRating = setCardRating;
 window.deleteFromGallery = deleteFromGallery;
 </script>
-<script src="js/void-desktop.js?v=29.3"></script>
+<script src="js/void-engines.js?v=4"></script>
+<script src="js/void-recognition.js?v=2"></script>
+<script src="js/void-desktop.js?v=32.1-recognition"></script>
+<dialog id="rng-panel" style="width:min(94vw,1400px);max-width:none;height:88vh;background:var(--bg1);color:var(--text)">
+<form method="dialog"><button class="tb-btn">關閉 RNG</button></form>
+<label>辨識標籤（可編輯）<textarea rows="2" style="width:100%"></textarea></label>
+<iframe title="VOID.RNG" style="width:100%;height:calc(100% - 90px);border:0"></iframe>
+</dialog>
+<script src="js/anime-rng.js"></script>
 </body>
 </html>
