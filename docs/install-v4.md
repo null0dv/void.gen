@@ -29,7 +29,7 @@
    powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\create-void-full-shortcut.ps1
    ```
 
-Klein、Qwen、MOSS、Moody Moss 和 Wan 各有額外的權重或節點需求。可從對應的模型選單查看缺少的元件，將模型放入 ComfyUI 對應的 `diffusion_models`、`text_encoders`、`vae` 或 `loras` 目錄。手機模式的固定檔名可查閱 [工作流設定](../mobile_workflows.py)，Wan 的模型與節點清單見 [影片工作流](../mobile_motion_graph.json)。先用 SDXL 驗證基本生成，再逐項配置進階引擎。
+先用 SDXL 驗證基本生成，再按[模型下載表](models-v4.md)配置 Klein、Qwen、MOSS、Moody Moss、Wan 及圖片辨識。下載表列出對應檔名、模型目錄和自訂節點。手機模式的固定檔名可查閱[工作流設定](../mobile_workflows.py)。
 
 ## 日常使用
 
