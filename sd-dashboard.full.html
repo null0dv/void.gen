@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Void.gen Full V3</title>
+<title>VOID FULL V4</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#080808">
 <meta name="mobile-web-app-capable" content="yes">
@@ -11,11 +11,11 @@
 <meta name="apple-mobile-web-app-title" content="Void.gen">
 <link rel="apple-touch-icon" href="icon-192.png">
 <script src="js/void-boot.js"></script>
-<script src="js/void-gallery-db.js?v=29.3"></script>
+<script src="js/void-gallery-db.js?v=34"></script>
 <script src="js/void-gen-flow.js?v=29.3"></script>
 <script src="js/void-jszip-loader.js"></script>
 <script src="js/void-pwa.js"></script>
-<script src="js/void-pixai.js"></script>
+<script src="js/void-shared-gallery.js?v=10"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap');
 :root {
@@ -683,15 +683,120 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
   #ss-controls{bottom:14px}
 }
 
+.rng-header{display:flex;justify-content:space-between;align-items:center;padding:16px 22px;border-bottom:1px solid var(--line2);background:var(--bg2)}
+.rng-header h2{font:600 21px system-ui;margin:4px 0 0}
+.rng-kicker{font:600 10px system-ui;letter-spacing:.17em;color:#b9a6fa}
+.rng-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(235px,300px);flex:1;min-height:0}
+.rng-body iframe{width:100%;height:100%;border:0;background:var(--bg)}
+.rng-draft{padding:18px;display:flex;flex-direction:column;gap:10px;overflow:auto;border-left:1px solid var(--line2);background:var(--bg2)}
+.rng-draft label{font:600 13px system-ui}
+.rng-draft textarea{box-sizing:border-box;width:100%;min-height:64px;padding:10px;resize:vertical;border-radius:8px;background:var(--bg);color:var(--text);border:1px solid var(--line2);font:13px/1.5 system-ui}
+.rng-actions{display:flex;gap:8px;flex-wrap:wrap}
+.rng-actions .tb-btn{flex:1;padding:8px;white-space:nowrap}
+.rng-primary,#rng-open{color:#e7ddff;border-color:#7365a6;background:#342b51}
+#rng-feedback{font:12px/1.5 system-ui;color:#bdafdc;margin:0}
+@media(max-width:760px){.rng-body{grid-template-columns:1fr;grid-template-rows:minmax(170px,1fr) minmax(120px,35%)}.rng-draft{border-left:0;border-top:1px solid var(--line2);padding:12px}.rng-header{padding:10px 14px}}
+#studio-dialog [hidden]{display:none}
+.studio-header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 20px;border-bottom:1px solid #26262d}
+.studio-header h2{font:600 17px system-ui;margin:2px 0 0}
+.studio-tools,.studio-attachments,.studio-composer-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.studio-tools [aria-pressed=true]{border-color:#ab91f4;color:#e7ddff}
+.studio-stage{flex:1;min-height:0;overflow:auto;padding:12px 20px;background:#0b0b0f}
+.studio-images{height:100%;min-height:160px;display:flex;justify-content:center;gap:12px}
+.studio-hero,#studio-compare-wrap{min-width:0;flex:1;display:grid;place-items:center;margin:0;position:relative}
+.studio-hero>img,#studio-compare-img{width:100%;height:100%;min-height:0;max-height:100%;object-fit:contain;position:absolute;inset:0}
+#studio-compare-wrap figcaption{position:absolute;z-index:1;top:6px;left:6px;padding:4px 8px;border-radius:6px;background:#131318dc;font:12px system-ui}
+.studio-empty{display:grid;place-items:center;align-content:center;gap:12px;text-align:center;cursor:pointer;width:min(100%,560px);min-height:150px;padding:16px;border:1px dashed #45434f;border-radius:14px;color:#bab8c5;font:13px system-ui}
+.studio-empty strong{font-size:20px;color:#f2f0f8}
+.studio-hero:has(img:not([hidden])) .studio-empty{display:none}
+#studio-rounds{display:flex;justify-content:safe center;gap:8px;overflow:auto;flex-shrink:0;padding:8px 14px;border-top:1px solid #26262d}
+.studio-round{position:relative;flex:0 0 64px;height:55px;padding:2px;border-radius:8px;border:1px solid #343440;background:#19191f;color:#fff;overflow:hidden;cursor:pointer}
+.studio-round[aria-pressed=true]{border-color:#c4afff;outline:1px solid #c4afff;outline-offset:-2px}
+.studio-round img{width:100%;height:100%;object-fit:cover;border-radius:5px}
+.studio-round span{position:absolute;right:4px;bottom:3px;background:#101014d9;padding:1px 4px;border-radius:4px;font:10px system-ui}
+.studio-bottom{padding:8px 16px 10px;background:#101014}
+.studio-composer{max-width:790px;margin:auto;padding:10px 12px;border:1px solid #3a3845;border-radius:18px;background:#1a191f;box-shadow:0 8px 24px #0004}
+.studio-composer:focus-within{border-color:#8574b0}
+.studio-composer textarea{display:block;width:100%;padding:8px 2px;resize:vertical;max-height:18dvh;border:0;outline:none;background:transparent;color:#f4f1fb;font:14px/1.55 system-ui}
+.studio-attach{display:flex;align-items:center;gap:5px;border:1px solid #3a3845;border-radius:9px;padding:4px 8px;font:12px system-ui;cursor:pointer}
+.studio-attach img{width:26px;height:26px;object-fit:cover;border-radius:4px}
+.studio-file{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.studio-attach:hover,.studio-attach:has(+input:focus-visible){border-color:#b39be9}
+.studio-composer-tools .sel{width:auto;max-width:120px}
+.studio-engine{margin-left:auto;color:#b2a9c2;font:11px system-ui}
+.studio-submit{background:#ddd0ff;color:#181126;border-color:#ddd0ff;font-weight:700;padding:7px 12px}
+.studio-video-options{position:relative;font:12px system-ui}
+.studio-video-options summary{cursor:pointer;padding:5px}
+.studio-video-options>div{position:absolute;bottom:100%;left:0;z-index:2;display:grid;gap:7px;min-width:136px;padding:9px;border:1px solid #45404f;border-radius:10px;background:#23212b}
+#studio-status{max-width:790px;margin:5px auto 0;color:#bdafdc;font:12px/1.4 system-ui;overflow-wrap:anywhere}
+#studio-canvas-wrap{overflow:auto;max-height:34vh;border:1px solid #303037;border-radius:10px;margin-bottom:10px}
+#studio-canvas{position:relative;min-width:680px;background:radial-gradient(circle,#303037 1px,transparent 1px) 0 0/16px 16px}
+.studio-tile{position:absolute;width:142px;height:108px;padding:5px;border-radius:8px;border:1px solid #303037;background:#1a191f;color:#eee;cursor:grab;touch-action:none;text-align:left}
+.studio-tile:active{cursor:grabbing}
+.studio-tile[aria-pressed=true]{border-color:#ab91f4}
+.studio-tile img{display:block;width:100%;height:76px;object-fit:contain}
+.studio-tile span{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:3px}
+#studio-video{display:block;max-width:100%;max-height:38vh;margin:12px auto 4px}
+@media(max-width:620px){.studio-header{padding:8px 10px}.studio-stage{padding:8px}.studio-bottom{padding:5px 8px}.studio-engine{display:none}.studio-submit{margin-left:auto}.studio-round{flex-basis:52px;height:46px}}
+.studio-attachments{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:8px}
+.studio-asset{min-width:0;display:flex;align-items:center;gap:5px;padding:6px;border:1px solid #3a3845;border-radius:10px}
+.studio-asset-info{min-width:0;flex:1;display:grid;gap:2px;font:12px system-ui}
+.studio-asset-info span{color:#c0b9cf;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.studio-asset .tb-btn,.studio-asset .studio-attach{white-space:nowrap;padding:4px 6px}
+.studio-asset>img{width:28px;height:28px;border-radius:5px;object-fit:cover}
+.studio-composer-tools label{display:flex;align-items:center;gap:5px;font:12px system-ui}
+.studio-model-control{flex:1;min-width:135px}
+.studio-composer-tools .studio-model-control .sel{width:100%;max-width:none;min-width:0}
+#studio-video-options{display:flex;gap:6px}
+.studio-submit-row{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#beb4ce}
+.studio-submit-row small{font:11px/1.3 system-ui}
+.studio-picker-body{padding:12px 16px}
+#studio-picker-search{width:100%;padding:8px;background:#101014;border:1px solid #494555;border-radius:8px;color:#eee}
+#studio-picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(106px,1fr));gap:8px}
+.studio-pick{display:grid;gap:4px;text-align:left;background:#24222d;color:#eee;border:1px solid #3a3645;border-radius:8px;padding:4px;cursor:pointer}
+.studio-pick:hover,.studio-pick:focus-visible{border-color:#cab3ff}
+.studio-pick img{width:100%;height:83px;object-fit:cover;border-radius:4px}
+.studio-pick span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:12px system-ui}
+#studio-picker-more{margin-top:10px}
+@media(max-width:720px){.studio-attachments{grid-template-columns:1fr}.studio-composer-tools{gap:5px}}
+.full-workspaces{display:flex;align-items:stretch;gap:4px;min-width:0;overflow:auto;scrollbar-width:thin}
+.full-workspace{min-width:max-content;display:grid;gap:2px;text-align:left;padding:6px 10px;background:transparent;color:var(--text);border:1px solid transparent;border-radius:9px;cursor:pointer;font:13px system-ui}
+.full-workspace small{font-size:10px;color:#aea8ba}
+.full-workspace:hover,.full-workspace[aria-pressed=true]{background:#26212e;border-color:#5b4e72}
+.full-workspace:focus-visible{outline:2px solid #bcabef;outline-offset:-2px}
+.full-workspaces #rng-open,.full-workspaces #studio-open{color:inherit;background:transparent;border-color:transparent}
+.full-workspaces #rng-open:hover,.full-workspaces #studio-open:hover{background:#26212e;border-color:#5b4e72}
+.full-source-actions{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+body[data-full-view=library] .sidebar,body[data-full-view=library] .sidebar-toggle-btn,body[data-full-view=library] .resize-handle,body[data-full-view=library] .right-panel,
+body[data-full-view=queue] .sidebar,body[data-full-view=queue] .sidebar-toggle-btn,body[data-full-view=queue] .resize-handle,body[data-full-view=queue] .right-panel,
+body[data-full-view=queue] #album-chips-row,body[data-full-view=queue] #gallery-tag-row,body[data-full-view=queue] #storage-bar-wrap{display:none!important}
+body[data-full-view=library] #center-panel,body[data-full-view=queue] #center-panel{width:100%;max-width:none;flex:1}
+@media(max-width:1250px){.full-workspace small{display:none}.full-workspace{padding:7px}.topbar{gap:8px}}
+@media(max-width:1050px){.topbar .logo{display:none}.full-workspace{font-size:12px}}
+.full-inline-workspace{flex:1;min-height:0;display:flex;flex-direction:column;width:100%;background:var(--bg1);color:var(--text)}
+.full-inline-workspace[hidden],body[data-full-view=rng] .main,body[data-full-view=studio] .main,body[data-full-view=picker] .main{display:none!important}
+#studio-dialog{background:#101014}
+#studio-picker .studio-picker-body{min-height:0;overflow:auto;width:min(100%,1100px);margin-inline:auto;box-sizing:border-box}
+#rng-panel .rng-header,#studio-dialog .studio-header,#studio-picker .studio-header{flex-shrink:0}
+.full-workspaces #rng-open[aria-pressed=true],.full-workspaces #studio-open[aria-pressed=true]{background:#26212e;border-color:#5b4e72}
 </style>
 <link rel="stylesheet" href="void-desktop.css?v=29.3">
+<link rel="stylesheet" href="void-layout.css?v=5">
 
 </head>
 <body>
 
 <div class="topbar">
-  <div class="logo">VOID<span>.gen</span> <span style="font-size:9px;letter-spacing:.12em;color:var(--muted)">FULL V3</span></div>
+  <div class="logo">VOID<span>.gen</span> <span style="font-size:9px;letter-spacing:.12em;color:var(--muted)">FULL V4</span></div>
+  <nav class="full-workspaces" aria-label="VOID 工作區">
+    <button type="button" class="full-workspace" data-full-view="create" aria-pressed="true"><strong>創作</strong><small>文生圖 · 圖生圖 · 辨識</small></button>
+    <button type="button" class="full-workspace" id="rng-open" aria-pressed="false"><strong>RNG</strong><small>抽詞 · 辭庫</small></button>
+    <button type="button" class="full-workspace" id="studio-open" aria-pressed="false"><strong>編輯工作室</strong><small>連續改圖 · 轉影片</small></button>
+    <button type="button" class="full-workspace" data-full-view="library" aria-pressed="false"><strong>作品庫</strong><small>搜尋 · 收藏 · 相簿</small></button>
+    <button type="button" class="full-workspace" data-full-view="queue" aria-pressed="false"><strong>任務</strong><small>佇列 · 執行進度</small></button>
+  </nav>
   <div class="topbar-right">
+    <a class="tb-btn" href="void-motion.html" title="開啟影片庫與獨立轉影工具">影片庫 ↗</a>
     <button class="tb-btn" id="folder-btn" onclick="selectOutputFolder()" title="選擇 ComfyUI 輸出資料夾">FOLDER</button>
     <button class="tb-btn" onclick="saveTasks()">SAVE</button>
     <button class="tb-btn" onclick="checkApi()">CHECK</button>
@@ -713,7 +818,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
     <div class="sidebar-scroll">
 
       <div class="ss">
-        <div class="sec-label">MODE</div>
+        <div class="sec-label">創作模式</div>
         <div class="mode-toggle">
           <div class="mode-btn active" data-mode="txt2img" onclick="setMode('txt2img',this)">TXT → IMG</div>
           <div class="mode-btn" data-mode="img2img" onclick="setMode('img2img',this)">IMG → IMG</div>
@@ -734,18 +839,49 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
           <span class="ul">CLICK OR DROP</span>
         </div>
         <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleUpload(this)">
+        <div class="full-source-actions"><button type="button" class="tb-btn" id="full-i2i-library">從作品庫選圖</button></div>
         <div class="param-row" style="margin-top:10px;margin-bottom:0">
           <span class="param-name">DENOISE</span>
           <input type="range" class="slider" id="denoise-slider" min="0" max="1" step="0.01" value="0.75"
             oninput="document.getElementById('denoise-val').textContent=parseFloat(this.value).toFixed(2);saveSettings()">
           <span class="param-val" id="denoise-val">0.75</span>
         </div>
+        <div id="klein-settings" hidden style="margin-top:8px">
+          <label for="klein-strength" class="sec-label">寫實 LoRA 強度</label>
+          <input id="klein-strength" class="size-input" type="number" min="0" max="2" step="0.05" value="0.8">
+        </div>
       </div>
 
       <div class="ss" id="img2txt-section" style="display:none">
+        <label class="sec-label" for="recognition-engine">辨識引擎</label>
+        <select class="sel" id="recognition-engine" aria-label="辨識引擎" style="margin-bottom:8px" onchange="VoidRecognition.selectEngine()">
+          <option value="wd14">WD14 · 動漫標籤</option>
+          <option value="qwen">Qwen-VL · 照片／詳細描述</option>
+          <option value="florence">Florence-2 · 輕量圖說</option>
+        </select>
+        <div id="recognition-info" role="status" style="font-size:12px;line-height:1.6;color:var(--muted);margin-bottom:10px"></div>
+        <div id="qwen-recognition-settings" hidden style="margin-bottom:10px">
+          <label class="sec-label" for="recognition-style">輸出方式</label>
+          <select class="sel" id="recognition-style" aria-label="辨識輸出方式" onchange="VoidRecognition.presetChanged()">
+            <option value="prompt">英文生圖 prompt</option>
+            <option value="zh">繁體中文描述</option>
+            <option value="brief">簡短英文描述</option>
+          </select>
+          <details style="margin-top:8px;font-size:12px"><summary>自訂辨識指令</summary>
+            <textarea id="recognition-instruction" aria-label="自訂辨識指令" rows="4" style="width:100%;margin-top:6px;background:var(--bg2);color:var(--text);border:1px solid var(--line2);padding:8px;resize:vertical" onchange="VoidRecognition.remember()"></textarea>
+          </details>
+        </div>
+        <div id="florence-recognition-settings" hidden style="margin-bottom:10px">
+          <label class="sec-label" for="florence-task">描述詳細度</label>
+          <select class="sel" id="florence-task" aria-label="Florence 描述詳細度" onchange="VoidRecognition.remember()">
+            <option value="caption">簡短</option>
+            <option value="detailed_caption">標準</option>
+            <option value="more_detailed_caption" selected>詳細</option>
+          </select>
+        </div>
         <div class="sec-label" style="margin-bottom:6px">
           SOURCE IMAGE
-          <span style="font-size:8px;color:var(--muted2);letter-spacing:.06em">WD14 LOCAL</span>
+          <span id="recognition-source-label" style="font-size:10px;color:var(--muted2)">本機辨識</span>
         </div>
         <div class="img-upload vis" id="img2txt-upload" onclick="triggerUpload2txt()"
           ondragover="event.preventDefault();this.style.borderColor='var(--muted)'"
@@ -755,6 +891,8 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
           <span class="ul">CLICK OR DROP</span>
         </div>
         <input type="file" id="file-input-2txt" accept="image/*" style="display:none" onchange="handleUpload2txt(this)">
+        <div class="full-source-actions"><button type="button" class="tb-btn" id="full-recognition-library">從作品庫選圖</button></div>
+        <div id="wd14-settings">
         <div class="param-row" style="margin-top:10px;margin-bottom:4px">
           <span class="param-name">GENERAL</span>
           <input type="range" class="slider" id="tagger-threshold" min="0.05" max="0.9" step="0.05" value="0.30"
@@ -767,26 +905,62 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
             oninput="document.getElementById('tagger-char-threshold-val').textContent=parseFloat(this.value).toFixed(2)">
           <span class="param-val" id="tagger-char-threshold-val">0.75</span>
         </div>
+        </div>
         <button id="interrogate-btn" onclick="runInterrogate()"
           style="width:100%;padding:8px;background:var(--bg3);border:1px solid var(--line2);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:11px;letter-spacing:.08em;cursor:pointer">
           INTERROGATE
         </button>
+        <button id="recognition-cancel" class="tb-btn" hidden style="width:100%;margin-top:6px" onclick="VoidRecognition.cancel()">取消辨識</button>
         <div id="tagger-output-wrap" style="display:none;margin-top:8px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-            <span style="font-size:8px;color:var(--muted2);letter-spacing:.1em">RESULT</span>
+            <span id="recognition-result-label" style="font-size:12px;color:var(--muted2)">辨識結果</span>
             <div style="display:flex;gap:5px">
+              <button type="button" class="icon-btn" id="rng-tags">送入 RNG</button>
               <span id="tagger-send-btn" class="icon-btn" onclick="sendTaggerToPrompt()">SEND</span>
               <span id="tagger-copy-btn" class="icon-btn" onclick="copyTaggerOutput()">COPY</span>
             </div>
           </div>
-          <div id="tagger-output" style="background:var(--bg2);border:1px solid var(--line2);border-radius:5px;padding:8px;font-size:10px;color:var(--muted);line-height:1.6;font-family:var(--mono);word-break:break-word"></div>
+          <div id="tagger-output" style="background:var(--bg2);border:1px solid var(--line2);border-radius:5px;padding:8px;font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;word-break:break-word"></div>
+        </div>
+      </div>
+
+      <div class="ss">
+        <div class="sec-label">生成引擎</div>
+        <select class="sel" id="engine-select" aria-label="生成引擎" onchange="VoidEngines.switchEngine(this.value)">
+          <option value="sd">SD / SDXL</option>
+          <option value="qwen">Qwen Image 2.1</option>
+          <option value="moody">Moody Moss Mix V4.1</option>
+          <option value="moss">MOSS Image SFT</option>
+          <option value="klein">FLUX.2 Klein 9B</option>
+          <option value="desirex">Krea 2 · DesireX X3</option>
+        </select>
+        <div id="engine-components" hidden style="margin-top:10px">
+          <div class="sec-label">文字編碼器</div>
+          <select class="sel" id="engine-clip" aria-label="文字編碼器"></select>
+          <div class="sec-label" id="engine-vae-label" style="margin-top:8px">VAE</div>
+          <select class="sel" id="engine-vae" aria-label="VAE"></select>
+          <div id="moss-settings" hidden style="margin-top:8px">
+            <label for="moss-shift" class="sec-label">MOSS SHIFT</label>
+            <input id="moss-shift" class="size-input" aria-label="MOSS shift" type="number" min="0.01" max="100" step="0.1" value="5">
+          </div>
+          <div id="engine-status" role="status" style="margin-top:8px;color:var(--muted);font-size:12px;line-height:1.6">等待檢查模型</div>
+        </div>
+      </div>
+      <div class="ss">
+        <div class="sec-label">
+          <label for="model-select">模型</label>
+          <button type="button" class="tb-btn" onclick="loadComfyModels(true)" title="重新讀取目前引擎的模型">更新模型</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="model-badge-dot" id="model-badge-dot"></span>
+          <select class="sel" id="model-select" style="flex:1" onchange="updateModelBadge();saveSettings()"><option value="">— no models loaded —</option></select>
         </div>
       </div>
 
       <div class="ss">
         <div class="sec-label">
-          TASKS
-          <button class="add-task-btn" onclick="addTask()">+ NEW</button>
+          提示詞草稿
+          <button class="add-task-btn" onclick="addTask()">＋ 新草稿</button>
         </div>
         <div class="task-tabs-row" id="task-tabs"></div>
       </div>
@@ -794,17 +968,6 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
       <div class="ss" id="task-editor">
         <div class="empty-state" style="height:60px">
           <div class="empty-text">ADD A TASK TO BEGIN</div>
-        </div>
-      </div>
-
-      <div class="ss">
-        <div class="sec-label">
-          MODEL
-          <span style="cursor:pointer;color:var(--muted);font-size:14px" onclick="loadComfyModels(true)" title="Refresh">↻</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <span class="model-badge-dot" id="model-badge-dot"></span>
-          <select class="sel" id="model-select" style="flex:1" onchange="updateModelBadge();saveSettings()"><option value="">— no models loaded —</option></select>
         </div>
       </div>
 
@@ -904,7 +1067,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
         </div>
       </div>
 
-      <div class="ss">
+      <div class="ss" id="image-batch-settings">
         <div class="sec-label">BATCH</div>
         <div class="batch-row">
           <div class="batch-btn active" onclick="setBatch(1,this)">×1</div>
@@ -1021,8 +1184,8 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
     <div id="center-gallery-stack">
     <div class="center-tabs" id="center-tabs-bar" style="justify-content:space-between">
       <div style="display:flex">
-        <div class="center-tab active" onclick="switchCenterTab('gallery',this)">GALLERY</div>
-        <div class="center-tab" onclick="switchCenterTab('queue',this)">QUEUE
+        <div class="center-tab active" onclick="switchCenterTab('gallery',this)">作品</div>
+        <div class="center-tab" onclick="switchCenterTab('queue',this)">佇列
           <span id="queue-count" style="display:none;background:var(--bg3);border-radius:3px;padding:1px 5px;font-size:9px;margin-left:4px">0</span>
         </div>
       </div>
@@ -1035,7 +1198,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
         <button class="tb-btn" id="del-btn" onclick="deleteSelected()" title="Delete selected">DEL</button>
         <button class="tb-btn" id="zip-btn" onclick="downloadZip()" style="display:none;color:var(--text);border-color:var(--muted)">ZIP</button>
         <button class="tb-btn" onclick="startSlideshow()" title="Slideshow">SLIDE</button>
-        <button class="tb-btn" id="mason-btn" onclick="toggleMasonry()" title="Toggle masonry layout">LIST</button>
+        <button class="tb-btn" id="mason-btn" onclick="toggleMasonry()" title="切換直式或方形預覽">直式預覽</button>
       </div>
     </div>
     <div id="gallery-search-wrap">
@@ -1060,6 +1223,10 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
         <div class="empty-text">QUEUE EMPTY</div>
       </div>
       <div id="queue-list"></div>
+      <section id="shared-jobs" style="padding:12px" aria-label="共用任務">
+        <strong>共用任務</strong> <button type="button" id="shared-jobs-refresh" class="tb-btn">更新</button>
+        <div id="shared-jobs-results" role="status">讀取中…</div>
+      </section>
     </div>
     </div><!-- /center-gallery-stack -->
   </div>
@@ -1069,9 +1236,10 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
   <!-- RIGHT PANEL -->
   <div class="right-panel">
     <div class="rp-header" style="display:flex;align-items:center;justify-content:space-between">
-      <span>PREVIEW</span>
+      <span>生成預覽</span>
       <span class="rp-expand-btn" id="rp-expand-btn" onclick="togglePanelExpand()" title="Expand/shrink preview">⤢</span>
     </div>
+    <div class="full-source-actions" style="margin:8px"><button type="button" class="tb-btn" id="full-result-studio">用成品繼續改圖</button></div>
     <div class="preview-wrap">
       <div class="preview-box" id="preview-box">
         <div class="preview-ph" id="preview-ph">
@@ -1103,6 +1271,100 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 
 </div><!-- /main -->
 
+<section id="rng-panel" class="full-inline-workspace" hidden aria-labelledby="rng-title">
+  <header class="rng-header">
+    <div><span class="rng-kicker">VOID FULL / PROMPT WORKSPACE</span><h2 id="rng-title">RNG 提示詞工作區</h2></div>
+    <button type="button" class="tb-btn" id="rng-back">回到創作</button>
+  </header>
+  <div class="rng-body">
+    <iframe title="VOID.RNG 辭庫與抽卡"></iframe>
+    <aside class="rng-draft">
+      <label for="rng-reference">辨識標籤</label>
+      <textarea id="rng-reference" rows="3" placeholder="可貼上標籤，或從圖片辨識送入"></textarea>
+      <label for="rng-result">提示詞預覽</label>
+      <textarea id="rng-result" rows="7" placeholder="抽詞或選卡後，提示詞會顯示在這裡"></textarea>
+      <div class="rng-actions">
+        <button type="button" class="tb-btn" id="rng-replace">取代草稿</button>
+        <button type="button" class="tb-btn rng-primary" id="rng-append">追加到草稿</button>
+      </div>
+      <p id="rng-feedback" role="status">可在預覽中編輯，再送入目前任務。</p>
+    </aside>
+  </div>
+</section>
+<section id="studio-dialog" class="full-inline-workspace" hidden aria-labelledby="studio-title">
+  <header class="studio-header">
+    <div><span class="rng-kicker">VOID / STUDIO</span><h2 id="studio-title">連續改圖</h2></div>
+    <div class="studio-tools">
+      <button type="button" class="tb-btn" id="studio-board-toggle" aria-pressed="false">圖板</button>
+      <button type="button" class="tb-btn" id="studio-compare" aria-pressed="false">比較</button>
+      <button type="button" class="tb-btn" id="studio-back">回到創作</button>
+    </div>
+  </header>
+  <section class="studio-stage" aria-label="主圖與版本預覽">
+    <details id="studio-projects">
+      <summary>專案圖板 · 命名、自動存檔與重新開啟</summary>
+      <label>專案名稱 <input id="studio-project-name" maxlength="100" placeholder="例如：人物換裝草稿"></label>
+      <button type="button" id="studio-project-new" class="tb-btn">新增空白圖板</button>
+      <label>搜尋 <input type="search" id="studio-project-search" placeholder="依圖板名稱搜尋"></label>
+      <div id="studio-project-list"></div>
+    </details>
+    <div id="studio-canvas-wrap" hidden><div id="studio-canvas" aria-label="可拖動排列的版本圖板"></div></div>
+    <div class="studio-images">
+      <div class="studio-hero">
+        <img id="studio-main-img" alt="目前編輯的主圖" hidden>
+        <label class="studio-empty" for="studio-main"><strong>從一張圖片開始</strong><span>點選或拖入主圖，再描述你想改的地方。</span><span class="tb-btn">選擇主圖</span></label>
+      </div>
+      <figure id="studio-compare-wrap" hidden><figcaption>比較版本</figcaption><img id="studio-compare-img" alt="比較版本" hidden></figure>
+    </div>
+    <video id="studio-video" controls hidden></video>
+    <a class="tb-btn" id="studio-video-link" target="_blank" rel="noopener" hidden>開啟影片原檔</a>
+  </section>
+  <nav id="studio-rounds" aria-label="版本縮圖" hidden></nav>
+  <div class="studio-bottom">
+    <div class="studio-composer">
+      <div class="studio-attachments">
+        <div class="studio-asset">
+          <div class="studio-asset-info"><strong>主圖</strong><span id="studio-main-name">尚未選擇</span></div>
+          <button type="button" class="tb-btn" id="studio-main-library">作品庫</button>
+          <label class="studio-attach" for="studio-main">上傳</label>
+          <input class="studio-file" type="file" id="studio-main" accept="image/*" aria-label="上傳主圖">
+          <button type="button" class="tb-btn" id="studio-last">最近成品</button>
+        </div>
+        <div class="studio-asset" id="studio-reference-controls">
+          <img id="studio-ref-img" alt="" hidden>
+          <div class="studio-asset-info"><strong>參考圖</strong><span id="studio-ref-name">選填</span></div>
+          <button type="button" class="tb-btn" id="studio-ref-library">作品庫</button>
+          <label class="studio-attach" for="studio-ref">上傳</label>
+          <input class="studio-file" type="file" id="studio-ref" accept="image/*" aria-label="上傳參考圖">
+          <button type="button" class="tb-btn" id="studio-clear-ref" hidden>移除</button>
+        </div>
+      </div>
+      <div class="studio-composer-tools">
+        <label>模式 <select id="studio-mode" class="sel"><option value="image">連續改圖</option><option value="video">圖片轉影片</option></select></label>
+        <label class="studio-model-control">模型 <select id="studio-model" class="sel"><option value="">正在檢查…</option></select></label>
+        <button type="button" class="tb-btn" id="studio-refresh-models" title="重新偵測本機模型">更新模型</button>
+        <div id="studio-video-options" hidden>
+          <label>長度 <select id="studio-seconds" class="sel"><option value="3">3 秒</option><option value="5" selected>5 秒</option></select></label>
+          <label>短邊 <select id="studio-size" class="sel"><option value="384">384 px</option><option value="480">480 px</option></select></label>
+        </div>
+        <select id="studio-template" class="sel" aria-label="指令範本"><option value="">指令範本</option><option value="outfit">角色換裝</option><option value="light">重打光</option><option value="motion">人物微動</option></select>
+      </div>
+      <textarea id="studio-prompt" rows="2" maxlength="20000" aria-label="修改指令" placeholder="描述下一步，例如：把背景改成夕陽，保留人物與構圖"></textarea>
+      <div class="studio-submit-row"><small id="studio-model-status" role="status"></small><button type="button" class="tb-btn studio-submit" id="studio-edit" title="Ctrl+Enter">生成下一版 ↑</button></div>
+    </div>
+    <p id="studio-status" role="status" aria-live="polite">選擇主圖後，即可開始修改。</p>
+  </div>
+</section>
+<section id="studio-picker" class="full-inline-workspace" hidden aria-labelledby="studio-picker-title">
+  <header class="studio-header"><h2 id="studio-picker-title">從作品庫選圖</h2><button type="button" class="tb-btn" id="studio-picker-back">返回</button></header>
+  <div class="studio-picker-body">
+    <input id="studio-picker-search" type="search" placeholder="搜尋檔名、模型或提示詞" aria-label="搜尋作品">
+    <p id="studio-picker-status" role="status"></p>
+    <div id="studio-picker-grid"></div>
+    <button type="button" class="tb-btn" id="studio-picker-more" hidden>載入更多</button>
+  </div>
+</section>
+
 <div class="statusbar">
   <div class="sb-item" id="sb-main">Void.gen · Desktop 29</div>
   <span id="vram-badge" title="GPU VRAM usage">VRAM —</span>
@@ -1118,6 +1380,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
       <span class="lb-counter" id="lb-counter"></span>
     </div>
     <div class="lb-topbar-right">
+      <button type="button" class="lb-tb-btn" id="full-lightbox-studio">改圖／轉影</button>
       <button class="lb-tb-btn" title="Download" onclick="lbDownload()">↓</button>
 
       <button class="lb-tb-btn" title="Apply model + LoRA + all settings" onclick="lbApplyAll()">⚡</button>
@@ -1148,6 +1411,7 @@ input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 
   <div class="ctx-item" onclick="ctxRestoreSettings()">↺ Restore Settings</div>
   <div class="ctx-item" onclick="ctxCopyPrompt()">⎘ Copy Prompt</div>
+  <div class="ctx-item" id="studio-card">↳ 連續改圖／轉影片</div>
   <div class="ctx-item" onclick="ctxSendToImg2Img()">→ Send to IMG2IMG</div>
   <div class="ctx-sep"></div>
   <div class="ctx-stars">
@@ -1375,6 +1639,7 @@ let _cardRatingsCache = null;
 let _comfyWs = null, _comfyWsReady = null, _comfyWsRetry = null;
 let _comfyWsListeners = {}, _comfyPreviewHandler = null, _modelListPromise = null;
 let _lbCards = [], _lbIdx = -1, _lbMeta = {};
+let _lbLoadVersion = 0;
 let _saveTimer = null;
 // stubs for inline oninput handlers (replaced with debounced versions later)
 window._debouncedTokenCount = () => {};
@@ -1543,6 +1808,7 @@ function setupGalleryObserver() {
     if (entries[0].isIntersecting && _galleryBuffer.length) {
       const batch = _galleryBuffer.splice(0, GALLERY_PAGE);
       batch.forEach(item => _addToGalleryInternal(item.thumbUrl, item.dataUrl || null, item.title, item.meta, item.id, true));
+      filterGallery();
     }
   }, { root: document.getElementById('gallery-view'), threshold: 0.1 });
   _galleryObserver.observe(sentinel);
@@ -1574,6 +1840,7 @@ function _runGalleryCardAction(action, card) {
     case 'copy': copyPromptFromCard(card); break;
     case 'download': downloadFromCard(card, card.dataset.title); break;
     case 'i2i': sendToI2IFromGallery(card); break;
+    case 'studio': void VoidStudio.openCard(card); break;
     case 'delete': deleteFromGallery(card); break;
   }
 }
@@ -1668,7 +1935,7 @@ async function loadSavedGallery() {
   try {
     const loader = typeof dbLoadGalleryList === 'function' ? dbLoadGalleryList : dbLoadAll;
     const all = await _backfillGalleryRecords(await loader());
-    const imgs = all.filter(r => r.source !== 'disk');
+    const imgs = await VoidSharedGallery.load(all.filter(r => r.source !== 'disk'));
     if (loader === dbLoadAll) imgs.sort((a, b) => (b.ts || 0) - (a.ts || 0));
     const first = imgs.splice(0, GALLERY_PAGE);
     _galleryBuffer = imgs.map(img => ({
@@ -1774,6 +2041,7 @@ async function selectOutputFolder() {
 function _folderSyncKey(name) { return _FOLDER_SYNC_PREFIX + (name || ''); }
 
 async function syncOutputFolder(handle, options = {}) {
+  if (VoidSharedGallery.isOnline()) { await loadSavedGallery(); return; }
   const force = !!options.force;
   handle = handle || await _getFolderHandle();
   if (!handle) return;
@@ -1859,8 +2127,8 @@ async function syncOutputFolder(handle, options = {}) {
 }
 
 // ── GALLERY DELETE (DB + output folder file) ──────────────────────
-const _DELETE_CONFIRM_MSG = '確定刪除此圖片？\n\n作品集紀錄與輸出資料夾內的原始檔案都會被刪除，此操作無法復原。';
-const _DELETE_CONFIRM_MULTI = n => `確定刪除 ${n} 張圖片？\n\n作品集紀錄與輸出資料夾內的原始檔案都會被刪除，此操作無法復原。`;
+const _DELETE_CONFIRM_MSG = '確定刪除此圖片？\n\n原始檔案會先移到電腦的 void-data/trash 回收區，成功後才移除圖庫紀錄；可從回收區復原。';
+const _DELETE_CONFIRM_MULTI = n => `確定刪除 ${n} 張圖片？\n\n原始檔案會先移到電腦的 void-data/trash 回收區，成功後才移除圖庫紀錄；可從回收區復原。`;
 
 async function _getCardDeleteInfo(card) {
   const meta = _metaFromCard(card);
@@ -1880,37 +2148,23 @@ async function _getCardDeleteInfo(card) {
   const cardTitle = card.dataset.title || '';
   if (!filename && /\.(png|jpe?g|webp)$/i.test(cardTitle)) filename = cardTitle;
   if (!filename && _folderFileIndex?.byName?.has(cardTitle)) filename = cardTitle;
-  if (!filename) {
-    const resolved = await _resolveFilenameFromFolder('', subfolder, parseInt(card.dataset.ts || meta.ts || 0));
-    if (resolved.filename) {
-      filename = resolved.filename;
-      subfolder = resolved.subfolder || subfolder;
-      if (id) {
-        const patched = { ...meta, filename, subfolder };
-        card.dataset.metaJson = JSON.stringify(patched);
-        dbUpdate(id, { meta: patched, filename }).catch(() => {});
-      }
-    }
-  }
   return { filename, subfolder, favKey: card.dataset.favKey || '', dbId: id || null };
 }
 
 async function _deleteOutputFile(filename, subfolder = '') {
-  if (!filename) return { ok: false, reason: 'no_filename' };
-  const handle = await _getFolderHandle();
-  if (!handle) return { ok: false, reason: 'no_folder' };
+  if (!filename) return { ok:false, reason:'此圖缺少原始檔名，請重新同步輸出資料夾後再刪除。' };
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 20000);
   try {
-    const perm = await handle.requestPermission({ mode: 'readwrite' });
-    if (perm !== 'granted') return { ok: false, reason: 'no_permission' };
-    let dir = handle;
-    const parts = (subfolder || '').split(/[/\\]/).filter(Boolean);
-    for (const part of parts) dir = await dir.getDirectoryHandle(part);
-    await dir.removeEntry(filename);
-    return { ok: true };
-  } catch (e) {
-    console.warn('[void.gen] delete output file failed', filename, e);
-    return { ok: false, reason: e?.message || 'delete_failed' };
-  }
+    const response = await fetch('http://127.0.0.1:8090/api/trash', {
+      method:'POST', headers:{'Content-Type':'application/json'}, signal:controller.signal,
+      body:JSON.stringify({filename,subfolder})
+    });
+    const result = await response.json();
+    return response.ok && result.ok ? result : {ok:false, reason:result.error || '原檔移至回收區失敗'};
+  } catch(error) {
+    return {ok:false, reason:'無法連線本機檔案服務，請執行 Start-VOID-Full.cmd 後重試。圖庫紀錄已保留。'};
+  } finally { clearTimeout(timer); }
 }
 
 function _purgeCardSideData(favKey) {
@@ -1946,8 +2200,9 @@ function _afterGalleryCardRemoved() {
 async function _deleteGalleryCard(card) {
   if (!card) return { ok: false };
   const info = await _getCardDeleteInfo(card);
-  if (info.dbId) await dbDelete(info.dbId).catch(() => {});
   const fileResult = await _deleteOutputFile(info.filename, info.subfolder);
+  if (!fileResult.ok) return {ok:false, fileDeleted:false, fileResult};
+  if (info.dbId) await dbDelete(info.dbId);
   _purgeCardSideData(info.favKey);
   const wasInLb = _lbCards.includes(card);
   card.remove();
@@ -2028,8 +2283,8 @@ function restoreImmediateSettings() {
   if (seedBtn) { seedBtn.textContent = '🎲'; seedBtn.classList.remove('locked'); }
   const seedSt = document.getElementById('seed-status');
   if (seedSt) seedSt.textContent = 'RANDOM SEED EACH RUN';
-  if (s.sampler)   document.getElementById('sampler-select').value   = s.sampler;
-  if (s.scheduler) document.getElementById('scheduler-select').value = s.scheduler;
+  if ([...document.getElementById('sampler-select').options].some(option => option.value === s.sampler)) document.getElementById('sampler-select').value = s.sampler;
+  if ([...document.getElementById('scheduler-select').options].some(option => option.value === s.scheduler)) document.getElementById('scheduler-select').value = s.scheduler;
   if (s.hiresEn)  { document.getElementById('hires-enable').checked = true;  document.getElementById('hires-settings').style.display = 'block'; }
   if (s.hiresScale) document.getElementById('hires-scale').value = s.hiresScale;
   if (s.hiresSteps) { const v = s.hiresSteps; document.getElementById('hires-steps-slider').value = v; document.getElementById('hires-steps-num').value = v; document.getElementById('hires-steps-val').textContent = v; }
@@ -2065,7 +2320,7 @@ function restoreImmediateSettings() {
   const _savedFolderName = localStorage.getItem('void-folder-name');
   if (_savedFolderName) _setFolderBtn(_savedFolderName, true);
   initGalleryOpen();
-  loadSavedGallery().then(() => syncOutputFolder());
+  loadSavedGallery().then(() => { if (!VoidSharedGallery.isOnline()) return syncOutputFolder(); });
   setTimeout(initMasonry, 100);
   initTheme();
   renderAlbumChips();
@@ -2224,6 +2479,7 @@ async function _getModelList(force = false) {
   catch (e) { _modelListPromise = null; throw e; }
 }
 async function loadComfyModels(force = false) {
+  if (window.VoidEngines?.isActive()) return VoidEngines.loadModels();
   const selM = document.getElementById('model-select');
   let models = [];
   // retry up to 3 times
@@ -2238,6 +2494,7 @@ async function loadComfyModels(force = false) {
       if (attempt < 2) await new Promise(r => setTimeout(r, 2000));
     }
   }
+  if (window.VoidEngines?.isActive()) return;
   if (!models.length) { selM.innerHTML = '<option value="">— no models found —</option>'; return; }
 
   selM.innerHTML = models.map(m => `<option value="${m}">${m}</option>`).join('');
@@ -2543,6 +2800,13 @@ function syncParam(id, v) {
   if (id==='cfg')   document.getElementById('m-cfg').textContent   = v;
 }
 function setMode(mode, el) {
+  if (window.VoidRecognition?.isBusy()) { setStatus('請先完成或取消圖片辨識','warn'); return; }
+  if (mode === 'img2img' && window.VoidEngines && !VoidEngines.supportsImageEdit()) {
+    if (isGenerating) { setStatus('請等生成完成再切換圖生圖。', 'warn'); return; }
+    VoidEngines.switchEngine('sd').catch(error => setStatus(error.message, 'error'));
+    if (!VoidEngines.supportsImageEdit()) return;
+    setStatus('已切換至 SD／SDXL 圖生圖。', 'ok');
+  }
   currentMode = mode;
   document.querySelectorAll('.mode-toggle .mode-btn').forEach(b => b.classList.remove('active'));
   (el || document.querySelector('.mode-toggle .mode-btn[data-mode="' + mode + '"]'))?.classList.add('active');
@@ -2550,6 +2814,7 @@ function setMode(mode, el) {
   const img2sec = document.getElementById('img2txt-section');
   if (img2imgSec) img2imgSec.style.display = mode === 'img2img' ? 'block' : 'none';
   if (img2sec) img2sec.style.display = mode === 'img2txt' ? 'block' : 'none';
+  window.VoidEngines?.modeChanged();
   saveSettings();
 }
 window.setMode = setMode;
@@ -2589,18 +2854,7 @@ async function _uploadBase64ToComfyInput(base64, filename = 'void_upload.png') {
   const buf = new Uint8Array(raw.length);
   for (let i = 0; i < raw.length; i++) buf[i] = raw.charCodeAt(i);
   const blob = new Blob([buf], { type: 'image/png' });
-  const form = new FormData();
-  form.append('image', blob, filename);
-  form.append('type', 'input');
-  form.append('overwrite', 'true');
-  const upCtrl = new AbortController();
-  const upTid = setTimeout(() => upCtrl.abort(), 15000);
-  const upResp = await fetch(`${COMFY_API}/upload/image`, {
-    method: 'POST', body: form, signal: upCtrl.signal
-  }).finally(() => clearTimeout(upTid));
-  if (!upResp.ok) throw new Error(`Upload failed: HTTP ${upResp.status}`);
-  const { name } = await upResp.json();
-  return name;
+  return (await VoidSharedGallery.uploadFile(blob)).filename;
 }
 function triggerUpload2txt() { document.getElementById('file-input-2txt').click(); }
 function handleUpload2txt(input) {
@@ -2608,15 +2862,18 @@ function handleUpload2txt(input) {
   _load2txtFile(file);
 }
 function _load2txtFile(file) {
+  if (window.VoidRecognition?.isBusy()) { setStatus('請先完成或取消圖片辨識','warn'); return; }
   const reader = new FileReader();
   reader.onload = e => {
+    if (window.VoidRecognition?.isBusy()) return;
     img2txtBase64 = e.target.result.split(',')[1];
     const up = document.getElementById('img2txt-upload');
     up.classList.add('has-img');
     up.innerHTML = `<img src="${e.target.result}"><span class="ul" style="color:var(--text)">✓ LOADED</span>`;
     up.style.borderColor = '';
     document.getElementById('tagger-output-wrap').style.display = 'none';
-    runInterrogate();
+    if (document.getElementById('recognition-engine').value === 'wd14') runInterrogate();
+    else setStatus('圖片已載入，按「辨識提示詞」開始','ok');
   };
   reader.readAsDataURL(file);
 }
@@ -2628,44 +2885,7 @@ function handleDrop2txt(e) {
   _load2txtFile(file);
 }
 async function runInterrogate() {
-  if (!img2txtBase64) { setStatus('UPLOAD AN IMAGE FIRST','warn'); return; }
-  const btn = document.getElementById('interrogate-btn');
-  const outEl = document.getElementById('tagger-output');
-  const outWrap = document.getElementById('tagger-output-wrap');
-  if (btn.disabled || innerWidth <= 900) return;
-  if (window.VoidGenFlow) VoidGenFlow.setState('generating');
-  btn.textContent = 'ANALYZING…'; btn.disabled = true;
-  outWrap.style.display = 'none';
-  setStatus('UPLOADING TO WD14 TAGGER…');
-
-  try {
-    const name = await _uploadBase64ToComfyInput(img2txtBase64, 'wd14_input.png');
-
-    // Step 2: call the WD14-Tagger REST endpoint (uses installed wd-v1-4-moat-tagger-v2)
-    setStatus('ANALYZING WITH WD14 TAGGER…');
-    const genThreshold  = parseFloat(document.getElementById('tagger-threshold').value)      || 0.30;
-    const charThreshold = parseFloat(document.getElementById('tagger-char-threshold').value) || 0.75;
-    const tagResp = await _fetchWithTimeout(
-      `${COMFY_API}/pysssss/wd14tagger/tag?filename=${encodeURIComponent(name)}&type=input&threshold=${genThreshold}&character_threshold=${charThreshold}`,
-      120000
-    );
-    if (!tagResp.ok) throw new Error(`Tagger HTTP ${tagResp.status}`);
-    const tags = await tagResp.json();
-
-    if (!tags) throw new Error('No tags returned');
-    outEl.textContent = tags;
-    outWrap.style.display = 'block';
-    if (window.VoidGenFlow) VoidGenFlow.setState('done');
-    setStatus('TAGS EXTRACTED — PRESS SEND TO FILL PROMPT', 'ok');
-    setTimeout(() => setStatus('Void.gen'), 3000);
-  } catch(e) {
-    outEl.innerHTML = `<span style="color:var(--red)">${escHtml(e.message)}</span>`;
-    outWrap.style.display = 'block';
-    if (window.VoidGenFlow) VoidGenFlow.setState('error');
-    setStatus(`TAGGER ERROR · ${e.message}`, 'error');
-  } finally {
-    btn.textContent = '辨識提示詞'; btn.disabled = false;
-  }
+  return window.VoidRecognition?.run();
 }
 function setSize(w, h, el) {
   currentW = w; currentH = h;
@@ -2779,6 +2999,8 @@ function renderQueue() {
 
 // ── GALLERY CARD ACTIONS (IDB-backed for full-res) ────────────────
 async function _cardFullDataUrl(card) {
+  const sharedId = _metaFromCard(card).sharedId;
+  if (sharedId) return VoidSharedGallery.fullData(sharedId);
   const id = parseInt(card.dataset.dbId);
   if (id) {
     try {
@@ -2822,37 +3044,56 @@ function _addToGalleryInternal(thumbUrl, fullDataUrl, title, meta={}, dbId=null,
   card.dataset.ts    = meta.ts    || Date.now();
   card.dataset.model = (meta.model || '').replace(/\.(safetensors|ckpt|pt)$/i,'');
   card.dataset.title = title;
-  const favKey = dbId ? `db_${dbId}` : `ts_${card.dataset.ts}`;
+  const favKey = meta.sharedId ? `shared_${meta.sharedId}` : dbId ? `db_${dbId}` : `ts_${card.dataset.ts}`;
+  if (meta.sharedId) {if(meta.sharedFavorite)_favorites.add(favKey);else _favorites.delete(favKey);}
   card.dataset.favKey = favKey;
   if (_favorites.has(favKey)) card.classList.add('fav');
   card.dataset.metaJson = JSON.stringify(meta);
+  if (meta.sharedId) {
+    getCardRatings()[favKey] = meta.rating || 0;
+    getCardTags()[favKey] = Array.isArray(meta.tags) ? meta.tags : [];
+  }
   const _initRating = getCardRatings()[favKey] || 0;
   if (_initRating > 0) card.classList.add('rated');
   const _initTags = getCardTags()[favKey] || [];
   card.dataset.searchBlob = _gallerySearchBlob(meta, title, _initTags);
+  const filename = meta.filename || title || '未命名作品';
+  const dimensions = meta.width && meta.height ? meta.width+' × '+meta.height : '';
+  const actionButton = (action,label,icon) => '<button type="button" class="card-action-btn" data-gallery-action="'+action+'" title="'+label+'" aria-label="'+label+'">'+icon+'</button>';
   card.innerHTML = `
     <div class="card-img-wrap">
-      <div class="card-star" data-gallery-action="fav" title="Favorite">${_favorites.has(favKey)?'★':'☆'}</div>
+      <button type="button" class="card-star" data-gallery-action="fav" title="收藏作品" aria-label="收藏作品" aria-pressed="${_favorites.has(favKey)}">${_favorites.has(favKey)?'★':'☆'}</button>
       <div class="card-check">✓</div>
-      <img src="${thumbUrl || ''}" loading="lazy" decoding="async" alt="">
-      <div class="card-overlay">
-        <div class="card-meta-wrap">
-          ${meta.model ? `<div class="card-model-badge">${escHtml(meta.model.replace(/\.(safetensors|ckpt|pt)$/i,'').slice(0,28))}</div>` : ''}
-          ${(meta.loras||[]).filter(l=>l&&l.name).length ? `<div class="card-loras">${(meta.loras||[]).filter(l=>l&&l.name).map(l=>`<span class="card-lora-chip">${escHtml(l.name.replace(/\.(safetensors|pt|ckpt)$/i,'').slice(0,18))} <b>${parseFloat(l.strength||0).toFixed(1)}</b></span>`).join('')}</div>` : ''}
-          <div class="card-prompt">${escHtml((meta.prompt||title).slice(0,80))}</div>
-        </div>
-      </div>
-      <div class="card-tags">${_initTags.map(t=>`<span class="card-tag-badge">${escHtml(t)}</span>`).join('')}</div>
-      <div class="card-actions">
-        <div class="card-action-btn" data-gallery-action="apply" title="Apply model + LoRA + all settings">⚡</div>
-        <div class="card-action-btn" data-gallery-action="copy" title="Copy prompt">⎘</div>
-        <div class="card-action-btn" data-gallery-action="i2i" title="Send to IMG→IMG">→</div>
-        <div class="card-action-btn" data-gallery-action="download" title="Download">↓</div>
-        <div class="card-action-btn" data-gallery-action="delete" title="Delete image and file in output folder">×</div>
-      </div>
+      <img src="${escHtml(thumbUrl || '')}" loading="lazy" decoding="async" alt="${escHtml(filename)}">
     </div>
-    <div class="card-rating">${[1,2,3,4,5].map(i=>`<span class="rating-star ${i<=_initRating?'on':''}" data-rating="${i}" title="Rate ${i}">${i<=_initRating?'★':'☆'}</span>`).join('')}</div>`;
-  card.oncontextmenu = e => showCtxMenu(e, fullDataUrl, title, meta);
+    <div class="card-details">
+      <div class="card-file" title="${escHtml(filename)}">${escHtml(filename)}</div>
+      <div class="card-summary"><span title="${escHtml(meta.model||'')}">${escHtml((meta.model||'未記錄模型').replace(/\.(safetensors|ckpt|gguf)$/i,''))}</span><small>${escHtml(dimensions)}</small></div>
+      <div class="card-prompt" title="${escHtml(meta.prompt||title)}">${escHtml(meta.prompt||title||'沒有提示詞記錄')}</div>
+      <div class="card-tags">${_initTags.slice(0,3).map(t=>`<span class="card-tag-badge">${escHtml(t)}</span>`).join('')}</div>
+    </div>
+    <div class="card-actions">
+      ${actionButton('studio','連續改圖／轉影片','↻')}
+      ${actionButton('i2i','用於圖生圖','→')}
+      ${actionButton('apply','套用生成設定','⚡')}
+      ${actionButton('copy','複製提示詞','⎘')}
+      ${actionButton('download','下載原圖','↓')}
+      ${actionButton('delete','移至回收區','×')}
+    </div>
+    <div class="card-rating" role="group" aria-label="作品評分">${[1,2,3,4,5].map(i=>`<button type="button" class="rating-star ${i<=_initRating?'on':''}" data-rating="${i}" title="評分 ${i} 星" aria-label="評分 ${i} 星">${i<=_initRating?'★':'☆'}</button>`).join('')}</div>`;
+  const thumbnail = card.querySelector('.card-img-wrap img');
+  thumbnail.addEventListener('load', () => {
+    thumbnail.hidden = false;
+    thumbnail.parentElement.querySelector('.card-image-error')?.remove();
+  });
+  thumbnail.addEventListener('error', () => {
+    thumbnail.hidden = true;
+    const fallback = document.createElement('span');
+    fallback.className = 'card-image-error';
+    fallback.textContent = '縮圖無法載入 · 點選查看原圖';
+    thumbnail.parentElement.append(fallback);
+  }, {once:true});
+  card.oncontextmenu = e => showCtxMenu(e, fullDataUrl || meta.sharedUrl, title, meta);
   if (!thumbUrl && dbId) {
     dbLoadById(dbId).then(rec => {
       const img = card.querySelector('img');
@@ -2881,23 +3122,18 @@ function _addToGalleryInternal(thumbUrl, fullDataUrl, title, meta={}, dbId=null,
   }
 }
 async function deleteFromGallery(card) {
-  if (!card) return;
+  if (!card || card._deleting) return;
   if (!confirm(_DELETE_CONFIRM_MSG)) return;
-  setStatus('DELETING…');
-  const result = await _deleteGalleryCard(card);
-  if (result.fileResult?.reason === 'no_folder') {
-    setStatus('REMOVED FROM GALLERY · NO FOLDER LINKED', 'warn');
-  } else if (result.fileResult?.reason === 'no_permission') {
-    setStatus('REMOVED FROM GALLERY · FOLDER WRITE DENIED', 'warn');
-  } else if (result.fileResult?.reason === 'no_filename') {
-    setStatus('REMOVED FROM GALLERY · FILE NAME UNKNOWN', 'warn');
-  } else if (result.fileDeleted) {
-    setStatus('DELETED · GALLERY + DISK FILE', 'ok');
-  } else {
-    setStatus('REMOVED FROM GALLERY · DISK FILE NOT FOUND', 'warn');
-  }
-  setTimeout(() => setStatus('Void.gen'), 2200);
+  card._deleting=true;
+  setStatus('正在將原檔移至回收區…');
+  try {
+    const result=await _deleteGalleryCard(card);
+    if (!result.ok) {setStatus(result.fileResult?.reason || '刪除失敗，紀錄已保留','error');return;}
+    setStatus(result.fileResult?.missing ? '原檔已不存在，已清除圖庫紀錄' : '已移除圖片與紀錄 · 原檔可從 void-data/trash 復原','ok');
+  } catch(error) {setStatus('刪除未完成：'+error.message,'error');}
+  finally {card._deleting=false;}
 }
+
 async function clearGallery() {
   if (window.voidGalleryClearing) return;
   if (isGenerating) { setStatus('請先停止生成，再清空圖庫', 'warn'); return; }
@@ -2940,7 +3176,7 @@ function switchCenterTab(tab, el) {
     gv.style.maxHeight = '';
   }
   if (qv) {
-    qv.style.display = tab === 'queue' ? '' : 'none';
+    qv.style.display = tab === 'queue' ? 'block' : 'none';
     qv.style.flex = '';
     qv.style.height = '';
     qv.style.maxHeight = '';
@@ -2998,16 +3234,19 @@ function openGalleryCard(card) {
     console.error('[gallery] open failed', err);
     return;
   }
+  const version = _lbLoadVersion;
   _cardFullDataUrl(card).then(url => {
+    if (version !== _lbLoadVersion || _lbCards[_lbIdx] !== card) return;
     if (!url || url === thumb) return;
     const modal = document.getElementById('modal-bg');
     if (!modal?.classList.contains('open')) return;
     const lbImg = document.getElementById('modal-img');
-    if (lbImg && lbImg.src === thumb) lbImg.src = url;
+    if (lbImg) lbImg.src = url;
   }).catch(() => {});
 }
 
 function openModal(dataUrl, title, meta, srcCard) {
+  ++_lbLoadVersion;
   _lbCards = [...document.querySelectorAll('#gallery-grid .gallery-card')].filter(c => c.style.display !== 'none');
   _lbIdx = srcCard ? _lbCards.indexOf(srcCard) : -1;
   try { _setLightboxContent(dataUrl, title, meta); } catch(e) { console.error('[lb] setContent error', e); }
@@ -3077,21 +3316,16 @@ function lbDownload() {
 }
 async function lbDelete() {
   const card = _lbIdx >= 0 ? _lbCards[_lbIdx] : null;
-  if (!card) return;
-  if (!confirm(_DELETE_CONFIRM_MSG)) return;
-  setStatus('DELETING…');
-  const result = await _deleteGalleryCard(card);
-  if (result.fileDeleted) setStatus('DELETED · GALLERY + DISK FILE', 'ok');
-  else setStatus('REMOVED FROM GALLERY', 'warn');
-  setTimeout(() => setStatus('Void.gen'), 2200);
+  if (card) await deleteFromGallery(card);
 }
+
 function lbApplyAll() {
   const applied = restoreFromMeta(_lbMeta);
   const ta = document.getElementById('te-prompt');
   if (ta && _lbMeta.prompt) { updateTokenCount(); _autoResize(ta); }
-  const msg = applied.length
+  const msg = applied.issue || (applied.length
     ? '✓ Applied: ' + applied.join(' · ')
-    : '✕ No settings to apply (ComfyUI not connected?)';
+    : '✕ No settings to apply (ComfyUI not connected?)');
   _showLbToast(msg);
 }
 function _showLbToast(msg) {
@@ -3113,17 +3347,29 @@ async function lightboxNav(dir) {
   if (ni < 0 || ni >= _lbCards.length) return;
   _lbIdx = ni;
   const card = _lbCards[_lbIdx];
-  const url  = await _cardFullDataUrl(card);
+  const version = ++_lbLoadVersion;
   let meta = {};
   try { meta = JSON.parse(card.dataset.metaJson || '{}'); } catch {}
-  _setLightboxContent(url || card.querySelector('img')?.src, card.dataset.title || '', meta);
+  _setLightboxContent(card.querySelector('img')?.src || '', card.dataset.title || '', meta);
   _updateLbNavBtns();
+  try {
+    const url = await _cardFullDataUrl(card);
+    if (version !== _lbLoadVersion || _lbCards[_lbIdx] !== card ||
+        !document.getElementById('modal-bg')?.classList.contains('open')) return;
+    if (url) document.getElementById('modal-img').src = url;
+  } catch (error) {
+    if (version === _lbLoadVersion) _showLbToast('原圖讀取失敗，保留目前作品的預覽圖');
+  }
 }
 function closeLightbox() {
+  const version = ++_lbLoadVersion;
   document.getElementById('modal-bg')?.classList.remove('open');
   document.getElementById('lb-sidebar')?.classList.remove('open');
   document.getElementById('lb-info-btn')?.classList.remove('active');
-  setTimeout(() => { const img = document.getElementById('modal-img'); if (img) img.src = ''; }, 200);
+  setTimeout(() => {
+    if (version !== _lbLoadVersion) return;
+    const img = document.getElementById('modal-img'); if (img) img.src = '';
+  }, 200);
   _lbCards = []; _lbIdx = -1; _lbMeta = {};
 }
 function closeModal() { closeLightbox(); }
@@ -3145,6 +3391,7 @@ async function sendToI2IFromGallery(cardOrUrl) {
   let dataUrl = typeof cardOrUrl === 'string' ? cardOrUrl : null;
   if (!dataUrl && cardOrUrl?.dataset) dataUrl = await _cardFullDataUrl(cardOrUrl);
   if (!dataUrl) return;
+  window.VoidStudio?.navigate('create');
   const btn = document.querySelector('.mode-toggle .mode-btn[data-mode="img2img"]');
   setMode('img2img', btn);
   _setImg2imgFromDataUrl(dataUrl);
@@ -3220,6 +3467,7 @@ function clearPrompt(idx) {
   if (ta) { ta.value = ''; updateTokenCount(); }
 }
 function sendTaggerToPrompt() {
+  if (window.VoidRecognition?.isBusy() || document.getElementById('tagger-send-btn').getAttribute('aria-disabled') === 'true') return;
   const text = document.getElementById('tagger-output').textContent;
   if (!text.trim() || activeTask < 0 || !tasks[activeTask]) return;
   const ta = document.getElementById('te-prompt');
@@ -3238,14 +3486,24 @@ function sendTaggerToPrompt() {
   setStatus('提示詞已送入 · 已切換為文生圖', 'ok');
   setTimeout(() => setStatus('Void.gen'), 2000);
 }
-function copyTaggerOutput() {
+async function copyTaggerOutput() {
+  if (window.VoidRecognition?.isBusy() || document.getElementById('tagger-copy-btn').getAttribute('aria-disabled') === 'true') return;
   const text = document.getElementById('tagger-output').textContent;
   if (!text) return;
-  navigator.clipboard.writeText(text).then(() => {
+  try {
+    try { await navigator.clipboard.writeText(text); }
+    catch {
+      const area = document.createElement('textarea');
+      area.value = text;
+      area.style.cssText = 'position:fixed;left:-9999px;top:0';
+      document.body.appendChild(area);
+      try { area.select(); if (!document.execCommand('copy')) throw new Error('Copy failed'); }
+      finally { area.remove(); }
+    }
     const btn = document.getElementById('tagger-copy-btn');
     btn.textContent = 'COPIED';
     setTimeout(() => btn.textContent = 'COPY', 1500);
-  }).catch(()=>{});
+  } catch { setStatus('複製失敗，請選取結果文字手動複製','error'); }
 }
 
 // ── CONTEXT MENU ─────────────────────────────────────────────────
@@ -3292,6 +3550,21 @@ async function ctxDeleteFromGallery() {
 function restoreFromMeta(meta) {
   if (!meta || activeTask < 0) return [];
   const applied = [];
+  const missing = [];
+  const hasOption = (id,value) => [...(document.getElementById(id)?.options || [])].some(option => option.value === value);
+  if (meta.model && !hasOption('model-select',meta.model)) missing.push('模型 '+meta.model);
+  if (meta.sampler && !hasOption('sampler-select',meta.sampler)) missing.push('採樣器 '+meta.sampler);
+  if (meta.scheduler && !hasOption('scheduler-select',meta.scheduler)) missing.push('排程器 '+meta.scheduler);
+  if (Array.isArray(meta.loras)) {
+    for (const [i,lora] of meta.loras.entries()) if (lora?.name && !hasOption('lora-sel-'+i,lora.name)) missing.push('LoRA '+lora.name);
+  }
+  const multiple = ['klein','moss','moody'].includes(meta.engine) ? 16 : 8;
+  if ([meta.width,meta.height].some(size => size && (!Number.isInteger(Number(size)) || size<64 || size>4096 || size%multiple))) missing.push('解析度');
+  if (missing.length) {
+    applied.issue = '配方無法套用：'+missing.join('、');
+    setStatus(applied.issue,'warn');
+    return applied;
+  }
   if (meta.prompt) {
     tasks[activeTask].prompt = meta.prompt;
     const ta = document.getElementById('te-prompt');
@@ -3309,7 +3582,8 @@ function restoreFromMeta(meta) {
   }
   if (meta.steps) { document.getElementById('steps-slider').value = meta.steps; syncParam('steps', meta.steps); applied.push('STEPS'); }
   if (meta.cfg)   { document.getElementById('cfg-slider').value   = meta.cfg;   syncParam('cfg',   meta.cfg);   applied.push('CFG'); }
-  if (meta.sampler) { document.getElementById('sampler-select').value = meta.sampler; applied.push('SAMPLER'); }
+  if ([...document.getElementById('sampler-select').options].some(option => option.value === meta.sampler)) { document.getElementById('sampler-select').value = meta.sampler; applied.push('SAMPLER'); }
+  if (meta.scheduler) { document.getElementById('scheduler-select').value = meta.scheduler; applied.push('SCHEDULER'); }
   if (meta.denoise !== undefined) {
     const ds = document.getElementById('denoise-slider');
     const dv = document.getElementById('denoise-val');
@@ -3322,7 +3596,7 @@ function restoreFromMeta(meta) {
     if (btn) setMode('img2img', btn);
     applied.push('IMG2IMG');
   }
-  if (meta.negative && activeTask >= 0) {
+  if (meta.negative !== undefined && activeTask >= 0) {
     tasks[activeTask].negative = meta.negative;
     const taNeg = document.getElementById('te-neg');
     if (taNeg) { taNeg.value = meta.negative; updateNegTokenCount(); _autoResize(taNeg); }
@@ -3423,6 +3697,7 @@ function _stopResize() {
 
 // ── WORKFLOW ──────────────────────────────────────────────────────
 function buildWorkflow(task, modelName, seed, img2imgFile = null) {
+  if (window.VoidEngines?.isActive()) return VoidEngines.buildWorkflow(task, modelName, seed, img2imgFile);
   currentW = parseInt(document.getElementById('size-w').value) || currentW;
   currentH = parseInt(document.getElementById('size-h').value) || currentH;
   const w = currentW, h = currentH;
@@ -3539,7 +3814,15 @@ function _getGenerateTaskIndices(allTasks = false) {
 }
 
 // ── COMFY GENERATE ────────────────────────────────────────────────
+function comfyValidationMessage(detail, status) {
+  const reasons = Object.entries(detail.node_errors || {}).flatMap(([id, node]) =>
+    (node.errors || []).map(error =>
+      `${node.class_type || 'Node'} #${id} · ${error.details || error.message}`)
+  );
+  return reasons.join(' · ') || detail.error?.details || detail.error?.message || `HTTP ${status}`;
+}
 async function comfyuiGenerate(task) {
+  if (window.VoidEngines?.isActive()) await VoidEngines.validate();
   const modelName = document.getElementById('model-select').value;
   if (!modelName) throw new Error('Please select a model');
   const seed = getEffectiveSeed();
@@ -3551,131 +3834,35 @@ async function comfyuiGenerate(task) {
     img2imgFilename = img2imgFile;
   }
   const { wf: workflow, saveNodeId } = buildWorkflow(task, modelName, seed, img2imgFile);
-  const stagesInTask = Math.max(1, Object.values(workflow).filter(n =>
-    ['KSampler','KSamplerAdvanced'].includes(n.class_type)
-  ).length);
-  let currentStage = 0, lastStepVal = -1;
-
-  const promptBody = JSON.stringify({ prompt: workflow, client_id: _COMFY_CLIENT_ID });
-  const preQueue = [];
-  const preKey = '__pre_' + Date.now();
-  _comfyWsListeners[preKey] = (e) => preQueue.push(e);
-  let promptResp;
-  try {
-    [, promptResp] = await Promise.all([
-      _ensureComfyWs(),
-      fetch(`${COMFY_API}/prompt`, {
-        method:'POST', headers:{'Content-Type':'application/json'}, body: promptBody
-      })
-    ]);
-  } finally {
-    delete _comfyWsListeners[preKey];
-  }
-  if (!promptResp.ok) throw new Error(`HTTP ${promptResp.status}`);
-  const { prompt_id } = await promptResp.json();
-
-  return new Promise((resolve, reject) => {
-    let settled = false;
-    const finish = (fn, val) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timeout);
-      delete _comfyWsListeners[prompt_id];
-      if (_comfyPreviewHandler === previewHandler) _comfyPreviewHandler = null;
-      clearLivePreview();
-      fn(val);
-    };
-
-    const timeout = setTimeout(() => {
-      finish(reject, new Error('Generation timeout (4 min)'));
-    }, 4*60*1000);
-
-    const previewHandler = async (event) => {
-      try {
-        const buf = await event.data.arrayBuffer();
-        const view = new DataView(buf);
-        if (view.getUint32(0) === 1) {
-          showLivePreview(URL.createObjectURL(new Blob([buf.slice(8)], {type:'image/jpeg'})));
-        }
-      } catch {}
-    };
-    _comfyPreviewHandler = previewHandler;
-
-    async function _fetchResultImages(images) {
-      images = _dedupeImages(images);
-      if (!images.length) return;
-      const dataUrls = await Promise.all(images.map(async img => {
-        const url = `${COMFY_API}/view?filename=${encodeURIComponent(img.filename)}&subfolder=${encodeURIComponent(img.subfolder)}&type=${img.type}`;
-        const resp = await fetch(url);
-        if (!resp.ok) throw new Error(`fetch /view ${resp.status}`);
-        const blob = await resp.blob();
-        return new Promise((res,rej) => { const rd=new FileReader(); rd.onload=()=>res(rd.result); rd.onerror=rej; rd.readAsDataURL(blob); });
-      }));
-      const files = images.map(img => ({ filename: img.filename, subfolder: img.subfolder || '', type: img.type || 'output' }));
-      finish(resolve, { dataUrls, files, seed, model: modelName });
+  const generationMeta = window.VoidEngines?.isActive() ? VoidEngines.captureMeta(workflow, task) : undefined;
+  const meta={negative:task.negative||'',steps:Number(document.getElementById('steps-num').value),
+    cfg:Number(document.getElementById('cfg-num').value),width:currentW,height:currentH,
+    sampler:document.getElementById('sampler-select').value,scheduler:document.getElementById('scheduler-select').value,
+    mode:currentMode,loras:Object.values(workflow).filter(node=>node.class_type==='LoraLoader').map(node=>({name:node.inputs.lora_name,strength:node.inputs.strength_model})),
+    ...(generationMeta||{}),engine:generationMeta?.engine||'sd',prompt:task.prompt,model:modelName,seed};
+  const job=await VoidSharedGallery.runWorkflow(workflow,saveNodeId,meta,job=>{
+    if(stopRequested)void VoidSharedGallery.cancelDesktop();
+    const progress=job.progress||{};
+    setStatus(job.state==='running'?'GENERATING · '+(progress.max?progress.value+'/'+progress.max:'準備模型'):'QUEUED · 共用任務');
+    if(progress.max){
+      document.getElementById('progress-fill').style.width=Math.round(progress.value/progress.max*100)+'%';
     }
-
-    async function _dispatchMsg(event) {
-      try {
-        if (event.data instanceof Blob) return;
-        const msg = JSON.parse(event.data);
-        if (msg.type==='progress' && msg.data.prompt_id===prompt_id) {
-          if (msg.data.value <= lastStepVal && lastStepVal > 0)
-            currentStage = Math.min(currentStage + 1, stagesInTask - 1);
-          lastStepVal = msg.data.value;
-          const stagePct = msg.data.value / msg.data.max;
-          const taskPct = (currentStage + stagePct) / stagesInTask;
-          const globalPct = Math.round((_progressCompleted + taskPct) / _progressTotal * 100);
-          document.getElementById('progress-fill').style.width = globalPct+'%';
-          document.getElementById('progress-label').textContent = `${msg.data.value}/${msg.data.max} · ${globalPct}%`;
-          document.getElementById('progress-wrap').style.display = 'flex';
-        }
-        if (msg.type==='execution_success' && msg.data.prompt_id===prompt_id) {
-          setTimeout(async () => {
-            if (settled) return;
-            try {
-              const hr = await fetch(`${COMFY_API}/history/${prompt_id}`);
-              if (!hr.ok || settled) return;
-              const hist = await hr.json();
-              const outputs = hist[prompt_id]?.outputs;
-              if (!outputs) return;
-              const images = _imagesFromHistoryOutputs(outputs, saveNodeId);
-              if (images.length) await _fetchResultImages(images);
-            } catch(_) {}
-          }, 300);
-        }
-        if (msg.type==='executed' && msg.data.prompt_id===prompt_id && msg.data.node===saveNodeId) {
-          const images = msg.data.output?.images;
-          if (images?.length) {
-            try { await _fetchResultImages(images); }
-            catch(fetchErr) { finish(reject, new Error('圖片讀取失敗: ' + fetchErr.message)); }
-          }
-        }
-        if (msg.type==='execution_error' && msg.data.prompt_id===prompt_id) {
-          finish(reject, new Error(msg.data.exception_message || 'ComfyUI error'));
-        }
-      } catch(e) { /* ignore parse errors */ }
-    }
-
-    _comfyWsListeners[prompt_id] = (event) => {
-      if (settled) return;
-      _dispatchMsg(event);
-    };
-    preQueue.forEach(_dispatchMsg);
   });
+  const files=job.result.images;
+  const dataUrls=await Promise.all(job.result.gallery.map(id=>VoidSharedGallery.fullData(id)));
+  return {dataUrls,files,seed,model:modelName,generationMeta};
 }
 
-// ── GENERATE LOOP ─────────────────────────────────────────────────
 function stopGenerate() {
   stopRequested = true;
+  void VoidSharedGallery.cancelDesktop().catch(error=>setStatus(error.message,'error'));
   if (window.VoidPixai) VoidPixai.stop();
-  if (!window.VoidPixai || !VoidPixai.isActive())
-    fetch(`${COMFY_API}/interrupt`, {method:'POST'}).catch(()=>{});
   setStatus('STOPPING…','warn');
   document.querySelectorAll('.center-tab')[1]?.classList.remove('generating');
   _syncMobileGenBtn(false);
 }
 async function startGenerate(allTasks = false, opts = {}) {
+  if (window.VoidRecognition?.isBusy()) { setStatus('請先完成或取消圖片辨識','warn'); return; }
   if (isGenerating) return;
   if (!tasks.length) { setStatus('ADD A TASK FIRST','warn'); return; }
   if (currentMode === 'img2img' && !img2imgBase64) {
@@ -3721,19 +3908,23 @@ async function startGenerate(allTasks = false, opts = {}) {
     setStatus(`GENERATING ${i+1}/${tasks.length} · ${tasks[i].title}`);
     try {
       const _gen = (window.VoidPixai && VoidPixai.isActive()) ? VoidPixai.generate : comfyuiGenerate;
-      const { dataUrls, files, seed, model } = await _gen(tasks[i]);
+      const { dataUrls, files, seed, model, generationMeta } = await _gen(tasks[i]);
       const elapsed = ((Date.now()-t0)/1000).toFixed(1)+'s';
       await Promise.all(dataUrls.map(async (dataUrl, j) => {
         const title = tasks[i].title + (dataUrls.length>1 ? ` #${j+1}` : '');
         const imgFile = files?.[j];
         const meta = { prompt:tasks[i].prompt, negative:tasks[i].negative, seed, model,
+          engine: window.VoidEngines?.getEngine() || 'sd',
           mode: currentMode,
           denoise: currentMode === 'img2img' ? document.getElementById('denoise-slider')?.value : undefined,
           steps:document.getElementById('steps-num').value, cfg:document.getElementById('cfg-num').value,
           sampler:document.getElementById('sampler-select').value, time:elapsed,
+          scheduler:document.getElementById('scheduler-select').value,
+          width:currentW, height:currentH,
           filename: imgFile?.filename || '', subfolder: imgFile?.subfolder || '', outputType: imgFile?.type || 'output',
-          loras: (window.VoidPixai && VoidPixai.isActive()) ? VoidPixai.lorasMeta() :
-            [0,1,2,3,4,5].map(k=>({ name:document.getElementById(`lora-sel-${k}`)?.value||'', strength:parseFloat(document.getElementById(`lora-sldr-${k}`)?.value||0.8) })).filter(l=>l.name) };
+          loras: window.VoidEngines?.isActive() ? [] : (window.VoidPixai && VoidPixai.isActive()) ? VoidPixai.lorasMeta() :
+            [0,1,2,3,4,5].map(k=>({ name:document.getElementById(`lora-sel-${k}`)?.value||'', strength:parseFloat(document.getElementById(`lora-sldr-${k}`)?.value||0.8) })).filter(l=>l.name),
+          ...generationMeta };
         await saveAndAddToGallery(dataUrl, title, meta);
         showPreviewFinal(dataUrl, meta);
       }));
@@ -3853,7 +4044,10 @@ async function downloadZip() {
 function saveFavorites() {
   localStorage.setItem('void-gen-favs', JSON.stringify([..._favorites]));
 }
-function toggleFav(card) {
+async function toggleFav(card) {
+  if (card._favoriting) return;
+  const meta=_metaFromCard(card);
+  if(meta.sharedId){card._favoriting=true;try{await VoidSharedGallery.favorite(meta.sharedId,!_favorites.has(card.dataset.favKey));}catch(error){setStatus(error.message,'error');return;}finally{card._favoriting=false;}}
   const key = card.dataset.favKey;
   if (!key) return;
   const star = card.querySelector('.card-star');
@@ -3895,7 +4089,7 @@ function filterGallery() {
     const matchQ     = !q || blob.includes(q);
     const matchModel = !model || cardModel.includes(model);
     const matchFav   = !_favFilterOn || isFav;
-    const matchAlbum = !activeAlbumCards || activeAlbumCards.includes(favKey);
+    const matchAlbum = _activeAlbum.startsWith('shared:') ? (_metaFromCard(card).albums || []).includes(_activeAlbum.slice(7)) : !activeAlbumCards || activeAlbumCards.includes(favKey);
     const matchTag   = !_activeTagFilter || (cardTagsAll?.[favKey] || []).includes(_activeTagFilter);
     const show = matchQ && matchModel && matchFav && matchAlbum && matchTag;
     card.style.display = show ? '' : 'none';
@@ -4477,24 +4671,18 @@ function restoreFromMetaPng(meta) {
 
 // ── DELETE SELECTED ────────────────────────────────────────────────
 async function deleteSelected() {
-  const selected = [...document.querySelectorAll('.gallery-card.selected')];
-  if (!selected.length) return;
-  if (!confirm(_DELETE_CONFIRM_MULTI(selected.length))) return;
-  setStatus(`DELETING ${selected.length}…`);
-  let diskOk = 0, diskMiss = 0;
-  for (const card of selected) {
-    const r = await _deleteGalleryCard(card);
-    if (r.fileDeleted) diskOk++;
-    else diskMiss++;
-  }
-  document.getElementById('del-btn').style.display = 'none';
-  document.getElementById('zip-btn').style.display = 'none';
-  toggleSelectMode();
-  const msg = diskMiss
-    ? `DELETED ${selected.length} · ${diskOk} DISK FILES`
-    : `DELETED ${selected.length} · GALLERY + DISK`;
-  setStatus(msg, diskMiss ? 'warn' : 'ok');
-  setTimeout(() => setStatus('Void.gen'), 2500);
+  const selected=[...document.querySelectorAll('.gallery-card.selected')];
+  if (!selected.length || window.voidDeleteBusy || !confirm(_DELETE_CONFIRM_MULTI(selected.length))) return;
+  window.voidDeleteBusy=true;
+  let removed=0,failed=0,reason='';
+  try {
+    for (const card of selected) {
+      try {const result=await _deleteGalleryCard(card);if(result.ok)removed++;else {failed++;reason=result.fileResult?.reason || '刪除失敗';}}
+      catch(error){failed++;reason=error.message;}
+    }
+    if (!failed && gallerySelectMode) toggleSelectMode();
+    setStatus(failed ? `已移除 ${removed} 張，${failed} 張保留：${reason}` : `已移除 ${removed} 張 · 原檔已移至回收區`,failed?'error':'ok');
+  } finally {window.voidDeleteBusy=false;}
 }
 
 // ── THEME PRESETS ─────────────────────────────────────────────────
@@ -4534,7 +4722,7 @@ function toggleMasonry() {
   _masonryMode = !_masonryMode;
   document.getElementById('gallery-grid').classList.toggle('masonry', _masonryMode);
   const btn = document.getElementById('mason-btn');
-  btn.textContent = _masonryMode ? 'MASON' : 'GRID';
+  btn.textContent = _masonryMode ? '直式預覽' : '方形預覽';
   btn.style.color       = _masonryMode ? 'var(--text)' : '';
   btn.style.borderColor = _masonryMode ? 'var(--muted)' : '';
 }
@@ -4604,12 +4792,17 @@ function filterByAlbum(albumId) {
 function renderAlbumChips() {
   const row = document.getElementById('album-chips-row'); if (!row) return;
   const albums = getAlbums();
+  const sharedNames = [...new Set([...document.querySelectorAll('.gallery-card')].flatMap(card => _metaFromCard(card).albums || []))].sort();
   row.innerHTML =
     `<span class="album-chip ${_activeAlbum===''?'active':''}" onclick="filterByAlbum('')">ALL</span>` +
     albums.map(a =>
       `<span class="album-chip ${_activeAlbum===String(a.id)?'active':''}" onclick="filterByAlbum('${a.id}')" oncontextmenu="event.preventDefault();deleteAlbum(${a.id})" title="Right-click to delete">${escHtml(a.name)}</span>`
     ).join('') +
     `<span class="album-chip add-album" onclick="createAlbum()">+ ALBUM</span>`;
+  for (const name of sharedNames) {
+    const chip=document.createElement('button'), key='shared:'+name;
+    chip.type='button';chip.className='album-chip'+(_activeAlbum===key?' active':'');chip.textContent=name;chip.onclick=()=>filterByAlbum(key);row.append(chip);
+  }
   requestAnimationFrame(fitGalleryView);
 }
 function deleteAlbum(id) {
@@ -4620,6 +4813,7 @@ function deleteAlbum(id) {
 }
 function ctxAddToAlbum() {
   if (!_ctxData) return;
+  if (_ctxData.meta.sharedId) { const meta=_ctxData.meta; hideCtxMenu(); VoidSharedGallery.editMetadata(meta,'albums'); return; }
   const albums = getAlbums();
   if (!albums.length) { alert('No albums. Create one first via the chip row above the gallery.'); hideCtxMenu(); return; }
   const names = albums.map((a,i) => `${i+1}. ${a.name}`).join('\n');
@@ -4676,6 +4870,7 @@ function setTagFilter(tag) {
 }
 function ctxAddTag() {
   if (!_ctxData) return;
+  if (_ctxData.meta.sharedId) { const meta=_ctxData.meta; hideCtxMenu(); VoidSharedGallery.editMetadata(meta); return; }
   const tag = prompt('Enter tag:'); if (!tag?.trim()) { hideCtxMenu(); return; }
   if (_ctxData.favKey) addTagToCard(_ctxData.favKey, tag.trim());
   hideCtxMenu();
@@ -4687,7 +4882,11 @@ function getCardRatings() {
   try { _cardRatingsCache = JSON.parse(localStorage.getItem(RATINGS_KEY) || '{}'); return _cardRatingsCache; } catch { return {}; }
 }
 function saveCardRatings(obj) { localStorage.setItem(RATINGS_KEY, JSON.stringify(obj)); _cardRatingsCache = obj; }
-function setCardRating(favKey, rating) {
+async function setCardRating(favKey, rating) {
+  if (favKey.startsWith('shared_')) {
+    try { await VoidSharedGallery.update(favKey.slice(7), {rating}); }
+    catch (error) { setStatus(error.message,'error'); return; }
+  }
   const all = getCardRatings();
   if (rating === 0) delete all[favKey]; else all[favKey] = rating;
   saveCardRatings(all);
@@ -4698,7 +4897,7 @@ function setCardRating(favKey, rating) {
     let el = card.querySelector('.card-rating');
     if (!el) { el = document.createElement('div'); el.className = 'card-rating'; card.appendChild(el); }
     el.innerHTML = [1,2,3,4,5].map(i =>
-      `<span class="rating-star ${i<=rating?'on':''}" onclick="event.stopPropagation();setCardRating('${favKey}',${i})">${i<=rating?'★':'☆'}</span>`
+      `<button type="button" class="rating-star ${i<=rating?'on':''}" data-rating="${i}" aria-label="評分 ${i} 星">${i<=rating?'★':'☆'}</button>`
     ).join('');
   }
 }
@@ -4823,6 +5022,17 @@ window.toggleFav = toggleFav;
 window.setCardRating = setCardRating;
 window.deleteFromGallery = deleteFromGallery;
 </script>
-<script src="js/void-desktop.js?v=29.3"></script>
+<script src="js/void-engines.js?v=9"></script>
+<script src="js/void-recognition.js?v=3"></script>
+<script src="js/void-desktop.js?v=32.1-recognition"></script>
+<script src="js/void-mobile-link.js?v=1"></script>
+
+<script src="js/void-rng-bridge.js?v=2"></script>
+
+
+<script src="js/void-motion-graph.js?v=1"></script>
+<script src="js/void-studio.js?v=14"></script>
+<script src="js/void-layout.js?v=2"></script>
+<script src="js/void-image-drop.js?v=1"></script>
 </body>
 </html>

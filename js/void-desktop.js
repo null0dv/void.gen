@@ -35,10 +35,12 @@
     });
   }
   function readiness(all) {
+    if (window.VoidRecognition?.isBusy()) return '正在辨識圖片，請稍候或取消。';
     if (window.voidGalleryClearing) return '正在清空圖庫，請稍候。';
     if (innerWidth <= 900) return '手機版已暫停，請使用電腦開啟。';
-    if (currentMode === 'img2txt') return '請上傳圖片，使用「辨識提示詞」操作。';
+    if (currentMode === 'img2txt') return img2txtBase64 ? '圖片已載入，可按「辨識提示詞」開始。' : '請上傳圖片，使用「辨識提示詞」操作。';
     if (!cloud() && !window.voidApiOnline) return '尚未連接 ComfyUI，請重新連線。';
+    if (window.VoidEngines?.isActive() && VoidEngines.missingComponents().length) return '引擎元件尚未就緒，請查看模型區提示。';
     if (!$('model-select').value) return '請先選擇模型。';
     if (currentMode === 'img2img' && !img2imgBase64) return '請先上傳來源圖片。';
     if (!_getGenerateTaskIndices(all).length) return all ? '請至少完成一個任務的提示詞。' : '請輸入目前任務的提示詞。';
@@ -72,8 +74,8 @@
     $('vd-run-all').title = isGenerating ? '目前正在生成，請等待完成或停止。' : allReason;
     const state = window.VoidGenFlow?.getState() || 'idle';
     const labels = { idle:'待命', queued:'排隊中', generating:'生成中', saving:'儲存中', done:'已完成', error:'生成失敗', cancelled:'已停止', connecting:'連接中' };
-    setText($('vd-state'), labels[state] || '待命');
-    if (!isGenerating && (activeReason || state === 'idle')) setText($('vd-detail'), activeReason || '設定就緒，可以生成圖片。');
+    setText($('vd-state'), window.VoidRecognition?.isBusy() ? '辨識中' : labels[state] || '待命');
+    if (!isGenerating && !(currentMode === 'img2txt' && ['done','error','cancelled'].includes(state)) && (activeReason || state === 'idle')) setText($('vd-detail'), activeReason || '設定就緒，可以生成圖片。');
     $('vd-retry').hidden = cloud() || !!window.voidApiOnline;
     document.body.classList.toggle('has-preview', !!lastResult || isGenerating);
     syncLoras();

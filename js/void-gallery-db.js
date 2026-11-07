@@ -74,8 +74,12 @@
 
   async function dbDelete(id) {
     const db = await _openDB();
-    return new Promise(res => {
-      db.transaction(_DB_STORE, 'readwrite').objectStore(_DB_STORE).delete(id).onsuccess = res;
+    return new Promise((res, rej) => {
+      const tx = db.transaction(_DB_STORE, 'readwrite');
+      tx.objectStore(_DB_STORE).delete(id);
+      tx.oncomplete = () => res();
+      tx.onerror = () => rej(tx.error || new Error('圖庫紀錄刪除失敗'));
+      tx.onabort = () => rej(tx.error || new Error('圖庫紀錄刪除已中止'));
     });
   }
 
