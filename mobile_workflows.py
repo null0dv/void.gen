@@ -1,5 +1,18 @@
 """Graphs for the private mobile gateway; only installed engines are exposed."""
 import secrets
+import json
+from copy import deepcopy
+from pathlib import Path
+
+_z_image_file = Path(__file__).with_name('z-image-turbo-api.json')
+if not _z_image_file.is_file():
+    _z_image_file = _z_image_file.parent / 'void.gen' / _z_image_file.name
+Z_IMAGE_GRAPH = json.loads(_z_image_file.read_text(encoding='utf-8'))
+Z_IMAGE_NODES = {node['class_type'] for node in Z_IMAGE_GRAPH.values()}
+Z_IMAGE_MODEL = Z_IMAGE_GRAPH['1']['inputs']['unet_name']
+Z_IMAGE_CLIP = Z_IMAGE_GRAPH['8']['inputs']['clip_name']
+Z_IMAGE_VAE = Z_IMAGE_GRAPH['9']['inputs']['vae_name']
+
 
 QWEN_CLIP = 'qwen3vl_8b_int8_convrot.safetensors'
 QWEN_VAE = 'qwen_image_2.1_vae_bf16.safetensors'
@@ -41,8 +54,8 @@ def generate(data, catalog, source=None, reference=None, mask=None):
     mode = data.get('mode', 'txt2img')
     edit = mode == 'img2img'
     continuous = edit and data.get('continuous') is True
-    if mode not in ('txt2img', 'img2img') or (edit and engine not in ('sd', 'klein')):
-        raise ValueError('圖生圖請選擇 SD / SDXL 或 Klein 9B')
+    if mode not in ('txt2img', 'img2img') or (edit and engine not in ('sd', 'klein', 'zimage', 'qwen')):
+        raise ValueError('圖生圖請選擇 SD / SDXL、Klein 9B 或 Qwen')
     if continuous and (engine != 'klein' or not catalog.get('kleinContinuous')):
         raise ValueError('Klein 連續改圖模型或節點尚未就緒')
     if mask and (not continuous or not catalog.get('editMask')):
@@ -53,32 +66,54 @@ def generate(data, catalog, source=None, reference=None, mask=None):
         raise ValueError(f'Klein 寫實轉換需要 {KLEIN_LORA} 和對應的 ComfyUI 節點')
     if edit and engine == 'sd' and not catalog.get('sdEdit'):
         raise ValueError('SD / SDXL 圖生圖需要相容 checkpoint 與完整的 ComfyUI 節點')
-    if engine not in ('sd', 'qwen', 'moss', 'klein', 'moody'):
+    if edit and engine == 'qwen' and not catalog.get('qwenEdit'):
+        raise ValueError('Qwen 改圖需要 Qwen-Image 2.1 權重與支援參考圖的 ComfyUI 節點')
+    if engine not in ('sd', 'qwen', 'moss', 'klein', 'moody', 'zimage'):
         raise ValueError('未知的生圖引擎')
     prompt = str(data.get('prompt', '')).strip()
-    if edit and engine == 'klein' and not continuous and not prompt:
+    if edit and engine in ('klein', 'qwen') and not continuous and not prompt:
         prompt = 'Convert this illustration into a photorealistic live-action photograph. Preserve the subject, outfit, pose, composition and background.'
     if not prompt or len(prompt) > 20000:
         raise ValueError('請輸入提示詞（最多 20000 字元）')
-    defaults = {'sd': (1024, 20, 7), 'qwen': (1024, 25, 1), 'moss': (512, 8, 3), 'moody': (1024, 25, 3), 'klein': (512, 8, 1)}[engine]
+    defaults = {'sd': (1024, 20, 7), 'qwen': (1024, 25, 1), 'moss': (512, 8, 3), 'moody': (1024, 25, 3), 'klein': (512, 8, 1), 'zimage': (512, 8, 1)}[engine]
     width = number(data, 'width', defaults[0], 256, 2048, True)
-    height = number(data, 'height', defaults[0], 256, 2048, True)
+    height = number(data, 'height', 768 if engine == 'zimage' else defaults[0], 256, 2048, True)
     multiple = 16 if engine in ('moss', 'klein', 'moody') else 32
     if width % multiple or height % multiple:
         raise ValueError(f'尺寸須為 {multiple} 的倍數')
     steps = number(data, 'steps', defaults[1], 1, 100, True)
     cfg = number(data, 'cfg', defaults[2], 0, 30)
+    if engine == 'zimage':
+        steps, cfg = 8, 1
     seed = number(data, 'seed', -1, -1, 2**53-1, True)
     if seed == -1:
         seed = secrets.randbelow(2**32)
-    models = catalog['sdEditModels'] if edit and engine == 'sd' else catalog['models'][engine]
+    models = catalog['sdEditModels'] if edit and engine == 'sd' else catalog['models'].get(engine, [])
     model = data.get('model') or (MOSS_MODEL if engine == 'moss' else QWEN_MODEL if engine == 'qwen' else models[0] if models else '')
     if model not in models:
         raise ValueError('所選模型未安裝，請重新選擇')
     negative = str(data.get('negative', ''))[:20000]
     meta = dict(engine=engine, model=model, prompt=prompt, negative=negative, width=width, height=height, steps=steps, cfg=cfg, seed=seed)
     wf = {'7': node('SaveImage', filename_prefix=f'VOID-mobile/{engine}', images=['6', 0])}
-    if engine == 'klein':
+    if engine == 'zimage':
+        wf = deepcopy(Z_IMAGE_GRAPH)
+        wf['2']['inputs']['text'] = prompt
+        wf['4']['inputs'].update(width=width, height=height)
+        wf['5']['inputs']['seed'] = seed
+        wf['7']['inputs']['filename_prefix'] = 'VOID-mobile/zimage'
+        if edit:
+            if not catalog.get('zimageEdit'):
+                raise ValueError('Z-Image-Turbo image editing nodes are unavailable')
+            denoise = number(data, 'denoise', .35, .01, 1)
+            wf['11'] = node('LoadImage', image=source)
+            wf['12'] = node('ImageScale', image=['11', 0], upscale_method='lanczos',
+                            width=width, height=height, crop='center')
+            wf['4'] = node('VAEEncode', pixels=['12', 0], vae=['9', 0])
+            wf['5']['inputs']['denoise'] = denoise
+            meta.update(mode=mode, denoise=denoise)
+        meta.update(negative='', batch=1, sampler='res_multistep', scheduler='simple',
+                    zImageClip=Z_IMAGE_CLIP, zImageVae=Z_IMAGE_VAE)
+    elif engine == 'klein':
         wf.update({
             '1': node('UnetLoaderGGUF', unet_name=model),
             '2': node('CLIPLoader', clip_name=KLEIN_CLIP, type='flux2', device='default'),
@@ -165,6 +200,12 @@ def generate(data, catalog, source=None, reference=None, mask=None):
                        '2': node('TextEncodeQwenImage21', clip=['8', 0], prompt=prompt, negative_prompt=negative, resolution=1024)})
             model_ref, pos, neg, vae = ['1', 0], ['2', 0], ['2', 1], ['9', 0]
             meta.update(qwenClip=QWEN_CLIP, qwenVae=QWEN_VAE)
+            if edit:
+                # the encoder sizes the output latent to the reference, keeping its aspect ratio
+                wf['10'] = node('LoadImage', image=source)
+                wf['2']['inputs'].update({'vae': vae, 'resolution': round((width * height) ** .5 / 32) * 32, 'images.image_1': ['10', 0]})
+                del wf['4']
+                meta.update(mode=mode)
         elif engine == 'moody':
             wf.update({'1': node('UNETLoader', unet_name=model, weight_dtype='default'),
                        '8': node('CLIPLoader', clip_name=MOODY_CLIP, type='moss_image', device='default'),
@@ -176,19 +217,31 @@ def generate(data, catalog, source=None, reference=None, mask=None):
         else:
             wf['1'] = node('CheckpointLoaderSimple', ckpt_name=model)
             model_ref, clip, vae = ['1', 0], ['1', 1], ['1', 2]
-            lora = data.get('lora', '')
-            if lora:
+            # `loras` = [{name, strength}, ...] stacks up to 4 LoRAs in order; `lora`/`loraStrength` is the single-LoRA form.
+            loras = data.get('loras')
+            if not isinstance(loras, list):
+                loras = [{'name': data.get('lora', ''), 'strength': data.get('loraStrength', .8)}] if data.get('lora') else []
+            if len(loras) > 4:
+                raise ValueError('LoRA 最多 4 個')
+            used = []
+            for i, item in enumerate(loras):
+                lora = item.get('name', '') if isinstance(item, dict) else ''
+                if not lora:
+                    continue
                 if lora not in catalog['loras']:
-                    raise ValueError('LoRA 未安裝')
-                strength = number(data, 'loraStrength', .8, -2, 2)
-                wf['10'] = node('LoraLoader', model=model_ref, clip=clip, lora_name=lora, strength_model=strength, strength_clip=strength)
-                model_ref, clip = ['10', 0], ['10', 1]
-                meta['loras'] = [{'name': lora, 'strength': strength}]
+                    raise ValueError('LoRA 未安裝：' + lora)
+                strength = number(item, 'strength', .8, -2, 2)
+                key = '10' if i == 0 else str(40 + i)
+                wf[key] = node('LoraLoader', model=model_ref, clip=clip, lora_name=lora, strength_model=strength, strength_clip=strength)
+                model_ref, clip = [key, 0], [key, 1]
+                used.append({'name': lora, 'strength': strength})
+            if used:
+                meta['loras'] = used
             wf['2'] = node('CLIPTextEncode', clip=clip, text=prompt)
             wf['3'] = node('CLIPTextEncode', clip=clip, text=negative)
             pos, neg = ['2', 0], ['3', 0]
-        denoise = 1
-        if edit:
+        denoise, latent = 1, ['2', 2] if edit and engine == 'qwen' else ['4', 0]
+        if edit and engine != 'qwen':
             denoise = number(data, 'denoise', .55, .01, 1)
             wf.update({
                 '8': node('LoadImage', image=source),
@@ -196,7 +249,7 @@ def generate(data, catalog, source=None, reference=None, mask=None):
                 '4': node('VAEEncode', pixels=['9', 0], vae=vae),
             })
             meta.update(mode=mode, denoise=denoise)
-        wf['5'] = node('KSampler', model=model_ref, positive=pos, negative=neg, latent_image=['4', 0], seed=seed, steps=steps, cfg=cfg, sampler_name=sampler, scheduler=scheduler, denoise=denoise)
+        wf['5'] = node('KSampler', model=model_ref, positive=pos, negative=neg, latent_image=latent, seed=seed, steps=steps, cfg=cfg, sampler_name=sampler, scheduler=scheduler, denoise=denoise)
         wf['6'] = node('VAEDecode', samples=['5', 0], vae=vae)
         meta.update(sampler=sampler, scheduler=scheduler)
     return wf, meta

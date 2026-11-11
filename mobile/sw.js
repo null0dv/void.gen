@@ -1,5 +1,5 @@
-const CACHE='void-pocket-v17';
-const ASSETS=['/','/style.css','/app.js?v=17','/manifest.webmanifest','/icon.svg','/icon-192.png','/icon-512.png'];
+const CACHE='void-pocket-v26';
+const ASSETS=['/','/style.css','/app.js?v=26','/manifest.webmanifest','/icon.svg','/icon-192.png','/icon-512.png'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)));self.skipWaiting();});
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('void-pocket-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{

@@ -23,7 +23,7 @@ from PIL import Image, ImageOps
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from mobile_workflows import (generate, caption, SD_EDIT_NODES, MASK_NODES, MOODY_MODEL, MOODY_VAE, MOODY_NODES, MOODY_CLIP, QWEN_CLIP, QWEN_MODEL, KLEIN_CLIP,
+from mobile_workflows import (generate, caption, Z_IMAGE_NODES, Z_IMAGE_MODEL, Z_IMAGE_CLIP, Z_IMAGE_VAE, SD_EDIT_NODES, MASK_NODES, MOODY_MODEL, MOODY_VAE, MOODY_NODES, MOODY_CLIP, QWEN_CLIP, QWEN_MODEL, KLEIN_CLIP,
                               KLEIN_VAE, KLEIN_LORA, KLEIN_NODES, KLEIN_EDIT_NODES)
 
 PANEL_ROOT = Path(__file__).resolve().parent
@@ -31,6 +31,9 @@ ROOT = PANEL_ROOT.parent
 TERMINAL = ('done', 'error', 'cancelled')
 IMAGE_EXT = {'.png', '.jpg', '.jpeg', '.webp'}
 GUEST_OUTPUT = '_void_guests'
+# 訪客的混用圖庫：主人的圖以這個前綴列在訪客圖庫裡，唯讀（可看、下載、複製 Prompt、套用參數）。
+OWNER_PREFIX = '@owner/'
+OWNER_READONLY = '這是主人的圖，訪客只能瀏覽、下載、複製 Prompt 和套用參數。'
 
 
 def recycle_windows_paths(paths):
@@ -57,7 +60,7 @@ def recycle_windows_paths(paths):
     if result or operation.fAnyOperationsAborted:
         raise OSError(f'Windows 資源回收筒移動未完成（{result}），未移走的資料仍保留')
 
-MOTION_GRAPH = json.loads((ROOT / 'mobile_motion_graph.json').read_text(encoding='utf-8'))
+MOTION_GRAPH = json.loads((PANEL_ROOT / 'mobile_motion_graph.json').read_text(encoding='utf-8'))
 MOTION_SIZES = {'landscape': (640, 384), 'portrait': (384, 640), 'square': (512, 512)}
 
 
@@ -117,6 +120,9 @@ class Gateway:
         self.thumbs = self.data_dir / 'thumbs'
         self.thumbs.mkdir(exist_ok=True)
         self.output = Path(output or ROOT / 'ComfyUI_windows_portable/ComfyUI/output' / self.output_prefix).resolve()
+        # Guests also see the owner's output (read-only). VOID_GUEST_SHARED=0 turns this off.
+        self.shared = ((ROOT / 'ComfyUI_windows_portable/ComfyUI/output').resolve()
+                       if guest and os.environ.get('VOID_GUEST_SHARED', '1') != '0' else None)
         self.input = Path(input_dir or ROOT / 'ComfyUI_windows_portable/ComfyUI/input').resolve()
         self.input.mkdir(parents=True, exist_ok=True)
         self.output.mkdir(parents=True, exist_ok=True)
@@ -184,13 +190,25 @@ class Gateway:
                         if m.lower().startswith('flux-2-klein-9b-') and m.lower().endswith('.gguf')] if klein_ready else []
         sd_models = [m for m in choices('CheckpointLoaderSimple', 'ckpt_name')
                      if not any(f in m.lower() for f in ('flux', 'qwen', 'moss', 'wan2', 'sd3', 'stable-diffusion-3'))]
+        qwen_models = [m for m in choices('UnetLoaderGGUF', 'unet_name') if 'qwen' in m.lower() and '2.1' in m]
         return {'sdEdit': bool(sd_models and SD_EDIT_NODES <= info.keys()), 'sdEditModels': sd_models, 'editMask': MASK_NODES <= info.keys(),
+                'qwenEdit': bool(qwen_models and 'LoadImage' in info
+                                 and 'images' in info.get('TextEncodeQwenImage21', {}).get('input', {}).get('required', {})),
+                'zimageEdit': {'LoadImage', 'ImageScale', 'VAEEncode'} <= info.keys(),
                 'kleinContinuous': bool(klein_models and (KLEIN_EDIT_NODES - {'LoraLoaderModelOnly'}) <= info.keys()),
                 'kleinEdit': bool(klein_models and KLEIN_EDIT_NODES <= info.keys()
                                   and KLEIN_LORA in choices('LoraLoaderModelOnly', 'lora_name')),
                 'models': {'sd': choices('CheckpointLoaderSimple', 'ckpt_name'),
-                           'qwen': [m for m in choices('UnetLoaderGGUF', 'unet_name') if 'qwen' in m.lower() and '2.1' in m],
+                           'qwen': qwen_models,
                            'klein': klein_models,
+                           'zimage': [Z_IMAGE_MODEL] if (
+                               Z_IMAGE_NODES <= info.keys()
+                               and Z_IMAGE_MODEL in choices('UNETLoader', 'unet_name')
+                               and Z_IMAGE_CLIP in choices('CLIPLoader', 'clip_name')
+                               and 'lumina2' in choices('CLIPLoader', 'type')
+                               and Z_IMAGE_VAE in choices('VAELoader', 'vae_name')
+                               and 'res_multistep' in choices('KSampler', 'sampler_name')
+                               and 'simple' in choices('KSampler', 'scheduler')) else [],
                            'moody': [MOODY_MODEL] if (MOODY_NODES <= info.keys()
                                     and MOODY_MODEL in choices('UNETLoader', 'unet_name')
                                     and MOODY_CLIP in choices('CLIPLoader', 'clip_name')
@@ -234,12 +252,16 @@ class Gateway:
             known = {r['rel']: dict(r) for r in self.db.execute('SELECT rel,mtime,size,meta FROM gallery')}
             def files():
                 found, updates = set(), []
-                for path in self.output.rglob('*'):
-                    if not path.is_file() or path.suffix.lower() not in IMAGE_EXT or not path.resolve().is_relative_to(self.output):
+                # Own output first; for a guest also the owner's output, prefixed and minus every guest folder.
+                roots = [(self.output, '')] + ([(self.shared, OWNER_PREFIX)] if self.shared else [])
+                for root, prefix in roots:
+                  for path in root.rglob('*'):
+                    if not path.is_file() or path.suffix.lower() not in IMAGE_EXT or not path.resolve().is_relative_to(root):
                         continue
-                    rel = path.relative_to(self.output).as_posix()
-                    if not self.guest and rel.startswith(GUEST_OUTPUT + '/'):
+                    inner = path.relative_to(root).as_posix()
+                    if (prefix or not self.guest) and inner.startswith(GUEST_OUTPUT + '/'):
                         continue
+                    rel = prefix + inner
                     found.add(rel)
                     stat = path.stat()
                     if rel in known and known[rel]['mtime'] == stat.st_mtime and known[rel]['size'] == stat.st_size:
@@ -265,6 +287,14 @@ class Gateway:
         row = self.db.execute('SELECT * FROM gallery WHERE id=?', (image_id,)).fetchone()
         if not row:
             raise web.HTTPNotFound()
+        if row['rel'].startswith(OWNER_PREFIX):
+            # Owner's image in a guest's mixed gallery: read-only, never inside any guest folder.
+            if not self.shared:
+                raise web.HTTPNotFound()
+            path = (self.shared / row['rel'][len(OWNER_PREFIX):]).resolve()
+            if not path.is_relative_to(self.shared) or not path.is_file() or path.relative_to(self.shared).parts[0] == GUEST_OUTPUT:
+                raise web.HTTPNotFound()
+            return path, dict(row)
         path = (self.output / row['rel']).resolve()
         if not path.is_relative_to(self.output) or not path.is_file() or (not self.guest and path.relative_to(self.output).parts[0] == GUEST_OUTPUT):
             raise web.HTTPNotFound()
@@ -273,6 +303,7 @@ class Gateway:
     def gallery_item(self, row):
         data = dict(row)
         data['meta'] = json.loads(data['meta'])
+        data['shared'] = data['rel'].startswith(OWNER_PREFIX)  # owner's image, read-only for this guest
         rel = Path(data['rel'])
         data['meta'].update(filename=rel.name, subfolder=rel.parent.as_posix() if rel.parent.as_posix() != '.' else '')
         data['name'] = Path(data.pop('rel')).name
@@ -420,16 +451,16 @@ class Gateway:
                 elif job['kind'] == 'motion':
                     videos = item.get('outputs', {}).get('34', {}).get('images', [])
                     video = next((v for v in videos if v.get('filename', '').endswith('.mp4')
-                                  and v.get('subfolder') == self.output_prefix + 'VOID-Motion'), None)
+                                  and v.get('subfolder', '').replace('\\', '/') == self.output_prefix + 'VOID-Motion'), None)
                     if not video:
                         raise ValueError('未取得輸出影片')
                     result = {'video': video['filename'], 'url': '/video/' + job_id}
                 else:
                     result = {'images': item.get('outputs', {}).get(str(data.get('saveNodeId', '7')), {}).get('images', [])}
                     if self.guest:
-                        result['images'] = [{**image, 'subfolder': image['subfolder'][len(self.output_prefix):]}
+                        result['images'] = [{**image, 'subfolder': image['subfolder'].replace('\\', '/')[len(self.output_prefix):]}
                                             for image in result['images']
-                                            if image.get('subfolder', '').startswith(self.output_prefix)]
+                                            if image.get('subfolder', '').replace('\\', '/').startswith(self.output_prefix)]
                     if not result['images']:
                         raise ValueError('未取得輸出圖片')
                     self.update_job(job_id, progress={'phase': 'saving'})
@@ -583,12 +614,16 @@ def create_app(gateway=None):
             raise web.HTTPForbidden(text='這是私人 VOID 服務，請使用擁有者帳號連線。')
         if g.guest and ((request.path in ('/api/resources', '/api/settings') and request.method != 'GET') or request.path == '/api/trash/empty'):
             raise web.HTTPForbidden(text='訪客不能變更主機設定或清空 Windows 回收資料。')
+        owner_gallery = request.path.startswith('/api/guest-gallery')
+        if owner_gallery and (g.guest or not local):
+            raise web.HTTPForbidden(text='請在主機上的 VOID 作品庫查看訪客作品。')
         origin = request.headers.get('Origin')
         desktop_origin = origin in ('http://127.0.0.1:8080', 'http://localhost:8080')
         desktop_path = (request.path in ('/api/import', '/api/trash', '/api/trash/restore', '/api/trash/empty', '/api/upload', '/api/jobs', '/api/resources', '/api/projects') or request.path.startswith('/api/projects/')
                         or (request.path.startswith('/api/jobs/') and request.path.endswith('/cancel'))
                         or ((request.path == '/api/gallery' or request.path.startswith(('/api/jobs/', '/media/', '/thumb/', '/video/'))) and request.method in ('GET', 'OPTIONS'))
-                        or (request.path.startswith('/api/gallery/') and request.method in ('PATCH', 'OPTIONS')))
+                        or (request.path.startswith('/api/gallery/') and request.method in ('PATCH', 'OPTIONS'))
+                        or ((owner_gallery or request.path.startswith('/api/trash/thumbnail/')) and request.method == 'GET'))
         if origin and urlsplit(origin).netloc != request.host and not (desktop_origin and local and desktop_path):
             raise web.HTTPForbidden(text='不允許此來源')
         if request.method == 'OPTIONS':
@@ -611,6 +646,39 @@ def create_app(gateway=None):
     app['gateway'] = g
     app.on_startup.append(g.start)
     app.on_cleanup.append(g.stop)
+
+    # 劇情分頁：主人連 8097（自己的 Nana），訪客連 8098（訪客 Nana），各用自己的金鑰，劇情互不相通。
+    async def roleplay(request):
+        lobby = ROOT / 'AI-Vault/telegram-lobby/data'
+        port, key_file = (8098, lobby / 'guest/pocket-roleplay.key') if g.guest else (8097, lobby / 'pocket-roleplay.key')
+        try:
+            key = key_file.read_text(encoding='ascii')
+            payload = await request.json() if request.method == 'POST' else None
+            if payload is not None and not isinstance(payload, dict):
+                raise ValueError('無效的劇情操作。')
+            async with g.session.request(
+                request.method, f'http://127.0.0.1:{port}/roleplay', json=payload,
+                headers={'Authorization': 'Bearer ' + key}, timeout=ClientTimeout(total=330),
+            ) as upstream:
+                if upstream.content_type != 'application/x-ndjson':
+                    return web.json_response(await upstream.json(), status=upstream.status)
+                response = web.StreamResponse(headers={
+                    'Content-Type': 'application/x-ndjson; charset=utf-8',
+                    'Cache-Control': 'no-store',
+                    'X-Content-Type-Options': 'nosniff',
+                })
+                await response.prepare(request)
+                try:
+                    async for chunk in upstream.content.iter_any():
+                        await response.write(chunk)
+                except ConnectionResetError:
+                    return response
+                except (ClientError, TimeoutError):
+                    await response.write('{"error":"劇情連線中斷，請重新整理確認進度。"}\n'.encode())
+                return response
+        except (OSError, ClientError, TimeoutError):
+            where = '請在電腦的 AI 工作台「系統」分頁啟動「訪客 Nana」。' if g.guest else '請在電腦啟動 Telegram 大廳。'
+            return web.json_response({'error': '劇情服務尚未啟動，' + where}, status=503)
 
     async def status(request):
         config = g.config()
@@ -707,7 +775,7 @@ def create_app(gateway=None):
             count_value = number_value(data, 'count', 1, 1, 4)
             if not count_value.is_integer():
                 raise ValueError('張數必須是整數')
-            count = int(count_value)
+            count = 1 if data.get('engine') == 'zimage' else int(count_value)
             if data.get('continuous') is True and count != 1:
                 raise ValueError('連續改圖每輪生成一張')
         elif kind == 'workflow':
@@ -846,6 +914,59 @@ def create_app(gateway=None):
             raise web.HTTPNotFound()
         return web.FileResponse(g.input / row['filename'])
 
+    def guest_gallery_root(slot):
+        root = g.output / GUEST_OUTPUT / slot
+        if slot not in {f'guest{i}' for i in range(1, 10)} or root.resolve() != root or not root.is_dir():
+            raise web.HTTPNotFound()
+        return root
+
+    async def guest_gallery(request):
+        slot = request.query.get('guest')
+        if not slot:
+            root = g.output / GUEST_OUTPUT
+            guests = [f'guest{i}' for i in range(1, 10)
+                      if (root / f'guest{i}').is_dir() and (root / f'guest{i}').resolve() == root / f'guest{i}']
+            return web.json_response({'guests': guests})
+        root = guest_gallery_root(slot)
+
+        def images():
+            items = []
+            for path in root.rglob('*'):
+                if path.suffix.lower() not in IMAGE_EXT or path.resolve() != path:
+                    continue
+                try:
+                    if path.is_file():
+                        items.append({'path': path.relative_to(root).as_posix(), 'name': path.name, 'mtime': path.stat().st_mtime})
+                except OSError:
+                    continue
+            return sorted(items, key=lambda item: item['mtime'], reverse=True)
+
+        return web.json_response({'items': await asyncio.to_thread(images)})
+
+    async def guest_gallery_image(request):
+        root = guest_gallery_root(request.query.get('guest', ''))
+        path = (root / request.query.get('path', '')).resolve()
+        if not path.is_relative_to(root) or path.suffix.lower() not in IMAGE_EXT or not path.is_file():
+            raise web.HTTPNotFound()
+        if request.query.get('thumb') != '1':
+            return web.FileResponse(path)
+
+        def thumbnail():
+            with Image.open(path) as source:
+                if source.width * source.height > 40000000:
+                    raise ValueError('圖片太大，請開啟原圖查看')
+                image = ImageOps.exif_transpose(source)
+                image.thumbnail((320, 320))
+                with io.BytesIO() as buffer:
+                    image.convert('RGB').save(buffer, format='JPEG', quality=82)
+                    return buffer.getvalue()
+
+        try:
+            content = await asyncio.to_thread(thumbnail)
+        except OSError:
+            raise web.HTTPNotFound()
+        return web.Response(body=content, content_type='image/jpeg')
+
     async def gallery(request):
         await g.scan()
         revision = g.gallery_epoch + ':' + str(g.db.execute('SELECT value FROM gallery_revision WHERE id=1').fetchone()[0])
@@ -919,6 +1040,8 @@ def create_app(gateway=None):
 
     async def favorite(request):
         _, row = g.image_path(request.match_info['id'])
+        if row['rel'].startswith(OWNER_PREFIX):
+            return web.json_response({'error': OWNER_READONLY}, status=403)
         data = await request.json()
         meta = json.loads(row['meta'])
         if 'rating' in data:
@@ -982,6 +1105,8 @@ def create_app(gateway=None):
             raise ValueError('缺少正確的圖片檔名，未刪除任何檔案')
         if '..' in subfolder.split('/') or ':' in subfolder or subfolder.startswith('/'):
             raise ValueError('輸出子資料夾無效')
+        if (subfolder + '/').startswith(OWNER_PREFIX):
+            return web.json_response({'error': OWNER_READONLY}, status=403)
         source = (g.output / subfolder / filename).resolve()
         if not source.is_relative_to(g.output):
             raise ValueError('只能處理 ComfyUI output 內的圖片')
@@ -1019,6 +1144,22 @@ def create_app(gateway=None):
         if source.parent != folder or not source.is_file() or source.suffix.lower() not in IMAGE_EXT:
             raise ValueError('找不到回收區原檔')
         return manifest, source
+
+    async def trash_thumbnail(request):
+        def render():
+            _, source = trash_entry(request.match_info['id'])
+            with Image.open(source) as image:
+                thumbnail = ImageOps.exif_transpose(image)
+                thumbnail.thumbnail((160, 160))
+                with io.BytesIO() as buffer:
+                    thumbnail.convert('RGB').save(buffer, format='JPEG', quality=80)
+                    return buffer.getvalue()
+
+        try:
+            content = await asyncio.to_thread(render)
+        except (OSError, ValueError, KeyError):
+            return web.Response(status=404)
+        return web.Response(body=content, content_type='image/jpeg')
 
     async def trash_list(request):
         query = request.query.get('q', '').casefold().strip()
@@ -1121,6 +1262,8 @@ def create_app(gateway=None):
         response.headers['Cache-Control'] = 'no-cache'
         return response
 
+    app.router.add_get('/api/roleplay', roleplay)
+    app.router.add_post('/api/roleplay', roleplay)
     app.router.add_get('/api/status', status)
     app.router.add_get('/api/catalog', catalog)
     app.router.add_get('/api/resources', resources)
@@ -1142,11 +1285,14 @@ def create_app(gateway=None):
     app.router.add_options('/api/upload', upload)
     app.router.add_get('/upload/{id}', upload_view)
     app.router.add_get('/api/gallery', gallery)
+    app.router.add_get('/api/guest-gallery', guest_gallery)
+    app.router.add_get('/api/guest-gallery/image', guest_gallery_image)
     app.router.add_get('/api/gallery/{id}', gallery_record)
     app.router.add_patch('/api/gallery/{id}', favorite)
     app.router.add_route('*', '/api/import', import_record)
     app.router.add_post('/api/trash', trash)
     app.router.add_get('/api/trash', trash_list)
+    app.router.add_get('/api/trash/thumbnail/{id}', trash_thumbnail)
     app.router.add_post('/api/trash/restore', trash_restore)
     app.router.add_post('/api/trash/empty', trash_empty)
     app.router.add_options('/api/trash/empty', trash_empty)

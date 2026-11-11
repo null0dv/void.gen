@@ -2,10 +2,10 @@
   'use strict';
   const $=id=>document.getElementById(id);
   const terminal=new Set(['done','error','cancelled']);
-  const titles={wan:'Wan 2.2',qwen:'Qwen',sd:'SD / SDXL',moss:'MOSS',moody:'Moody Moss Mix',klein:'Klein 9B',wd14:'WD14',florence:'Florence-2'};
+  const titles={zimage:'Z-Image-Turbo',wan:'Wan 2.2',qwen:'Qwen',sd:'SD / SDXL',moss:'MOSS',moody:'Moody Moss Mix',klein:'Klein 9B',wd14:'WD14',florence:'Florence-2'};
   const states={queued:'等待執行',submitting:'正在提交',running:'執行中',done:'已完成',error:'失敗',cancelled:'已取消'};
   const jobPhases={saving:'正在存檔',preparing:'載入模型／準備素材',generating:'生成中'};
-  const defaults={qwen:{width:1024,height:1024,steps:25,cfg:1,sampler:'euler',scheduler:'simple'},sd:{width:1024,height:1024,steps:20,cfg:7,sampler:'euler_ancestral',scheduler:'karras'},moody:{width:1024,height:1024,steps:25,cfg:3,sampler:'euler',scheduler:'simple'},moss:{width:512,height:512,steps:8,cfg:3,shift:5},klein:{width:512,height:512,steps:8,cfg:1}};
+  const defaults={zimage:{width:512,height:768,steps:8,cfg:1},qwen:{width:1024,height:1024,steps:25,cfg:1,sampler:'euler',scheduler:'simple'},sd:{width:1024,height:1024,steps:20,cfg:7,sampler:'euler_ancestral',scheduler:'karras'},moody:{width:1024,height:1024,steps:25,cfg:3,sampler:'euler',scheduler:'simple'},moss:{width:512,height:512,steps:8,cfg:3,shift:5},klein:{width:512,height:512,steps:8,cfg:1}};
   let engine='qwen',catalog=null,online=false,status={},jobs=[],selectedImage=null,images=[],offset=0,favorites=false,refreshing=false,toastTimer,uploading=false;
   let generationMode='txt2img', editUpload='', editUploading=false, generationSubmitting=false;
   let motionSource=null, motionBusy=false, imageOpenVersion=0;
@@ -19,16 +19,23 @@
     finally{clearTimeout(timer);}
   }
   const send=(path,data,method='POST')=>api(path,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-  function tab(name){if(name!=='image-dialog')++imageOpenVersion;if(!['generate','motion','recognize','gallery','jobs','rng','image-dialog','video-dialog','settings-dialog'].includes(name))name='generate';if(document.body.dataset.tab==='video-dialog'&&name!=='video-dialog')$('motion-player').pause();if(name!=='gallery'){galleryRole='';resetTrashSelection();$('gallery-pick-context').hidden=true;}document.body.dataset.tab=name;document.querySelectorAll('.page').forEach(page=>page.classList.toggle('active',page.id===name));document.querySelectorAll('nav button').forEach(button=>{button.classList.toggle('active',button.dataset.tab===name);button.setAttribute('aria-current',button.dataset.tab===name?'page':'false');});if(!name.endsWith('-dialog'))localStorage.setItem('void-pocket-tab',name);if(name==='rng')void loadRng();window.scrollTo({top:0});if(name==='gallery')loadGallery().catch(error=>toast(error.message));}
+  function tab(name){if(name!=='image-dialog')++imageOpenVersion;if(!['generate','motion','recognize','gallery','jobs','rng','roleplay','image-dialog','video-dialog','settings-dialog'].includes(name))name='generate';if(document.body.dataset.tab==='video-dialog'&&name!=='video-dialog')$('motion-player').pause();if(name!=='gallery'){galleryRole='';resetTrashSelection();$('gallery-pick-context').hidden=true;}document.body.dataset.tab=name;document.querySelectorAll('.page').forEach(page=>page.classList.toggle('active',page.id===name));document.querySelectorAll('nav button').forEach(button=>{button.classList.toggle('active',button.dataset.tab===name);button.setAttribute('aria-current',button.dataset.tab===name?'page':'false');});if(!name.endsWith('-dialog'))localStorage.setItem('void-pocket-tab',name);if(name==='rng')void loadRng();if(name==='roleplay'&&!rpBusy)void refreshRoleplay();window.scrollTo({top:0});if(name==='gallery')loadGallery().catch(error=>toast(error.message));}
   function options(id,values,preferred,empty=false){const select=$(id);select.replaceChildren(...(empty?[new Option('不使用','')]:[]),...values.map(value=>new Option(value,value)));if([...select.options].some(option=>option.value===preferred))select.value=preferred;}
   const fields=['model','prompt','negative','steps','cfg','width','height','seed','sampler','scheduler','shift','lora','lora-strength','count'];
-  const supportsEdit=candidate=>continuous()?candidate==='klein':['sd','klein'].includes(candidate);
+  /* 多個 LoRA：第一個沿用 gen-lora，其餘最多 3 個放在 #extra-loras；送出時合成 loras 清單（後端最多 4 個依序疊加）。 */
+  const maxLoras=4;const loraNumber=value=>{const n=parseFloat(value);return Number.isFinite(n)?n:.8;};
+  function loraRow(name='',strength=.8){const row=document.createElement('div');row.className='lora-row';const select=document.createElement('select');select.setAttribute('aria-label','LoRA');select.add(new Option('不使用',''));const installed=catalog?.loras||[];for(const lora of installed)select.add(new Option(lora,lora));if(name&&!installed.includes(name))select.add(new Option(name+'（未安裝）',name));select.value=name;const input=document.createElement('input');input.type='number';input.min='-2';input.max='2';input.step='0.1';input.value=String(strength);input.setAttribute('aria-label','LoRA 強度');const remove=document.createElement('button');remove.type='button';remove.textContent='✕';remove.setAttribute('aria-label','移除這個 LoRA');remove.onclick=()=>{row.remove();updateLoraAdd();};row.append(select,input,remove);return row;}
+  function updateLoraAdd(){$('lora-add').hidden=$('extra-loras').children.length>=maxLoras-1;}
+  function setExtraLoras(list){$('extra-loras').replaceChildren(...(list||[]).slice(0,maxLoras-1).map(item=>loraRow(item.name,item.strength??.8)));updateLoraAdd();}
+  function collectLoras(){const list=[];if($('gen-lora').value)list.push({name:$('gen-lora').value,strength:loraNumber($('gen-lora-strength').value)});for(const row of $('extra-loras').children){const name=row.querySelector('select').value;if(name)list.push({name,strength:loraNumber(row.querySelector('input').value)});}return list;}
+  const bindLoraAdd=()=>{$('lora-add').onclick=()=>{if($('extra-loras').children.length<maxLoras-1)$('extra-loras').append(loraRow());updateLoraAdd();};};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bindLoraAdd);else bindLoraAdd();
+  const supportsEdit=candidate=>continuous()?candidate==='klein':['sd','klein','zimage','qwen'].includes(candidate);
   const currentModels=()=>generationMode==='img2img'&&engine==='sd'?catalog?.sdEditModels||[]:catalog?.models[engine]||[];
-  function formData(){const data={engine,mode:generationMode};if(generationMode==='img2img'){data.upload=editUpload;if(engine==='klein')data.kleinStrength=$('gen-klein-strength').value;else data.denoise=$('gen-denoise').value;if(continuous())Object.assign(data,{continuous:true,referenceUpload,editGroup,parent:editParent});}for(const field of fields)data[field==='lora-strength'?'loraStrength':field]=$('gen-'+field).value;return data;}
+  function formData(mode=generationMode){const data={engine,mode};if(mode==='img2img'){data.upload=editUpload;if(engine==='klein')data.kleinStrength=$('gen-klein-strength').value;else data.denoise=$('gen-denoise').value;if(continuous())Object.assign(data,{continuous:true,referenceUpload,editGroup,parent:editParent});}for(const field of fields)data[field==='lora-strength'?'loraStrength':field]=$('gen-'+field).value;data.loras=collectLoras();return data;}
   function saveForm(){if(!catalog)return;preferences[engine]=formData();localStorage.setItem('void-pocket-generate',JSON.stringify(preferences));localStorage.setItem('void-pocket-gen-engine',engine);}
   function sizeLabel(){const width=Number($('gen-width').value),height=Number($('gen-height').value);$('size-label').textContent=`${width} × ${height}`;document.querySelectorAll('[data-ratio]').forEach(button=>button.classList.toggle('selected',button.dataset.ratio===(width===height?'square':width<height?'portrait':'landscape')));}
-  function chooseEngine(next,remember=true){if(!defaults[next]||(generationMode==='img2img'&&!supportsEdit(next)))return;if(remember)saveForm();engine=next;const values={...defaults[engine],seed:-1,count:1,...preferences[engine]};document.querySelectorAll('[data-engine]').forEach(button=>button.classList.toggle('selected',button.dataset.engine===engine));if(catalog){options('gen-model',currentModels(),values.model||(engine==='qwen'?'qwen-image-2.1-UC-Q4_K_M.gguf':engine==='moss'?'moss-image-sft-bf16.safetensors':''));options('gen-sampler',catalog.samplers,values.sampler);options('gen-scheduler',catalog.schedulers,values.scheduler);options('gen-lora',catalog.loras,values.lora,true);}for(const field of fields){if(['model','sampler','scheduler','lora'].includes(field))continue;const value=values[field==='lora-strength'?'loraStrength':field];if(value!==undefined)$('gen-'+field).value=value;}$('gen-width').step=$('gen-height').step=['moss','klein','moody'].includes(engine)?'16':'32';$('native-sampler').hidden=['moss','klein'].includes(engine);$('moss-options').hidden=engine!=='moss';$('lora-options').hidden=engine!=='sd';for(const id of ['native-sampler','moss-options','lora-options'])$(id).querySelectorAll('input,select').forEach(input=>input.disabled=$(id).hidden);$('gen-hint').textContent=engine==='moody'?'Moody Moss Mix V4.1 · 1024 × 1024、25 步、CFG 3。':engine==='moss'?'MOSS 預設使用已跑通的 512 × 512、8 步。文字編碼較吃記憶體。':'任務交給電腦執行，圖片保存在電腦；多張會依序處理。';if(engine==='sd')$('gen-denoise').value=values.denoise??.55;sizeLabel();localStorage.setItem('void-pocket-gen-engine',engine);syncContinuous();}
-  function ratio(name){const sizes=['moss','klein'].includes(engine)?{square:[512,512],portrait:[512,768],landscape:[768,512]}:{square:[1024,1024],portrait:[832,1216],landscape:[1216,832]};[$('gen-width').value,$('gen-height').value]=sizes[name];sizeLabel();saveForm();}
+  function chooseEngine(next,remember=true){if(!defaults[next]||(generationMode==='img2img'&&!supportsEdit(next)))return;if(remember)saveForm();engine=next;const values={...defaults[engine],seed:-1,count:1,...preferences[engine]};document.querySelectorAll('[data-engine]').forEach(button=>button.classList.toggle('selected',button.dataset.engine===engine));if(catalog){options('gen-model',currentModels(),values.model||(engine==='qwen'?'qwen-image-2.1-UC-Q4_K_M.gguf':engine==='moss'?'moss-image-sft-bf16.safetensors':''));options('gen-sampler',catalog.samplers,values.sampler);options('gen-scheduler',catalog.schedulers,values.scheduler);options('gen-lora',catalog.loras,values.lora,true);setExtraLoras((values.loras||[]).filter((item,index)=>!(index===0&&item.name===values.lora)));}for(const field of fields){if(['model','sampler','scheduler','lora'].includes(field))continue;const value=values[field==='lora-strength'?'loraStrength':field];if(value!==undefined)$('gen-'+field).value=value;}$('gen-width').step=$('gen-height').step=['moss','klein','moody'].includes(engine)?'16':'32';$('gen-negative-options').hidden=engine==='zimage';$('gen-sampling-values').hidden=engine==='zimage';$('gen-count').closest('.inline').hidden=engine==='zimage';$('native-sampler').hidden=['moss','klein','zimage'].includes(engine);$('moss-options').hidden=engine!=='moss';$('lora-options').hidden=engine!=='sd';for(const id of ['native-sampler','moss-options','lora-options'])$(id).querySelectorAll('input,select').forEach(input=>input.disabled=$(id).hidden);$('gen-hint').textContent=engine==='zimage'?(catalog?.models?.zimage?.length?'單張文生圖 · 8 步':'電腦端尚未偵測到完整的 Z-Image-Turbo 權重或節點。'):engine==='moody'?'Moody Moss Mix V4.1 · 1024 × 1024、25 步、CFG 3。':engine==='moss'?'MOSS 預設使用已跑通的 512 × 512、8 步。文字編碼較吃記憶體。':'任務交給電腦執行，圖片保存在電腦；多張會依序處理。';if(engine==='sd'||engine==='zimage')$('gen-denoise').value=values.denoise??(engine==='zimage'?.35:.55);sizeLabel();localStorage.setItem('void-pocket-gen-engine',engine);syncContinuous();}
+  function ratio(name){const sizes=['moss','klein','zimage'].includes(engine)?{square:[512,512],portrait:[512,768],landscape:[768,512]}:{square:[1024,1024],portrait:[832,1216],landscape:[1216,832]};[$('gen-width').value,$('gen-height').value]=sizes[name];sizeLabel();saveForm();}
   function setGenerationMode(mode){
     const edit=mode==='img2img';
     if(generationMode!==mode)saveForm();
@@ -45,7 +52,7 @@
     void selectEditImage('main',input.files[0]);
     input.value='';
   }
-  function updateButtons(){$('motion-submit').disabled=!online||!catalog?.motion||!motionSource||motionBusy;const active=jobs.find(job=>job.id===lastRec&&!terminal.has(job.state));const edit=generationMode==='img2img';$('generate-submit').disabled=!online||!currentModels().length||generationSubmitting||(edit&&(!(continuous()?catalog?.kleinContinuous:engine==='sd'?catalog?.sdEdit:catalog?.kleinEdit)||!editUpload||editUploading));$('generate-submit').textContent=editUploading?'正在上傳…':generationSubmitting?'正在送出…':edit?'開始圖生圖 ↗':'開始生成 ↗';$('recognize-submit').disabled=!online||uploading||!uploadId||!!active||!catalog?.recognition[$('rec-engine').value];$('recognize-submit').textContent=uploading?'正在上傳…':active?'電腦辨識中 · 可至任務取消':'辨識提示詞 ↗';}
+  function updateButtons(){$('motion-submit').disabled=!online||!catalog?.motion||!motionSource||motionBusy;const active=jobs.find(job=>job.id===lastRec&&!terminal.has(job.state));const edit=generationMode==='img2img';$('generate-submit').disabled=!online||!currentModels().length||generationSubmitting||(edit&&(!(continuous()?catalog?.kleinContinuous:engine==='sd'?catalog?.sdEdit:engine==='zimage'?catalog?.zimageEdit:catalog?.kleinEdit)||!editUpload||editUploading));$('generate-submit').textContent=editUploading?'正在上傳…':generationSubmitting?'正在送出…':edit?'開始圖生圖 ↗':'開始生成 ↗';$('recognize-submit').disabled=!online||uploading||!uploadId||!!active||!catalog?.recognition[$('rec-engine').value];$('recognize-submit').textContent=uploading?'正在上傳…':active?'電腦辨識中 · 可至任務取消':'辨識提示詞 ↗';}
   function recSettings(){const selected=$('rec-engine').value;$('rec-qwen').hidden=selected!=='qwen';$('rec-wd14').hidden=selected!=='wd14';$('rec-florence').hidden=selected!=='florence';localStorage.setItem('void-pocket-recognition',JSON.stringify({engine:selected,style:$('rec-style').value,detail:$('rec-detail').value,instruction:$('rec-instruction').value}));updateButtons();}
   async function submitGeneration(event){event.preventDefault();if($('generate-submit').disabled)return;saveForm();generationSubmitting=true;updateButtons();try{const form=formData();if(form.continuous&&maskPainted)form.maskUpload=await uploadMask();const data=await send('/api/jobs',{kind:'generate',...form});toast(`已提交 ${data.ids.length} 個任務，電腦會繼續執行`);tab('jobs');await refresh();}catch(error){toast(error.message);}finally{generationSubmitting=false;updateButtons();}}
   async function uploadPhoto(file){if(!file||uploading)return;uploading=true;uploadId='';localStorage.removeItem('void-pocket-upload');$('rec-preview').src=URL.createObjectURL(file);$('rec-preview').hidden=false;updateButtons();const body=new FormData();body.append('image',file,file.name||'clipboard.png');try{const result=await api('/api/upload',{method:'POST',body});uploadId=result.id;localStorage.setItem('void-pocket-upload',uploadId);const old=$('rec-preview').src;$('rec-preview').src=result.url;if(old.startsWith('blob:'))URL.revokeObjectURL(old);toast('圖片已存到電腦，可開始辨識');}catch(error){toast(error.message);}finally{uploading=false;updateButtons();}}
@@ -53,8 +60,8 @@
   function renderJobs(){const active=jobs.filter(job=>!terminal.has(job.state));$('jobs-count').textContent=`${active.length} 個執行中`;$('job-badge').hidden=!active.length;$('jobs-empty').hidden=!!jobs.length;const signature=JSON.stringify(jobs.map(job=>[job.id,job.state,job.updated,job.progress]));if($('jobs-list').dataset.signature!==signature){$('jobs-list').dataset.signature=signature;$('jobs-list').innerHTML=jobs.map(job=>{const pct=job.progress?.max?Math.min(100,job.progress.value/job.progress.max*100):0;return `<article class="job-card"><div class="job-head"><strong>${job.kind==='caption'?'圖片辨識':job.kind==='motion'?'影片生成':'圖片生成'} · ${esc(titles[job.engine])}</strong><span class="job-state ${job.state==='error'?'error':''}">${esc((job.state==='running'&&jobPhases[job.progress?.phase])||states[job.state]||job.state)}</span></div><p class="excerpt">${esc(job.kind==='caption'?'照片與指令已交給電腦':job.request.prompt)}</p>${!terminal.has(job.state)?`<div class="progress"><span style="width:${pct}%"></span></div>`:''}${job.error?`<p class="error-message">${esc(job.error)}</p>`:''}<small>${new Date(job.created*1000).toLocaleString('zh-TW')}${job.result?.seconds?` · ${job.result.seconds} 秒`:''}${job.progress?.max&&!terminal.has(job.state)?` · ${job.progress.value}/${job.progress.max}`:''}</small><div class="job-actions">${!terminal.has(job.state)?`<button data-job-cancel="${job.id}">取消工作</button>`:`${job.state==='done'?`<button data-job-open="${job.id}">${job.kind==='caption'?'查看文字':job.kind==='motion'?'播放影片':'查看圖片'}</button>`:''}<button data-job-retry="${job.id}">再次執行</button>`}</div></article>`;}).join('');}
     const rec=jobs.find(job=>job.id===lastRec);if(rec?.state==='done'&&$('rec-result').dataset.job!==rec.id){$('rec-text').value=rec.result.text||'';$('rec-result-engine').textContent=`${titles[rec.engine]} · ${rec.result.seconds||''} 秒`;$('rec-result').hidden=false;$('rec-result').dataset.job=rec.id;}updateButtons();}
   async function refresh(){if(refreshing)return;refreshing=true;try{const [nextStatus,result]=await Promise.all([api('/api/status'),api('/api/jobs')]);status=nextStatus;online=!!status.online;jobs=result.jobs;if(!lastRec){lastRec=jobs.find(job=>job.kind==='caption')?.id||'';if(lastRec)localStorage.setItem('void-pocket-caption',lastRec);}if(!catalog&&online){catalog=await api('/api/catalog');chooseEngine(engine,false);for(const option of $('rec-engine').options)option.disabled=!catalog.recognition[option.value];}$('connection').className='connection '+(online?'online':'offline');$('connection').querySelector('span').textContent=online?(jobs.some(job=>!terminal.has(job.state))?'電腦執行中':'電腦已連線'):'ComfyUI 離線';$('device-name').textContent=status.device||'電腦上的 ComfyUI 尚未啟動';$('remote-info').textContent=status.remoteUrl||'私人網址尚未設定，請在電腦完成 Tailscale 登入及連線設定。';$('keep-awake').checked=!!status.keepAwake;renderJobs();}catch(error){online=false;$('connection').className='connection offline';$('connection').querySelector('span').textContent='電腦未連線';updateButtons();}finally{refreshing=false;}}
-  async function loadGallery(more=false){try{if(!more){offset=0;images=[];}$('gallery-more').disabled=true;const query=new URLSearchParams({offset:String(offset),search:$('gallery-search').value,favorite:favorites?'1':'0',album:$('gallery-album').value});const result=await api('/api/gallery?'+query);images.push(...result.images);offset=images.length;$('gallery-grid').innerHTML=images.map(image=>`<button class="gallery-tile" data-image="${image.id}" aria-label="查看 ${esc(image.name)}"><img loading="lazy" src="${image.thumb}" alt="${esc(image.meta.prompt?.slice(0,100)||image.name)}"><p>${image.favorite?'♥ ':''}${esc(titles[image.meta.engine]||image.meta.model||image.name)}</p></button>`).join('');$('gallery-count').textContent=`${result.total} 張圖片 · 原圖儲存在電腦`;$('gallery-empty').hidden=result.total>0;$('gallery-more').hidden=offset>=result.total;if(result.albums){const previous=$('gallery-album').value;options('gallery-album',result.albums,previous,true);$('gallery-album').options[0].text='全部相簿';$('gallery-album').hidden=!result.albums.length;}renderTrashSelection();}finally{$('gallery-more').disabled=false;}}
-  async function openImage(id){const version=++imageOpenVersion;let image=images.find(item=>item.id===id);if(!image){image=await api('/api/gallery/'+encodeURIComponent(id));if(!image){tab('gallery');toast('請在圖庫查看最新圖片');return;}}if(version!==imageOpenVersion)return;if(galleryRole){const role=galleryRole;if(role==='motion'){setMotionSource({gallery:image.id},image.url);tab('motion');}else if(role==='recognize'){await recognizeGalleryImage(image);}else await selectEditImage(role,null,image);return;}selectedImage=image;$('image-rating').value=String(image.meta.rating||0);$('image-tags').value=(image.meta.tags||[]).join(', ');$('image-albums').value=(image.meta.albums||[]).join(', ');$('image-full').removeAttribute('src');$('image-full').src=image.url;$('image-title').textContent=image.name;$('image-prompt').textContent=image.meta.prompt||'這張圖片沒有提示詞記錄';$('image-meta').textContent=[titles[image.meta.engine]||image.meta.model,`${image.meta.width} × ${image.meta.height}`,image.meta.steps?`${image.meta.steps} steps`:'',image.meta.seed!==undefined?`seed ${image.meta.seed}`:''].filter(Boolean).join(' · ');$('image-favorite').textContent=image.favorite?'♥ 已收藏':'♡ 收藏';$('image-download').href=image.url+(image.url.includes('?')?'&':'?')+'download=1';$('image-download').download=image.name;tab('image-dialog');void showVersions(image).catch(error=>toast(error.message));}
+  async function loadGallery(more=false){try{if(!more){offset=0;images=[];}$('gallery-more').disabled=true;const query=new URLSearchParams({offset:String(offset),search:$('gallery-search').value,favorite:favorites?'1':'0',album:$('gallery-album').value});const result=await api('/api/gallery?'+query);images.push(...result.images);offset=images.length;$('gallery-grid').innerHTML=images.map(image=>`<button class="gallery-tile" data-image="${image.id}" aria-label="查看 ${esc(image.name)}"><img loading="lazy" src="${image.thumb}" alt="${esc(image.meta.prompt?.slice(0,100)||image.name)}"><p>${image.shared?'主人 · ':''}${image.favorite?'♥ ':''}${esc(titles[image.meta.engine]||image.meta.model||image.name)}</p></button>`).join('');$('gallery-count').textContent=`${result.total} 張圖片 · 原圖儲存在電腦`;$('gallery-empty').hidden=result.total>0;$('gallery-more').hidden=offset>=result.total;if(result.albums){const previous=$('gallery-album').value;options('gallery-album',result.albums,previous,true);$('gallery-album').options[0].text='全部相簿';$('gallery-album').hidden=!result.albums.length;}renderTrashSelection();}finally{$('gallery-more').disabled=false;}}
+  async function openImage(id){const version=++imageOpenVersion;let image=images.find(item=>item.id===id);if(!image){image=await api('/api/gallery/'+encodeURIComponent(id));if(!image){tab('gallery');toast('請在圖庫查看最新圖片');return;}}if(version!==imageOpenVersion)return;if(galleryRole){const role=galleryRole;if(role==='motion'){setMotionSource({gallery:image.id},image.url);tab('motion');}else if(role==='recognize'){await recognizeGalleryImage(image);}else await selectEditImage(role,null,image);return;}selectedImage=image;$('image-rating').value=String(image.meta.rating||0);$('image-tags').value=(image.meta.tags||[]).join(', ');$('image-albums').value=(image.meta.albums||[]).join(', ');$('image-full').removeAttribute('src');$('image-full').src=image.url;$('image-title').textContent=image.name;$('image-prompt').textContent=image.meta.prompt||'這張圖片沒有提示詞記錄';$('image-meta').textContent=[titles[image.meta.engine]||image.meta.model,`${image.meta.width} × ${image.meta.height}`,image.meta.steps?`${image.meta.steps} steps`:'',image.meta.seed!==undefined?`seed ${image.meta.seed}`:''].filter(Boolean).join(' · ');$('image-favorite').textContent=image.favorite?'♥ 已收藏':'♡ 收藏';/* 訪客混用圖庫裡主人的圖：只能看、下載、複製 Prompt、套用參數 */for(const control of ['image-favorite','image-save-meta','image-trash','image-rating','image-tags','image-albums']){if($(control))$(control).disabled=!!image.shared;}if(image.shared)$('image-title').textContent='主人的圖 · '+image.name;$('image-download').href=image.url+(image.url.includes('?')?'&':'?')+'download=1';$('image-download').download=image.name;tab('image-dialog');void showVersions(image).catch(error=>toast(error.message));}
   async function favoriteImage(){if(!selectedImage)return;const favorite=!selectedImage.favorite;await send('/api/gallery/'+selectedImage.id,{favorite},'PATCH');selectedImage.favorite=favorite?1:0;$('image-favorite').textContent=favorite?'♥ 已收藏':'♡ 收藏';if(document.body.dataset.tab==='gallery')await loadGallery();}
   function reuseImage(){const meta=selectedImage.meta;if(!catalog?.models[meta.engine]?.length){toast('無法辨識這張圖片使用的引擎');return;}const missing=[meta.model&&!catalog.models[meta.engine].includes(meta.model)?'模型 '+meta.model:'',...(meta.loras||[]).filter(lora=>!catalog.loras.includes(lora.name)).map(lora=>'LoRA '+lora.name),meta.sampler&&!catalog.samplers.includes(meta.sampler)?'採樣器 '+meta.sampler:'',meta.scheduler&&meta.scheduler!=='Flux2Scheduler'&&!catalog.schedulers.includes(meta.scheduler)?'排程器 '+meta.scheduler:''];const multiple=['sd','qwen'].includes(meta.engine)?32:16;if([meta.width,meta.height].some(n=>n&&(n<256||n>2048||n%multiple)))missing.push('解析度');if(missing.some(Boolean)){toast('配方有無法使用的設定：'+missing.filter(Boolean).join('、'));return;}saveForm();setGenerationMode('txt2img');preferences[meta.engine]={...meta,shift:meta.mossShift||5,count:1,lora:meta.loras?.[0]?.name||'',loraStrength:meta.loras?.[0]?.strength??.8};chooseEngine(meta.engine,false);tab('generate');saveForm();toast('已套用提示詞與生成參數');}
   async function copy(text){try{await navigator.clipboard.writeText(text);}catch{const area=document.createElement('textarea');area.value=text;document.body.append(area);area.select();const ok=document.execCommand('copy');area.remove();if(!ok)throw new Error('請選取文字手動複製');}toast('已複製');}
@@ -162,6 +169,15 @@
   $('gen-klein-strength').disabled=true;
   $('generate-form').addEventListener('invalid',event=>{event.preventDefault();const field=event.target;const details=field.closest('details');if(details)details.open=true;const label=document.querySelector('label[for="'+field.id+'"]');toast((label?.textContent||'生成設定')+'：'+field.validationMessage);field.focus();},true);
   $('generate-form').addEventListener('submit',submitGeneration);$('generate-form').addEventListener('change',()=>{sizeLabel();saveForm();});
+  document.querySelectorAll('[data-clear-prompt]').forEach(button=>{
+    const field=$(button.dataset.clearPrompt);
+    button.addEventListener('click',()=>{
+      if(!field.value)return;
+      field.value='';
+      field.dispatchEvent(new Event('input',{bubbles:true}));
+      field.dispatchEvent(new Event('change',{bubbles:true}));
+    });
+  });
   $('rec-file').addEventListener('change',event=>{void uploadPhoto(event.target.files[0]);event.target.value='';});$('recognize-submit').addEventListener('click',submitRecognition);
   for(const id of ['rec-engine','rec-style','rec-detail','rec-instruction'])$(id).addEventListener('change',recSettings);
   $('copy-caption').addEventListener('click',()=>copy($('rec-text').value).catch(error=>toast(error.message)));
@@ -187,6 +203,7 @@
   $('keep-awake').addEventListener('change',async()=>{try{await send('/api/settings',{keepAwake:$('keep-awake').checked},'PATCH');toast('已更新電腦連線設定');}catch(error){toast(error.message);}});
   $('copy-url').addEventListener('click',()=>{if(!status.remoteUrl){toast('請先在電腦完成 Tailscale 設定');return;}copy(status.remoteUrl).catch(error=>toast(error.message));});
   $('image-favorite').addEventListener('click',()=>favoriteImage().catch(error=>toast(error.message)));$('image-reuse').addEventListener('click',reuseImage);
+  $('image-copy-prompt').addEventListener('click',async()=>{const text=selectedImage?.meta?.prompt||'';if(!text){toast('這張圖片沒有提示詞記錄');return;}try{await navigator.clipboard.writeText(text);toast('已複製 Prompt');}catch{toast('無法自動複製，請長按提示詞選取');}});
   $('image-share').addEventListener('click',async()=>{try{const response=await fetch(selectedImage.url);const file=new File([await response.blob()],selectedImage.name,{type:response.headers.get('Content-Type')||'image/png'});if(navigator.canShare?.({files:[file]}))await navigator.share({files:[file]});else toast('此瀏覽器請先下載圖片，再從相簿分享');}catch(error){if(error.name!=='AbortError')toast('分享失敗，請改用下載');}});
   const selectedForTrash = new Map();
   let selectingTrash = false, trashBusy = false;
@@ -297,7 +314,16 @@
       for(const item of items){
         const label=document.createElement('label'), check=document.createElement('input');
         check.type='checkbox';check.value=item.id;
-        label.append(check,' '+item.name+' · '+new Date(item.trashedAt*1000).toLocaleDateString());
+        const thumbnail=document.createElement('img');
+        thumbnail.alt='';thumbnail.loading='lazy';thumbnail.width=56;thumbnail.height=56;
+        thumbnail.style.cssText='object-fit:contain;flex:none;border-radius:5px';
+        thumbnail.onerror=()=>{thumbnail.style.visibility='hidden';};
+        thumbnail.src='/api/trash/thumbnail/'+encodeURIComponent(item.id);
+        const name=document.createElement('span');
+        const date=document.createElement('small');
+        name.textContent=name.title=item.name;
+        date.textContent=new Date(item.trashedAt*1000).toLocaleDateString();
+        label.append(check,thumbnail,name,date);
         results.append(label);
       }
       $('recycle-status').textContent=items.length?'共 '+items.length+' 件作品':'沒有符合的作品';
@@ -378,14 +404,14 @@
     $('gen-reference-settings').hidden=!chain;
     $('gen-mask-panel').hidden=!chain||!editUpload||!catalog?.editMask;
     $('gen-klein-settings').hidden=!edit||chain||engine!=='klein';
-    $('gen-sd-edit-settings').hidden=!edit||engine!=='sd';
+    $('gen-sd-edit-settings').hidden=!edit||!['sd','zimage'].includes(engine);
     $('gen-klein-strength').disabled=$('gen-klein-settings').hidden;
     $('gen-denoise').disabled=$('gen-sd-edit-settings').hidden;
-    $('gen-count').disabled=chain;
-    if(chain)$('gen-count').value='1';
-    $('gen-prompt').required=!edit||chain||engine==='sd';
-    $('gen-prompt').placeholder=chain?'用中文描述要改的地方，以及要保留的細節':edit&&engine==='klein'?'可留空，套用預設寫實轉換指令':'描述主體、場景、光線與你想要的風格…';
-    $('gen-model-status').textContent=!edit?'':chain?(catalog&&!catalog.kleinContinuous?'缺少 Klein 權重或連續改圖節點。':'連續改圖可選已安裝的 Klein 9B 權重。'):engine==='sd'?(catalog&&!catalog.sdEdit?'找不到相容的 SD / SDXL checkpoint，或缺少圖生圖節點。':'可切換 SD / SDXL checkpoint；改圖強度越高，結果越不同。'):(catalog&&!catalog.kleinEdit?'缺少 Klein 權重、寫實 LoRA 或圖生圖節點。':'Klein 寫實轉換使用已安裝的寫實 LoRA。');
+    $('gen-count').disabled=chain||engine==='zimage';
+    if(chain||engine==='zimage')$('gen-count').value='1';
+    $('gen-prompt').required=!edit||chain||!['klein','qwen'].includes(engine);
+    $('gen-prompt').placeholder=chain?'用中文描述要改的地方，以及要保留的細節':edit&&engine==='qwen'?'可留空套用寫實轉換，或用中文寫要改的地方':edit&&engine==='klein'?'可留空，套用預設寫實轉換指令':'描述主體、場景、光線與你想要的風格…';
+    $('gen-model-status').textContent=!edit?'':engine==='zimage'?'Z-Image-Turbo':engine==='qwen'?(catalog&&!catalog.qwenEdit?'缺少 Qwen-Image 2.1 權重或參考圖節點。':'Qwen 依指令改圖，輸出比例跟原圖一致。'):chain?(catalog&&!catalog.kleinContinuous?'缺少 Klein 權重或連續改圖節點。':'連續改圖可選已安裝的 Klein 9B 權重。'):engine==='sd'?(catalog&&!catalog.sdEdit?'找不到相容的 SD / SDXL checkpoint，或缺少圖生圖節點。':'可切換 SD / SDXL checkpoint；改圖強度越高，結果越不同。'):(catalog&&!catalog.kleinEdit?'缺少 Klein 權重、寫實 LoRA 或圖生圖節點。':'Klein 寫實轉換使用已安裝的寫實 LoRA。');
     updateButtons();
   }
   async function selectEditImage(role, file, image) {
@@ -545,10 +571,51 @@
     }
   }
   let rngBank, rngLoading=false, rngFields=[], rngPrefix='', captionFields=[];
+  let rngAdvanced=false, rngBeforeRealistic='';
   const rngDrafts={};
+  const rngGroups={
+    '角色':['主體與角色','臉部特徵','角色細節','主題','JOB'],
+    '服裝':['服裝'],
+    '姿勢與構圖':['姿勢／構圖','構圖'],
+    '場景與光線':['環境與光線','場景','光線','情緒'],
+    '畫風與品質':['風格參考','風格代號','品質標籤','品質'],
+  };
+  function setRngUndo(prompt=''){
+    rngBeforeRealistic=prompt;
+    $('rng-undo-realistic').disabled=!prompt;
+  }
   function rngPreview(){
+    setRngUndo();
     $('rng-preview').value=[rngPrefix,...captionFields.filter(field=>field.enabled).map(field=>field.value),...rngFields.map(field=>field.select.value)].filter(Boolean).join(', ');
   }
+  function layoutRngFields(){
+    const container=$('rng-fields');
+    if(!rngAdvanced){
+      container.replaceChildren(...rngFields.map(field=>field.wrapper));
+      return;
+    }
+    const groups=new Map();
+    for(const {row,wrapper} of rngFields){
+      const title=Object.keys(rngGroups).find(group=>rngGroups[group].includes(row.label))||row.label;
+      if(!groups.has(title)){
+        const details=document.createElement('details'), summary=document.createElement('summary');
+        details.className='advanced';
+        summary.textContent=title;
+        details.append(summary);
+        groups.set(title,details);
+      }
+      groups.get(title).append(wrapper);
+    }
+    container.replaceChildren(...groups.values());
+  }
+  function setRngEditor(advanced){
+    rngAdvanced=advanced;
+    $('rng-quick').setAttribute('aria-pressed',String(!advanced));
+    $('rng-advanced').setAttribute('aria-pressed',String(advanced));
+    layoutRngFields();
+  }
+  $('rng-quick').onclick=()=>setRngEditor(false);
+  $('rng-advanced').onclick=()=>setRngEditor(true);
   function renderCaptionFields(){
     const fields=captionFields.map(field=>{
       const row=document.createElement('div'), label=document.createElement('label'), check=document.createElement('input'), input=document.createElement('input');
@@ -587,8 +654,7 @@
       wrapper.append(label,lockLabel);
       return {row,select,wrapper};
     });
-    $('rng-fields').replaceChildren(...rngFields.map(field=>field.wrapper));
-    rngPreview();
+    layoutRngFields();
   }
   async function loadRng(){
     if(rngBank||rngLoading)return;
@@ -598,7 +664,7 @@
     catch(error){$('rng-state').textContent=error.message;}
     finally{rngLoading=false;}
   }
-  $('rng-mode').onchange=renderRng;
+  $('rng-mode').onchange=()=>{renderRng();rngPreview();};
   $('rng-roll').onclick=()=>{
     if(!rngBank){void loadRng();return;}
     for(const {row,select} of rngFields){
@@ -613,11 +679,56 @@
     const words=$('rng-preview').value.trim();
     if(!words){toast('先抽詞或填入提示詞');return;}
     $('gen-prompt').value=[append?$('gen-prompt').value.trim():'',words].filter(Boolean).join(', ');
+    showRngSendOptions(false);
     saveForm();
     tab('generate');
   }
   $('rng-append').onclick=()=>applyRng(true);
   $('rng-replace').onclick=()=>applyRng(false);
+  function showRngSendOptions(open){
+    $('rng-send-options').hidden=!open;
+    $('rng-send').setAttribute('aria-expanded',String(open));
+  }
+  $('rng-send').onclick=()=>showRngSendOptions($('rng-send-options').hidden);
+  function removeAnimatedStyle(prompt){
+    const styleTag=/^(?:(?:high[- ]detail|vivid|professional|soft|flat|clean|delicate|crisp|classic)\s+)*(?:(?:2d\s+)?(?:anime|manga|cartoon|animation|animated)(?:[- ](?:style|art|illustration|aesthetic|quality|rendering))*|(?:cel|cell)[- ]shad(?:ed|ing)|line\s?art|linework|(?:日系)?(?:動漫|動畫|漫畫)(?:風格|風|插畫|渲染)?|賽璐璐(?:上色|陰影)?|線稿)$/iu;
+    const styleModifier=/\b(?:anime|manga|cartoon|animation)(?:[- ]style)?\s+|(?:日系)?(?:動漫|動畫|漫畫)(?:風格|風)/giu;
+    const tags=[];
+    let start=0, depth=0;
+    for(let i=0;i<prompt.length;i++){
+      const char=prompt[i];
+      if('([<'.includes(char))depth++;
+      if(')]>'.includes(char))depth=Math.max(0,depth-1);
+      if(!depth&&/[,，\r\n]/u.test(char)){
+        tags.push(prompt.slice(start,i));
+        start=i+1;
+      }
+    }
+    tags.push(prompt.slice(start));
+    let changed=false;
+    const cleaned=tags.map(tag=>{
+      const text=tag.trim();
+      const unweighted=text.replace(/^[(\[]+|[)\]]+$/g,'').replace(/:\s*\d+(?:\.\d+)?$/,'').trim();
+      const result=styleTag.test(unweighted)?'':text.startsWith('<')?text:text.replace(styleModifier,'').trim();
+      changed ||= result!==text;
+      return result;
+    });
+    return changed?cleaned.filter(Boolean).join(', '):prompt;
+  }
+  $('rng-realistic').onclick=()=>{
+    const preview=$('rng-preview');
+    if(!preview.value.trim()){toast('先抽詞或填入提示詞');return;}
+    const cleaned=removeAnimatedStyle(preview.value);
+    if(cleaned===preview.value){toast('未找到動漫風格詞');return;}
+    setRngUndo(preview.value);
+    preview.value=cleaned;
+    toast('已清理提示詞預覽');
+  };
+  $('rng-preview').addEventListener('input',()=>setRngUndo());
+  $('rng-undo-realistic').onclick=()=>{
+    $('rng-preview').value=rngBeforeRealistic;
+    setRngUndo();
+  };
   $('caption-rng').onclick=()=>{
     const labels={subject:'主體',clothing:'服裝',composition:'構圖',lighting:'光線',setting:'環境',colors:'色彩'};
     const raw=$('rec-text').value.trim();
@@ -634,7 +745,157 @@
   $('rng-load-recipe').onclick=()=>{
     const recipe=load('void-pocket-rng-recipe',null);if(!recipe){toast('尚未儲存配方');return;}
     $('rng-mode').value=recipe.mode;rngPrefix=recipe.rngPrefix;captionFields=recipe.captionFields;Object.assign(rngDrafts,recipe.drafts);
-    renderRng();renderCaptionFields();$('rng-preview').value=recipe.prompt;
+    renderRng();renderCaptionFields();setRngUndo();$('rng-preview').value=recipe.prompt;
+  };
+
+  let rpState, rpBusy=false;
+  function latestRoleplayPrompt(){
+    return rpState?.history.findLast(entry=>entry.role==='assistant'&&(entry.prompt||Object.hasOwn(entry,'rawPrompt')))?.prompt;
+  }
+  function roleplayBusy(busy){
+    rpBusy=busy;
+    $('rp-submit').disabled=busy||!rpState;
+    $('rp-generate').disabled=busy||!latestRoleplayPrompt();
+    $('rp-refresh').disabled=busy;
+    $('rp-slot').disabled=busy||!rpState?.slots.length;
+  }
+  $('rp-generate').onclick=async()=>{
+    const prompt=latestRoleplayPrompt();
+    if(rpBusy||!prompt)return;
+    roleplayBusy(true);
+    try{
+      await send('/api/jobs',{kind:'generate',...formData('txt2img'),prompt,count:1});
+      toast('已提交生圖，可在「任務」查看進度');
+      void refresh();
+    }catch(error){toast(error.message);}
+    finally{roleplayBusy(false);}
+  };
+  function roleplayEntry(role,content,prompt){
+    const article=document.createElement('article');
+    article.className='result rp-entry';
+    const speaker=document.createElement('strong');
+    speaker.textContent=role==='user'?'你':'角色';
+    const message=document.createElement('p');
+    message.textContent=content;
+    article.append(speaker,message);
+    if(prompt){
+      const editor=document.createElement('textarea');
+      editor.rows=3;
+      editor.value=prompt;
+      editor.setAttribute('aria-label','此刻生圖 Prompt');
+      const actions=document.createElement('div');
+      actions.className='two';
+      const clear=document.createElement('button');
+      clear.type='button';
+      clear.textContent='清除';
+      clear.setAttribute('aria-label','清除此刻生圖 Prompt');
+      clear.onclick=()=>{editor.value='';};
+      for(const [label,append] of [['追加到生成',true],['取代生成草稿',false]]){
+        const button=document.createElement('button');
+        button.type='button';
+        button.textContent=label;
+        button.onclick=()=>{
+          const text=editor.value.trim();
+          if(!text){toast('請先填入提示詞');return;}
+          $('gen-prompt').value=[append?$('gen-prompt').value.trim():'',text].filter(Boolean).join(', ');
+          saveForm();
+          tab('generate');
+        };
+        actions.append(button);
+      }
+      const tools=document.createElement('div');
+      tools.className='prompt-tools';
+      tools.append(clear);
+      article.append(tools,editor,actions);
+    }
+    $('rp-history').append(article);
+    return message;
+  }
+  function renderRoleplay(state){
+    rpState=state;
+    const slots=$('rp-slot');
+    slots.replaceChildren(new Option('未命名劇情',''),...state.slots.map(name=>new Option(name,name)));
+    slots.options[0].disabled=true;
+    slots.value=state.slot;
+    $('rp-character').textContent=state.character||'送出第一句即可開始預設劇情。';
+    $('rp-history').replaceChildren();
+    for(const entry of state.history)roleplayEntry(entry.role,entry.content,entry.prompt);
+    // 圖片傳出後的劇情分支：點了讓角色往那個方向演（和 Telegram 的 🔀 按鈕相同）。
+    const last=state.history.at(-1);
+    if(last?.role==='assistant'&&last.options?.length){
+      const box=document.createElement('div');
+      box.className='rp-options';
+      box.setAttribute('aria-label','劇情分支');
+      for(const option of last.options){
+        const button=document.createElement('button');
+        button.type='button';
+        button.textContent='🔀 '+option;
+        button.onclick=()=>{
+          if(rpBusy)return;
+          $('rp-input').value='（劇情走向：'+option+'）';
+          $('rp-form').requestSubmit();
+        };
+        box.append(button);
+      }
+      $('rp-history').append(box);
+    }
+  }
+  async function refreshRoleplay(){
+    if(rpBusy)return;
+    roleplayBusy(true);
+    try{renderRoleplay(await api('/api/roleplay'));$('rp-status').textContent='';}
+    catch(error){$('rp-status').textContent=error.message;}
+    finally{roleplayBusy(false);}
+  }
+  $('rp-refresh').onclick=refreshRoleplay;
+  $('rp-slot').onchange=async()=>{
+    roleplayBusy(true);
+    try{
+      renderRoleplay(await send('/api/roleplay',{action:'load',name:$('rp-slot').value,revision:rpState.revision}));
+      $('rp-status').textContent='';
+    }catch(error){
+      $('rp-slot').value=rpState.slot;
+      $('rp-status').textContent=error.message;
+    }finally{roleplayBusy(false);}
+  };
+  $('rp-form').onsubmit=async event=>{
+    event.preventDefault();
+    const input=$('rp-input'),text=input.value.trim();
+    if(rpBusy||!rpState||!text)return;
+    roleplayBusy(true);
+    $('rp-status').textContent='角色正在回應…';
+    $('rp-history').querySelector('.rp-options')?.remove();
+    roleplayEntry('user',text);
+    const reply=roleplayEntry('assistant','');
+    try{
+      const response=await fetch('/api/roleplay',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'turn',text,revision:rpState.revision})});
+      if(!response.ok){
+        if(response.status===409)renderRoleplay(await api('/api/roleplay'));
+        throw new Error((await response.json()).error||'劇情連線失敗');
+      }
+      const reader=response.body.getReader(),decoder=new TextDecoder();
+      let pending='',completed=false;
+      while(true){
+        const {value,done}=await reader.read();
+        if(done)break;
+        const lines=(pending+decoder.decode(value,{stream:true})).split('\n');
+        pending=lines.pop();
+        for(const line of lines){
+          if(!line)continue;
+          const data=JSON.parse(line);
+          if(data.error)throw new Error(data.error);
+          if(data.reply)reply.textContent=data.reply;
+          if(data.state){renderRoleplay(data.state);completed=true;}
+        }
+      }
+      if(!completed)throw new Error('劇情連線中斷，請先同步進度。');
+      if(input.value.trim()===text)input.value='';
+      $('rp-status').textContent='';
+    }catch(error){
+      renderRoleplay(rpState);
+      $('rp-status').textContent=error.message;
+    }finally{roleplayBusy(false);}
   };
 
   $('resource-profile').onchange=async()=>{
