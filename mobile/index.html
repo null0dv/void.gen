@@ -33,7 +33,7 @@
       <div id="gen-sd-edit-settings" hidden><label for="gen-denoise">改圖強度</label><input id="gen-denoise" type="number" min="0.01" max="1" step="0.01" value="0.55"></div>
     </div>
     <label for="gen-model">模型</label><select id="gen-model" required><option value="">正在讀取模型…</option></select><p id="gen-model-status" role="status"></p>
-    <label for="gen-prompt">想生成什麼？</label><div class="prompt-tools"><button type="button" id="gen-copy" aria-label="複製提示詞">複製</button><button type="button" id="gen-real" aria-label="改寫成寫實提示詞並切到寫實引擎">一鍵寫實</button><button type="button" id="gen-real-undo" hidden aria-label="還原寫實改寫前的提示詞">還原</button><button type="button" data-clear-prompt="gen-prompt" aria-label="清除生成提示詞">清除</button></div><textarea id="gen-prompt" rows="5" maxlength="20000" required placeholder="描述主體、場景、光線與你想要的風格…"></textarea><label id="gen-adapt-row" style="display:block;margin:6px 0;font-size:13px;opacity:.85"><input type="checkbox" id="gen-adapt" checked> 送出前把 tag 轉成自然語句（Qwen／Moody／Z-Image／Klein；用本機 Ollama，約多 10～20 秒，SDXL 不轉）</label>
+    <label for="gen-prompt">想生成什麼？</label><div class="prompt-tools"><button type="button" id="gen-paste" aria-label="貼上到提示詞">貼上</button><button type="button" id="gen-copy" aria-label="複製提示詞">複製</button><button type="button" id="gen-real" aria-label="改寫成寫實提示詞並切到寫實引擎">一鍵寫實</button><button type="button" id="gen-real-undo" hidden aria-label="還原寫實改寫前的提示詞">還原</button><button type="button" data-clear-prompt="gen-prompt" aria-label="清除生成提示詞">清除</button></div><textarea id="gen-prompt" rows="5" maxlength="20000" required placeholder="描述主體、場景、光線與你想要的風格…"></textarea><label id="gen-adapt-row" style="display:block;margin:6px 0;font-size:13px;opacity:.85"><input type="checkbox" id="gen-adapt" checked> 送出前把 tag 轉成自然語句（Qwen／Moody／Z-Image／Klein；用本機 Ollama，約多 10～20 秒，SDXL 不轉）</label>
     <div class="label-row"><label>畫面比例</label><span id="size-label">1024 × 1024</span></div>
     <div class="ratios"><button type="button" data-ratio="square" class="selected"><span class="ratio square"></span>方形</button><button type="button" data-ratio="portrait"><span class="ratio portrait"></span>直式</button><button type="button" data-ratio="landscape"><span class="ratio landscape"></span>橫式</button></div>
     <div class="inline"><label for="gen-count">生成張數</label><select id="gen-count"><option value="1">1 張</option><option value="2">2 張 · 依序執行</option><option value="4">4 張 · 依序執行</option></select></div>
@@ -160,5 +160,5 @@
 
 
 
-<div id="toast" role="status" hidden></div><script src="/lexicon-store.js?v=32" defer></script><script src="/prompt-formatter.js?v=32" defer></script><script src="/p-format-core.js?v=32" defer></script><script src="/app.js?v=32" defer></script>
+<div id="toast" role="status" hidden></div><script src="/lexicon-store.js?v=33" defer></script><script src="/prompt-formatter.js?v=33" defer></script><script src="/p-format-core.js?v=33" defer></script><script src="/app.js?v=33" defer></script>
 </body></html>
