@@ -16,7 +16,7 @@ function buildMotionGraph(p){
   const common={noise_seed:p.seed,steps:4,cfg:1,sampler_name:'euler',scheduler:'simple',positive:['6',0],negative:['6',1]};
   add('30','KSamplerAdvanced',{...common,model:['12',0],add_noise:'enable',latent_image:['6',2],start_at_step:0,end_at_step:2,return_with_leftover_noise:'enable'});
   add('31','KSamplerAdvanced',{...common,model:['22',0],add_noise:'disable',latent_image:['30',0],start_at_step:2,end_at_step:4,return_with_leftover_noise:'disable'});
-  add('32','VAEDecodeTiled',{samples:['31',0],vae:['4',0],tile_size:256,overlap:64,temporal_size:16,temporal_overlap:4});
+  add('32','VAEDecodeTiled',{samples:['31',0],vae:['4',0],tile_size:256,overlap:64,temporal_size:4096,temporal_overlap:8});
   add('33','CreateVideo',{images:['32',0],fps:p.fps});
   add('34','SaveVideo',{video:['33',0],filename_prefix:'VOID-Motion/wan22',format:'mp4',codec:'h264'});
   return g;

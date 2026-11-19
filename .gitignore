@@ -76,3 +76,9 @@
 !js/void-motion-gallery.js
 !docs/install-v4.md
 !docs/models-v4.md
+!docs/colab.md
+!VOID-Colab.ipynb
+!void_colab.py
+!colab_cli.py
+!colab_vm.py
+!/z-image-turbo-api.json

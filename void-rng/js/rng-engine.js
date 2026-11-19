@@ -157,6 +157,26 @@ let styleHistory = [];
 
 // ── Session 管理 ────────────────────────────────────────────────────
 const SESSIONS_KEY = 'void-sessions';
+function exportRoleplayDatabase() {
+  const keys = [SESSIONS_KEY, 'void-char-banks', 'void-char-templates', 'void-space-banks',
+    'void-char-lexicon-journal-v1', 'void-char-pref-samples'];
+  const data = {};
+  try {
+    for (const key of keys) {
+      const raw = localStorage.getItem(key);
+      if (raw !== null) data[key] = JSON.parse(raw);
+    }
+  } catch {
+    toast('無法讀取個人提示詞，請檢查瀏覽器儲存資料。');
+    return;
+  }
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], {type:'application/json'}));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'rng-backup.json';
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 const ACTIVE_SESSION_KEY = 'void-session-active';
 let sessions = [];
 let activeSessionId = null;

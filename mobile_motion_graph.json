@@ -196,8 +196,8 @@
       ],
       "tile_size": 256,
       "overlap": 64,
-      "temporal_size": 16,
-      "temporal_overlap": 4
+      "temporal_size": 4096,
+      "temporal_overlap": 8
     }
   },
   "33": {

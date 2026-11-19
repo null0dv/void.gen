@@ -3,9 +3,51 @@ window.VoidEngines = (() => {
   const $ = id => document.getElementById(id);
   const key = 'void-engine';
   let engine = 'sd', info = null, requestId = 0;
-  const settingsIds = ['model-select', 'sampler-select', 'scheduler-select', 'steps-num', 'cfg-num', 'size-w', 'size-h', 'engine-clip', 'engine-vae', 'moss-shift', 'klein-strength'];
+  const settingsIds = ['model-select', 'sampler-select', 'scheduler-select', 'steps-num', 'cfg-num', 'size-w', 'size-h', 'engine-clip', 'engine-vae', 'moss-shift', 'klein-strength', 'denoise-slider'];
+  // Recommended per-engine settings and prompt conversion come from the Pocket server (engine-profiles.json), shared with the phone.
+  const POCKET = 'http://127.0.0.1:8090';
+  let profiles = null;
+  const profileFields = ['size-w', 'size-h', 'steps-num', 'cfg-num', 'sampler-select', 'scheduler-select'];
+  const profilesReady = (async () => {
+    try {
+      const response = await fetch(POCKET + '/api/profiles', {signal: AbortSignal.timeout(2500)});
+      if (response.ok) profiles = await response.json();
+    } catch { /* Pocket offline: keep the built-in defaults. */ }
+    try {
+      if (profiles?.engines && localStorage.getItem('void-engine-profile-v') !== String(profiles.version)) {
+        // New recommended sizes/steps replace the values remembered from the old defaults (prompts and models are kept).
+        for (const name of Object.keys(profiles.engines)) {
+          if (name === 'sd') continue;
+          const saved = JSON.parse(localStorage.getItem('void-engine-' + name) || 'null');
+          if (saved) { for (const field of profileFields) delete saved[field]; localStorage.setItem('void-engine-' + name, JSON.stringify(saved)); }
+        }
+        localStorage.setItem('void-engine-profile-v', String(profiles.version));
+      }
+    } catch { /* Storage unavailable. */ }
+    return profiles;
+  })();
+  // The negative prompt only matters when CFG > 1 (Qwen, Klein and Z-Image run at CFG 1), so hide it there.
+  document.head.appendChild(Object.assign(document.createElement('style'), {textContent: 'body[data-negative-ineffective="1"] #te-neg, body[data-negative-ineffective="1"] #neg-token-bar-wrap { display: none; }'}));
+  const syncNegative = () => document.body.setAttribute('data-negative-ineffective', ['zimage', 'klein', 'qwen'].includes(engine) && !(Number($('cfg-num').value) > 1) ? '1' : '0');
+  $('cfg-slider')?.addEventListener('input', () => setTimeout(syncNegative)); // the slider copies its value into cfg-num after this event
+  // Tag-style prompt -> natural language (local Ollama through Pocket), for engines whose text encoder is a language model.
+  async function adaptTask(task) {
+    if (!$('engine-adapt')?.checked || currentMode !== 'txt2img' || !task?.prompt?.trim()) return task;
+    await profilesReady;
+    if (profiles?.engines?.[engine]?.style !== 'natural') return task;
+    try {
+      setStatus('正在把提示詞轉成自然語句…');
+      const response = await fetch(POCKET + '/api/prompt-adapt', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({prompt: task.prompt, engine}), signal: AbortSignal.timeout(100000)});
+      const result = await response.json();
+      if (result.adapted) { task.promptOriginal = task.prompt; task.prompt = result.prompt; }
+    } catch { /* Fall back to the original prompt. */ }
+    return task;
+  }
+  try { const adapt = $('engine-adapt'); if (adapt) { adapt.checked = localStorage.getItem('void-engine-adapt') !== '0'; adapt.addEventListener('change', () => { try { localStorage.setItem('void-engine-adapt', adapt.checked ? '1' : '0'); } catch { /* ignore */ } }); } } catch { /* ignore */ }
   const kleinLora = 'klein9b-anything-to-real.safetensors';
   const isActive = () => engine !== 'sd';
+  let zImageGraph;
+  const isZImage = () => engine === 'zimage';
   const isMoody = () => engine === 'moody';
   const moodyModel = 'moodyMossMixFreeDownload_v4125STEPSCFG3_fp8.safetensors';
   const moodyClip = 'qwen3.5_9b_w4a8_gptq.safetensors';
@@ -17,9 +59,11 @@ window.VoidEngines = (() => {
   const desireClip = 'qwen3vl_4b_fp8_scaled.safetensors';
   const desireVae = 'qwen_image_vae.safetensors';
   const isKleinEdit = () => isKlein() && currentMode === 'img2img';
-  const supportsImageEdit = () => !isActive() || isKlein();
-  const label = () => isMoody() ? 'Moody Moss Mix' : isDesireX() ? 'Krea 2 · DesireX' : isKlein() ? 'Klein 9B' : isMoss() ? 'MOSS' : 'Qwen';
-  const requiredNodes = () => isMoody()
+  const supportsImageEdit = () => !isActive() || isKlein() || isZImage();
+  const label = () => isZImage() ? 'Z-Image-Turbo' : isMoody() ? 'Moody Moss Mix' : isDesireX() ? 'Krea 2 · DesireX' : isKlein() ? 'Klein 9B' : isMoss() ? 'MOSS' : 'Qwen';
+  const requiredNodes = () => isZImage()
+    ? [...Object.values(zImageGraph || {}).map(node => node.class_type), ...(currentMode === 'img2img' ? ['LoadImage', 'ImageScale', 'VAEEncode'] : [])]
+    : isMoody()
     ? ['UNETLoader', 'CLIPLoader', 'VAELoader', 'CLIPTextEncode', 'EmptyFlux2LatentImage', 'KSampler', 'VAEDecode', 'SaveImage']
     : isKlein()
     ? ['UnetLoaderGGUF', 'CLIPLoader', 'VAELoader', 'CLIPTextEncode', ...(isKleinEdit() ? ['LoraLoaderModelOnly', 'LoadImage', 'ImageScaleToTotalPixels', 'VAEEncode', 'ReferenceLatent'] : []), 'EmptyFlux2LatentImage', 'RandomNoise', 'CFGGuider', 'KSamplerSelect', 'Flux2Scheduler', 'SamplerCustomAdvanced', 'VAEDecode', 'SaveImage']
@@ -41,6 +85,7 @@ window.VoidEngines = (() => {
   }
   function apply(settings) {
     for (const [id, value] of Object.entries(settings)) if ($(id)) $(id).value = value;
+    if (settings['denoise-slider'] !== undefined) $('denoise-val').textContent = Number($('denoise-slider').value).toFixed(2);
     for (const name of ['steps', 'cfg']) { syncParam(name, $(name + '-num').value); $(name + '-slider').value = $(name + '-num').value; }
     currentW = Number($('size-w').value); currentH = Number($('size-h').value);
     setSize(currentW, currentH, null);
@@ -61,6 +106,12 @@ window.VoidEngines = (() => {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       if (!isActive() || version !== requestId) return;
+      if (isZImage() && !zImageGraph) {
+        const template = await fetch('z-image-turbo-api.json');
+        if (!template.ok) throw new Error(`無法載入 Z-Image-Turbo 工作流（HTTP ${template.status}）`);
+        zImageGraph = await template.json();
+        if (version !== requestId || !isZImage()) return;
+      }
       info = data;
       const saved = readSettings(engine);
       if (isKlein()) {
@@ -71,6 +122,15 @@ window.VoidEngines = (() => {
         fill('model-select', (data.MOSSOfficialDiffusionLoader?.input.required.model_name[0] || []).filter(n => /moss-image-(base|sft)/i.test(n)), saved['model-select'] || 'moss-image-sft-bf16.safetensors');
         fill('engine-clip', (data.MOSSOfficialTextEncoderLoader?.input.required.model_name[0] || []).filter(n => /moss-image-qwen35/i.test(n)), saved['engine-clip']);
         fill('engine-vae', (data.MOSSOfficialVAELoader?.input.required.model_name[0] || []).filter(n => /moss-image-vae/i.test(n)), saved['engine-vae']);
+      } else if (isZImage()) {
+        for (const [id, loader, field, key] of [
+          ['model-select', 'UNETLoader', 'unet_name', '1'],
+          ['engine-clip', 'CLIPLoader', 'clip_name', '8'],
+          ['engine-vae', 'VAELoader', 'vae_name', '9']
+        ]) {
+          const name = zImageGraph[key].inputs[field];
+          fill(id, (data[loader]?.input.required[field][0] || []).filter(value => value === name), name);
+        }
       } else if (isMoody()) {
         fill('model-select', (data.UNETLoader?.input.required.unet_name[0] || []).filter(n => n === moodyModel), saved['model-select']);
         fill('engine-clip', (data.CLIPLoader?.input.required.clip_name[0] || []).filter(n => n === moodyClip), saved['engine-clip']);
@@ -98,12 +158,19 @@ window.VoidEngines = (() => {
     $('engine-status').textContent = missing.length ? `缺少：${missing.join('、')}。安裝後重啟 ComfyUI，再按 CHECK。` : isMoss()
         ? 'MOSS 已就緒 · 預設 512×512、8 步、CFG 3、batch 1。文字編碼使用 CPU，記憶體需求較高。'
         : isKlein() ? (isKleinEdit() ? 'Klein 9B 圖生圖已就緒。上傳來源圖片後可套用寫實 LoRA。' : 'Klein 9B 文生圖已就緒。')
+        : isZImage() ? 'Z-Image-Turbo 已就緒 · 單張 · 8 步'
         : isMoody() ? 'Moody Moss Mix V4.1 已就緒 · 1024×1024、25 步、CFG 3。'
         : isDesireX() ? 'DesireX X3 已就緒 · TXT→IMG。首次載入較久。'
         : 'Qwen 已就緒 · 建議 1024×1024、25 步、CFG 1、batch 1。首次載入較久。';
   }
   function missingComponents() {
     const missing = requiredNodes().filter(n => !info?.[n]);
+    if (isZImage()) {
+      if (!info || !zImageGraph) missing.push('Z-Image-Turbo workflow');
+      if (!info?.CLIPLoader?.input.required.type[0].includes('lumina2')) missing.push('lumina2');
+      if (!info?.KSampler?.input.required.sampler_name[0].includes('res_multistep')) missing.push('res_multistep');
+      if (!info?.KSampler?.input.required.scheduler[0].includes('simple')) missing.push('simple');
+    }
     if (isMoody() && info?.CLIPLoader && !info.CLIPLoader.input.required.type[0].includes('moss_image')) missing.push('CLIPLoader 的 moss_image 模式');
     if (isDesireX() && info?.CLIPLoader && !info.CLIPLoader.input.required.type[0].includes('krea2')) missing.push('CLIPLoader 的 krea2 模式');
     if (isKleinEdit() && !info?.LoraLoaderModelOnly?.input.required.lora_name[0].includes(kleinLora)) missing.push('寫實 LoRA');
@@ -111,7 +178,7 @@ window.VoidEngines = (() => {
     return missing;
   }
   async function validate() {
-    if (!isKlein() && currentMode !== 'txt2img') throw new Error(`${label()} 支援 TXT→IMG，請切回文字生圖。`);
+    if (!supportsImageEdit() && currentMode !== 'txt2img') throw new Error(`${label()} 支援 TXT→IMG，請切回文字生圖。`);
     const missing = missingComponents();
     if (missing.length) throw new Error(`${label()} 缺少：` + missing.join('、'));
     for (const id of ['size-w', 'size-h']) {
@@ -130,33 +197,44 @@ window.VoidEngines = (() => {
     remember();
   }
   async function switchEngine(next, initial = false) {
+    await profilesReady;
     if (isGenerating || window.VoidRecognition?.isBusy()) { $('engine-select').value = engine; setStatus('請等待目前工作完成再切換引擎', 'warn'); return; }
     if (!initial) remember();
-    engine = ['qwen','moss','klein','desirex','moody'].includes(next) ? next : 'sd';
+    engine = ['qwen','klein','desirex','moody','zimage'].includes(next) ? next : 'sd';
+    document.body.setAttribute?.('data-generation-engine', engine);
     localStorage.setItem(key, engine);
     $('engine-select').value = engine;
     $('engine-components').hidden = !isActive();
     $('moss-settings').hidden = !isMoss();
     $('klein-settings').hidden = !isKlein();
     $('denoise-slider').closest('.param-row').hidden = isKlein();
-    $('image-batch-settings').hidden = isKlein();
+    $('image-batch-settings').hidden = isKlein() || isZImage();
+    $('steps-slider').closest('.ss').hidden = isZImage();
+    $('zimage-size-presets').hidden = !isZImage();
+    $('standard-size-presets').hidden = isZImage();
     $('engine-vae-label').textContent = `${label().toUpperCase()} VAE`;
     $('engine-clip').setAttribute('aria-label', `${label()} 文字編碼器`);
     $('engine-vae').setAttribute('aria-label', `${label()} VAE`);
-    $('sampler-select').closest('.ss').hidden = isMoss() || isKlein();
+    $('sampler-select').closest('.ss').hidden = isMoss() || isKlein() || isZImage();
     for (const id of ['refiner-select', 'vae-select', 'lora-sel-0', 'hires-enable', 'upscale-enable']) {
       const section = $(id)?.closest('.ss');
       if (section) section.hidden = isActive();
     }
     if (!supportsImageEdit() && currentMode === 'img2img') setMode('txt2img');
-    const defaults = isMoss() ? {'steps-num':8, 'cfg-num':3, 'size-w':512, 'size-h':512, 'moss-shift':5, batch:1}
+    const defaults = isZImage() ? {'steps-num':8, 'cfg-num':1, 'size-w':512, 'size-h':768, 'denoise-slider':0.35, batch:1}
+      : isMoss() ? {'steps-num':8, 'cfg-num':3, 'size-w':512, 'size-h':512, 'moss-shift':5, batch:1}
       : isKlein() ? {'steps-num':8, 'cfg-num':1, 'size-w':512, 'size-h':512, 'klein-strength':0.8, batch:1}
       : isMoody() ? {'steps-num':25, 'cfg-num':3, 'sampler-select':'euler', 'scheduler-select':'simple', 'size-w':1024, 'size-h':1024, batch:1}
       : isDesireX() ? {'steps-num':8, 'cfg-num':1, 'sampler-select':'euler', 'scheduler-select':'simple', 'size-w':1024, 'size-h':1024, batch:1}
       : isActive() ? {'steps-num':25, 'cfg-num':1, 'sampler-select':'euler', 'scheduler-select':'simple', 'size-w':1024, 'size-h':1024} : {};
+    const profile = profiles?.engines?.[engine];
+    if (profile && isActive()) Object.assign(defaults, {'steps-num': profile.steps ?? defaults['steps-num'], 'cfg-num': profile.cfg ?? defaults['cfg-num'],
+      'size-w': profile.width ?? defaults['size-w'], 'size-h': profile.height ?? defaults['size-h'],
+      ...(profile.sampler && {'sampler-select': profile.sampler}), ...(profile.scheduler && {'scheduler-select': profile.scheduler})});
     const settings = Object.assign(defaults, readSettings(engine));
     if (isKlein()) settings.batch = 1;
     apply(settings);
+    syncNegative();
     if (isActive()) await loadModels();
     else { requestId++; await loadComfyModels(); const saved = readSettings('sd'); if (saved['model-select']) $('model-select').value = saved['model-select']; updateModelBadge(); }
   }
@@ -170,6 +248,23 @@ window.VoidEngines = (() => {
   }
   function buildWorkflow(task, model, seed, source, continuous = null) {
     const node = (class_type, inputs) => ({class_type, inputs});
+    if (isZImage() && !continuous) {
+      const wf = structuredClone(zImageGraph);
+      wf['2'].inputs.text = task.prompt || '';
+      Object.assign(wf['4'].inputs, {width:Number($('size-w').value), height:Number($('size-h').value)});
+      wf['5'].inputs.seed = seed;
+      if (currentMode === 'img2img') {
+        if (!source) throw new Error('請上傳來源圖片。');
+        const {width, height} = wf['4'].inputs;
+        const denoise = Number($('denoise-slider').value);
+        if (!(denoise >= 0 && denoise <= 1)) throw new Error('改圖強度須為 0～1。');
+        wf['11'] = node('LoadImage', {image:source});
+        wf['12'] = node('ImageScale', {image:['11',0], upscale_method:'lanczos', width, height, crop:'center'});
+        wf['4'] = node('VAEEncode', {pixels:['12',0], vae:['9',0]});
+        wf['5'].inputs.denoise = denoise;
+      }
+      return {wf, saveNodeId:'7'};
+    }
     if (continuous || isKlein()) {
       const edit = !!continuous || isKleinEdit();
       if (edit && !source) throw new Error('請上傳來源圖片。');
@@ -241,7 +336,7 @@ window.VoidEngines = (() => {
   const restore = restoreFromMeta;
   restoreFromMeta = function(meta) {
     if (isGenerating) return [];
-    const target = /flux-2-klein-9b/i.test(meta?.model || '') ? 'klein' : meta?.engine || (/moss-image/i.test(meta?.model || '') ? 'moss' : /qwen.*2[._-]1/i.test(meta?.model || '') ? 'qwen' : 'sd');
+    const target = /flux-2-klein-9b/i.test(meta?.model || '') ? 'klein' : (meta?.engine === 'moss' ? 'sd' : meta?.engine) || (/moss-image/i.test(meta?.model || '') ? 'sd' : /qwen.*2[._-]1/i.test(meta?.model || '') ? 'qwen' : 'sd');
     if (target !== engine) {
       switchEngine(target).then(() => restoreFromMeta(meta));
       return ['ENGINE'];
@@ -271,6 +366,12 @@ window.VoidEngines = (() => {
       const {width,height,steps} = workflow['19'].inputs;
       return {engine, width, height, steps, batch:1, sampler:'euler', scheduler:'Flux2Scheduler', cfg:workflow['17'].inputs.cfg, prompt:workflow['11'].inputs.text, negative:workflow['12'].inputs.text, kleinStrength:workflow['15']?.inputs.strength_model};
     }
+    if (isZImage()) {
+      const {width, height} = (workflow['12'] || workflow['4']).inputs;
+      const {steps, cfg, sampler_name, scheduler} = workflow['5'].inputs;
+      return {engine, prompt:task.prompt, negative:'', width, height, steps, cfg, sampler:sampler_name, scheduler, batch:1,
+        zImageClip:workflow['8'].inputs.clip_name, zImageVae:workflow['9'].inputs.vae_name};
+    }
     const sample = workflow['5'].inputs;
     const size = isMoss() ? sample : workflow['4'].inputs;
     return {engine, prompt:task.prompt, negative:task.negative, width:size.width, height:size.height,
@@ -280,5 +381,5 @@ window.VoidEngines = (() => {
         : {[isMoody() ? 'moodyClip' : isDesireX() ? 'desireClip' : 'qwenClip']:workflow['8'].inputs.clip_name,
           [isMoody() ? 'moodyVae' : isDesireX() ? 'desireVae' : 'qwenVae']:workflow['9'].inputs.vae_name, sampler:sample.sampler_name, scheduler:sample.scheduler})};
   }
-  return {isActive, supportsImageEdit, modeChanged:() => {if (isKlein() && info) updateStatus();}, switchEngine, loadModels, validate, buildWorkflow, missingComponents, captureMeta, getEngine:() => engine};
+  return {adaptTask, isActive, supportsImageEdit, modeChanged:() => {if ((isKlein() || isZImage()) && info) updateStatus();}, switchEngine, loadModels, validate, buildWorkflow, missingComponents, captureMeta, getEngine:() => engine};
 })();

@@ -80,10 +80,11 @@ window.VoidSharedGallery = (() => {
     if(!panel){
       panel=document.createElement('section');panel.id='void-shared-panel';
       panel.style.cssText='padding:10px;max-height:33vh;overflow:auto;border-bottom:1px solid var(--border,#444);';
-      document.getElementById('gallery-toolbar').after(panel);
+      document.getElementById('center-tabs-bar').after(panel);
     }
     const heading=document.createElement('strong'), close=document.createElement('button');
-    heading.textContent=title;close.textContent='關閉';close.className='tb-btn';close.onclick=()=>panel.replaceChildren();
+    panel.hidden=false;
+    heading.textContent=title;close.textContent='關閉';close.className='tb-btn';close.onclick=()=>{panel.hidden=true;panel.replaceChildren();};
     panel.replaceChildren(heading,' ',close,document.createElement('br'));
     return panel;
   }
@@ -110,6 +111,7 @@ window.VoidSharedGallery = (() => {
     const panel=sharedPanel('回收區'), form=document.createElement('form'), input=document.createElement('input');
     input.type='search';input.placeholder='搜尋檔名、提示詞、標籤';input.setAttribute('aria-label','搜尋回收區');
     const search=document.createElement('button'), restore=document.createElement('button'), results=document.createElement('div'), status=document.createElement('p');
+    results.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,82px);gap:8px;max-height:20vh;overflow:auto;padding:8px 2px';
     search.textContent='搜尋';restore.textContent='還原選取';restore.disabled=true;status.setAttribute('role','status');
     form.append(input,search);panel.append(form,results,restore,status);
     const empty=document.createElement('button'), confirm=document.createElement('div'), explanation=document.createElement('p');
@@ -137,7 +139,18 @@ window.VoidSharedGallery = (() => {
       if(token!==revision)return;
       for(const item of items){
         const label=document.createElement('label'), check=document.createElement('input');
-        label.style.display='block';check.type='checkbox';check.value=item.id;label.append(check,' '+item.name);results.append(label);
+        check.type='checkbox';check.value=item.id;
+        label.style.cssText='position:relative;display:grid;justify-items:center;gap:5px;padding:6px;border:1px solid var(--border,#343a43);border-radius:9px;background:var(--bg2,#15161b);cursor:pointer';
+        check.style.cssText='position:absolute;top:5px;left:5px;z-index:1;accent-color:#b9da9a';
+        const thumbnail=document.createElement('img');
+        thumbnail.alt='';thumbnail.loading='lazy';thumbnail.width=56;thumbnail.height=56;
+        thumbnail.style.cssText='object-fit:contain;flex:none;border-radius:5px';
+        thumbnail.onerror=()=>{thumbnail.style.visibility='hidden';};
+        thumbnail.src=base+'/api/trash/thumbnail/'+encodeURIComponent(item.id);
+        const name=document.createElement('span');
+        name.textContent=name.title=item.name;
+        name.style.cssText='max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px';
+        label.append(check,thumbnail,name);results.append(label);
       }
       status.textContent=items.length?'共 '+items.length+' 件作品':'沒有符合的作品';
     }
@@ -156,6 +169,55 @@ window.VoidSharedGallery = (() => {
       }catch(error){showError(error);restore.disabled=false;}
     };
     void load().catch(showError);
+  }
+  async function showGuestGallery(){
+    const panel=sharedPanel('訪客作品');
+    const select=document.createElement('select'), status=document.createElement('p'), grid=document.createElement('div');
+    select.setAttribute('aria-label','選擇訪客');
+    status.setAttribute('role','status');
+    grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:8px';
+    panel.append(select,status,grid);
+    let revision=0;
+    async function loadGuest(){
+      const token=++revision;
+      grid.replaceChildren();
+      status.textContent='讀取訪客作品…';
+      try{
+        const {items}=await request('/api/guest-gallery?'+new URLSearchParams({guest:select.value}));
+        if(token!==revision)return;
+        for(const item of items){
+          const card=document.createElement('a'), image=document.createElement('img'), name=document.createElement('span');
+          card.href=base+'/api/guest-gallery/image?'+new URLSearchParams({guest:select.value,path:item.path});
+          card.onclick=event=>{
+            event.preventDefault();
+            const contents=[...panel.childNodes], scrollTop=panel.scrollTop;
+            const preview=sharedPanel('訪客作品 · '+item.name);
+            const back=document.createElement('button'), original=document.createElement('img');
+            back.type='button';back.className='tb-btn';back.textContent='返回訪客作品';
+            back.onclick=()=>{panel.replaceChildren(...contents);panel.scrollTop=scrollTop;};
+            original.alt=item.name;original.src=card.href;
+            original.style.cssText='display:block;max-width:100%;height:auto';
+            preview.append(back,original);
+            panel.scrollTop=0;
+          };
+          card.style.cssText='display:grid;gap:5px;padding:6px;border:1px solid var(--border,#343a43);border-radius:9px;color:inherit;text-decoration:none';
+          image.src=card.href+'&thumb=1';image.alt='';image.loading='lazy';
+          image.style.cssText='width:100%;height:96px;object-fit:contain';
+          name.textContent=name.title=item.name;
+          name.style.cssText='overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+          card.append(image,name);grid.append(card);
+        }
+        status.textContent=items.length?'共 '+items.length+' 張圖片 · 點開看原圖':'這位訪客還沒有作品';
+      }catch(error){if(token===revision)status.textContent=error.message;}
+    }
+    status.textContent='讀取訪客…';
+    try{
+      const {guests}=await request('/api/guest-gallery');
+      select.replaceChildren(...guests.map(slot=>new Option('訪客 '+slot.slice(5),slot)));
+      select.onchange=loadGuest;
+      if(guests.length)await loadGuest();
+      else{select.disabled=true;status.textContent='目前沒有訪客作品';}
+    }catch(error){status.textContent=error.message;}
   }
   async function showVideos(){
     const panel=sharedPanel('影片作品'), list=document.createElement('div');
@@ -239,6 +301,7 @@ window.VoidSharedGallery = (() => {
     if(toolbar){const button=document.createElement('button');button.className='tb-btn';button.textContent='更新共用圖庫';button.onclick=async()=>{button.disabled=true;try{await loadSavedGallery();setStatus(online?'共用圖庫已更新':'共用圖庫離線，顯示瀏覽器紀錄',online?'ok':'warn');}finally{button.disabled=false;}};toolbar.prepend(button);}
     if(toolbar){const button=document.createElement('button');button.className='tb-btn';button.textContent='回收區';button.onclick=showRecycle;toolbar.append(button);}
     if(toolbar){const button=document.createElement('button');button.className='tb-btn';button.textContent='影片作品';button.onclick=showVideos;toolbar.append(button);}
+    if(toolbar){const button=document.createElement('button');button.className='tb-btn';button.textContent='訪客作品';button.onclick=showGuestGallery;toolbar.append(button);}
     if(toolbar){
       const label=document.createElement('label'), select=document.createElement('select');
       label.textContent='資源 ';select.setAttribute('aria-label','資源模式');

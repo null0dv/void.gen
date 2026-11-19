@@ -21,6 +21,7 @@ ComfyUI 內建。SDXL Base 可用來驗證安裝。
 | [flux-2-klein-9b-Q4_K_M.gguf](https://huggingface.co/unsloth/FLUX.2-klein-9B-GGUF/resolve/main/flux-2-klein-9b-Q4_K_M.gguf) | `diffusion_models/` |
 | [qwen_3_8b_fp4mixed.safetensors](https://huggingface.co/Comfy-Org/Flux-2-Klein-9B/resolve/main/split_files/text_encoders/qwen_3_8b_fp4mixed.safetensors) | `text_encoders/` |
 | [flux2-vae.safetensors](https://huggingface.co/Comfy-Org/Flux-2-Klein-9B/resolve/main/split_files/vae/flux2-vae.safetensors) | `vae/` |
+| [klein9b-anything-to-real.safetensors](https://huggingface.co/WarmBloodAban/Flux2_Klein_Anything_to_Real_Characters/resolve/main/Flux2%20Klein%E5%8A%A8%E6%BC%AB%E8%BD%AC%E5%86%99%E5%AE%9E%E7%9C%9F%E4%BA%BA%20AnythingtoRealCharacters.safetensors) | `loras/` |
 
 ## Qwen Image 2.1 · 生圖與改圖
 
@@ -81,6 +82,6 @@ ComfyUI 內建。SDXL Base 可用來驗證安裝。
 
 - **Nova Anime XL IL V1.8** 放入 `checkpoints/`。從發布頁選擇 IL V1.8（版本 2837020）。本機配方使用 `novaAnimeXL_ilV180.safetensors`，如需重用該配方，可在確認版本後以此名稱存放。[Civitai 版本頁](https://civitai.com/models/376130?modelVersionId=2837020)
 - **WD14 標籤辨識** 安裝節點並依其說明取得權重。[ComfyUI-WD14-Tagger](https://github.com/pythongosssss/ComfyUI-WD14-Tagger)
-- **Klein 寫實 LoRA** 部分圖生圖模式需要 `klein9b-anything-to-real.safetensors`，放入 `loras/`。確切版本來源尚未核實。Klein 連續改圖可先用上表的三個檔案試跑。
+- **Klein 寫實 LoRA** 部分圖生圖模式需要 `klein9b-anything-to-real.safetensors`，放入 `loras/`。來源已核實：HuggingFace `WarmBloodAban/Flux2_Klein_Anything_to_Real_Characters`，原檔名 `Flux2 Klein动漫转写实真人 AnythingtoRealCharacters.safetensors`，SHA-256 `157dbf28b72e53b2645dd57ad5974e10d2e4c8166d066d077063d008279d8c80`，下載後改名。已列入上方 Klein 表格。
 - **DesireX** 工作流指定 `BSS_DesireX3_Q4_K_M.gguf`，主權重來源尚未核實。手上已有相同主權重時，可放到 `diffusion_models/`，搭配 [文字編碼器](https://huggingface.co/Comfy-Org/Krea-2/resolve/main/text_encoders/qwen3vl_4b_fp8_scaled.safetensors) 放到 `text_encoders/`、[VAE](https://huggingface.co/Comfy-Org/Krea-2/resolve/main/vae/qwen_image_vae.safetensors) 放到 `vae/`。
 - **個人 LoRA** 依配方需求另行取得，放到 `loras/`。有登入或授權要求時，請在模型發布頁完成。

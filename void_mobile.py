@@ -1256,9 +1256,14 @@ def create_app(gateway=None):
 
     async def static(request):
         name = request.match_info.get('name') or 'index.html'
-        if name not in ('index.html', 'app.js', 'style.css', 'manifest.webmanifest', 'sw.js', 'icon.svg', 'icon-192.png', 'icon-512.png'):
+        rng_scripts = {'lexicon-store.js', 'prompt-formatter.js', 'p-format-core.js'}
+        if name in rng_scripts:
+            path = PANEL_ROOT / 'void-rng/js' / name
+        elif name in ('index.html', 'app.js', 'style.css', 'manifest.webmanifest', 'sw.js', 'icon.svg', 'icon-192.png', 'icon-512.png'):
+            path = PANEL_ROOT / 'mobile' / name
+        else:
             raise web.HTTPNotFound()
-        response = web.FileResponse(PANEL_ROOT / 'mobile' / name)
+        response = web.FileResponse(path)
         response.headers['Cache-Control'] = 'no-cache'
         return response
 

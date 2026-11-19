@@ -15,7 +15,7 @@
 <script src="js/void-gen-flow.js?v=29.3"></script>
 <script src="js/void-jszip-loader.js"></script>
 <script src="js/void-pwa.js"></script>
-<script src="js/void-shared-gallery.js?v=10"></script>
+<script src="js/void-shared-gallery.js?v=13"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap');
 :root {
@@ -107,6 +107,7 @@ body.file-protocol-warn{padding-top:40px}
 .prompt-area:focus{border-color:rgba(200,200,200,0.06);box-shadow:0 0 0 3px rgba(200,200,200,0.08),inset 0 1px 0 rgba(255,255,255,.03)}
 .prompt-area::placeholder{color:var(--muted2)}
 .neg-area{min-height:48px;margin-top:6px}
+body[data-generation-engine="zimage"] .neg-area{display:none}
 
 /* TAG CHIPS */
 .tag-section{margin-top:8px;max-height:320px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.07) transparent;padding-right:2px}
@@ -142,6 +143,7 @@ body.file-protocol-warn{padding-top:40px}
 
 /* SIZE */
 .size-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.size-grid[hidden]{display:none}
 .size-btn{padding:6px 3px;text-align:center;cursor:pointer;border-radius:6px;font-size:9px;color:var(--muted);border:1px solid transparent;transition:all .18s;letter-spacing:.03em;font-family:var(--mono);line-height:1.4;background:var(--glass)}
 .size-btn:hover{color:var(--accent2);border-color:rgba(220,220,220,0.12);background:rgba(200,200,200,0.06)}
 .size-btn.active{color:var(--text);border-color:var(--line2);background:var(--bg3)}
@@ -929,8 +931,8 @@ body[data-full-view=library] #center-panel,body[data-full-view=queue] #center-pa
         <select class="sel" id="engine-select" aria-label="生成引擎" onchange="VoidEngines.switchEngine(this.value)">
           <option value="sd">SD / SDXL</option>
           <option value="qwen">Qwen Image 2.1</option>
+          <option value="zimage">Z-Image-Turbo</option>
           <option value="moody">Moody Moss Mix V4.1</option>
-          <option value="moss">MOSS Image SFT</option>
           <option value="klein">FLUX.2 Klein 9B</option>
           <option value="desirex">Krea 2 · DesireX X3</option>
         </select>
@@ -939,6 +941,7 @@ body[data-full-view=library] #center-panel,body[data-full-view=queue] #center-pa
           <select class="sel" id="engine-clip" aria-label="文字編碼器"></select>
           <div class="sec-label" id="engine-vae-label" style="margin-top:8px">VAE</div>
           <select class="sel" id="engine-vae" aria-label="VAE"></select>
+          <label style="display:block;margin-top:8px;font-size:12px;color:var(--muted)"><input type="checkbox" id="engine-adapt" checked> 送出前把 tag 轉成自然語句（本機 Ollama，SDXL 不轉）</label>
           <div id="moss-settings" hidden style="margin-top:8px">
             <label for="moss-shift" class="sec-label">MOSS SHIFT</label>
             <input id="moss-shift" class="size-input" aria-label="MOSS shift" type="number" min="0.01" max="100" step="0.1" value="5">
@@ -1049,7 +1052,12 @@ body[data-full-view=library] #center-panel,body[data-full-view=queue] #center-pa
 
       <div class="ss">
         <div class="sec-label">SIZE</div>
-        <div class="size-grid">
+        <div class="size-grid" id="zimage-size-presets" hidden>
+          <div class="size-btn" onclick="setSize(512,768,this)">512×768<br>port</div>
+          <div class="size-btn" onclick="setSize(512,512,this)">512<br>sq</div>
+          <div class="size-btn" onclick="setSize(768,512,this)">768×512<br>land</div>
+        </div>
+        <div class="size-grid" id="standard-size-presets">
           <div class="size-btn" onclick="setSize(512,512,this)">512<br>sq</div>
           <div class="size-btn" onclick="setSize(768,1344,this)">768×1344<br>port</div>
           <div class="size-btn" onclick="setSize(1344,768,this)">1344×768<br>land</div>
@@ -3822,7 +3830,7 @@ function comfyValidationMessage(detail, status) {
   return reasons.join(' · ') || detail.error?.details || detail.error?.message || `HTTP ${status}`;
 }
 async function comfyuiGenerate(task) {
-  if (window.VoidEngines?.isActive()) await VoidEngines.validate();
+  if (window.VoidEngines?.isActive()) { await VoidEngines.validate(); await VoidEngines.adaptTask(task); }
   const modelName = document.getElementById('model-select').value;
   if (!modelName) throw new Error('Please select a model');
   const seed = getEffectiveSeed();
@@ -5022,7 +5030,7 @@ window.toggleFav = toggleFav;
 window.setCardRating = setCardRating;
 window.deleteFromGallery = deleteFromGallery;
 </script>
-<script src="js/void-engines.js?v=9"></script>
+<script src="js/void-engines.js?v=12"></script>
 <script src="js/void-recognition.js?v=3"></script>
 <script src="js/void-desktop.js?v=32.1-recognition"></script>
 <script src="js/void-mobile-link.js?v=1"></script>
@@ -5030,7 +5038,7 @@ window.deleteFromGallery = deleteFromGallery;
 <script src="js/void-rng-bridge.js?v=2"></script>
 
 
-<script src="js/void-motion-graph.js?v=1"></script>
+<script src="js/void-motion-graph.js?v=3"></script>
 <script src="js/void-studio.js?v=14"></script>
 <script src="js/void-layout.js?v=2"></script>
 <script src="js/void-image-drop.js?v=1"></script>
