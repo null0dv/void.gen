@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="zh-Hant">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111216"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="/manifest.webmanifest"><link rel="icon" href="/icon.svg"><link rel="apple-touch-icon" href="/icon-192.png"><link rel="stylesheet" href="/style.css"><title>VOID · Pocket</title></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111216"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="/manifest.webmanifest"><link rel="icon" href="/icon.svg"><link rel="apple-touch-icon" href="/icon-192.png"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/dressing/edit-studio.css?v=1"><title>VOID · Pocket</title></head>
 <body>
-<header><a class="brand" href="/">VOID<span>WORKSPACE</span></a><button id="connection" class="connection" aria-label="連線與設定"><i></i><span>連線中</span></button></header>
+<header><a class="brand" href="/">VOID<span>WORKSPACE</span></a><button id="connection" class="connection" aria-label="連線與設定"><i></i><span>連線中</span></button><a href="/dressing" class="connection" style="margin-left:auto;margin-right:8px">角色搭配 ↗</a></header>
 <main>
 <section id="generate" class="page active" aria-labelledby="generate-title">
   <div class="section-title"><div><p class="eyebrow">CREATE ON YOUR PC</p><h1 id="generate-title">創作空間</h1></div><span class="local-tag">本機生成</span></div>
@@ -13,7 +13,7 @@
     </div>
     <div class="engine-pills" style="grid-template-columns:repeat(3,1fr);margin-top:12px" role="group" aria-label="生圖引擎"><button type="button" data-engine="qwen" class="selected">Qwen</button><button type="button" data-engine="sd">SD / SDXL</button><button type="button" data-engine="moody">Moody Moss</button><button type="button" data-engine="klein">Klein 9B</button><button type="button" data-engine="zimage">Z-Image-Turbo</button></div>
     <div id="gen-source-settings" hidden>
-      <label><input type="checkbox" id="gen-continuous"> 連續改圖</label>
+      <label><input type="checkbox" id="gen-continuous"> 連續版本（保留歷史與分支）</label>
       <div id="gen-reference-settings" hidden>
         <label class="upload-zone" for="gen-reference"><img id="gen-reference-preview" alt="參考圖" hidden><span>＋ 上傳參考圖（選填）</span></label>
         <input id="gen-reference" type="file" accept="image/*" hidden>
@@ -30,10 +30,11 @@
       </details>
       <div id="gen-klein-settings"><label for="gen-klein-strength">寫實 LoRA 強度</label>
       <input id="gen-klein-strength" type="number" min="0" max="2" step="any" value="0.8"></div>
-      <div id="gen-sd-edit-settings" hidden><label for="gen-denoise">改圖強度</label><input id="gen-denoise" type="number" min="0.01" max="1" step="0.01" value="0.55"></div>
+      <div id="gen-sd-edit-settings" hidden><label for="gen-denoise">改動幅度 · 越低越接近主圖</label><input id="gen-denoise" type="number" min="0.01" max="0.95" step="0.01" value="0.55"></div>
     </div>
+    <div id="edit-sdxl-strengths" hidden><div class="two"><div><label for="edit-character-strength">角色參考強度</label><input id="edit-character-strength" type="number" min="0" max="1.5" step="0.05" value="0.75"></div><div><label for="edit-pose-strength">動作強度</label><input id="edit-pose-strength" type="number" min="0" max="1.5" step="0.05" value="0.8"></div></div><p class="hint">大幅換動作通常需要提高改動幅度，也可能影響臉與衣服。先從 0.55 試起。</p></div>
     <label for="gen-model">模型</label><select id="gen-model" required><option value="">正在讀取模型…</option></select><p id="gen-model-status" role="status"></p>
-    <label for="gen-prompt">想生成什麼？</label><div class="prompt-tools"><button type="button" id="gen-paste" aria-label="貼上到提示詞">貼上</button><button type="button" id="gen-copy" aria-label="複製提示詞">複製</button><button type="button" id="gen-real" aria-label="改寫成寫實提示詞並切到寫實引擎">一鍵寫實</button><button type="button" id="gen-real-undo" hidden aria-label="還原寫實改寫前的提示詞">還原</button><button type="button" data-clear-prompt="gen-prompt" aria-label="清除生成提示詞">清除</button></div><textarea id="gen-prompt" rows="5" maxlength="20000" required placeholder="描述主體、場景、光線與你想要的風格…"></textarea><label id="gen-adapt-row" style="display:block;margin:6px 0;font-size:13px;opacity:.85"><input type="checkbox" id="gen-adapt" checked> 送出前把 tag 轉成自然語句（Qwen／Moody／Z-Image／Klein；用本機 Ollama，約多 10～20 秒，SDXL 不轉）</label>
+    <label for="gen-prompt" id="gen-prompt-label">想生成什麼？</label><div class="prompt-tools"><button type="button" id="gen-paste" aria-label="貼上到提示詞">貼上</button><button type="button" id="gen-copy" aria-label="複製提示詞">複製</button><button type="button" id="gen-real" aria-label="改寫成寫實提示詞並切到寫實引擎">一鍵寫實</button><button type="button" id="gen-real-undo" hidden aria-label="還原寫實改寫前的提示詞">還原</button><button type="button" data-clear-prompt="gen-prompt" aria-label="清除生成提示詞">清除</button></div><textarea id="gen-prompt" rows="5" maxlength="20000" required placeholder="描述主體、場景、光線與你想要的風格…"></textarea><label id="gen-adapt-row" style="display:block;margin:6px 0;font-size:13px;opacity:.85"><input type="checkbox" id="gen-adapt" checked> 送出前把 tag 轉成自然語句（Qwen／Moody／Z-Image／Klein；用本機 Ollama，約多 10～20 秒，SDXL 不轉）</label>
     <div class="label-row"><label>畫面比例</label><span id="size-label">1024 × 1024</span></div>
     <div class="ratios"><button type="button" data-ratio="square" class="selected"><span class="ratio square"></span>方形</button><button type="button" data-ratio="portrait"><span class="ratio portrait"></span>直式</button><button type="button" data-ratio="landscape"><span class="ratio landscape"></span>橫式</button></div>
     <div class="inline"><label for="gen-count">生成張數</label><select id="gen-count"><option value="1">1 張</option><option value="2">2 張 · 依序執行</option><option value="4">4 張 · 依序執行</option></select></div>
@@ -160,5 +161,5 @@
 
 
 
-<div id="toast" role="status" hidden></div><script src="/lexicon-store.js?v=33" defer></script><script src="/prompt-formatter.js?v=33" defer></script><script src="/p-format-core.js?v=33" defer></script><script src="/app.js?v=33" defer></script>
+<div id="toast" role="status" hidden></div><script src="/lexicon-store.js?v=33" defer></script><script src="/prompt-formatter.js?v=33" defer></script><script src="/p-format-core.js?v=33" defer></script><script src="/dressing/edit-studio.js?v=3" defer></script><script src="/app.js?v=37" defer></script>
 </body></html>

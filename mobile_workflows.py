@@ -1,5 +1,6 @@
 """Graphs for the private mobile gateway; only installed engines are exposed."""
 import secrets
+import time
 import json
 from copy import deepcopy
 from pathlib import Path
@@ -12,6 +13,30 @@ Z_IMAGE_NODES = {node['class_type'] for node in Z_IMAGE_GRAPH.values()}
 Z_IMAGE_MODEL = Z_IMAGE_GRAPH['1']['inputs']['unet_name']
 Z_IMAGE_CLIP = Z_IMAGE_GRAPH['8']['inputs']['clip_name']
 Z_IMAGE_VAE = Z_IMAGE_GRAPH['9']['inputs']['vae_name']
+
+
+PROFILE_FILE = Path(__file__).with_name('engine-profiles.json')
+_profiles = {'time': 0.0, 'mtime': None, 'data': {'version': 0, 'engines': {}}}
+
+
+def load_profiles():
+    """Per-engine recommended settings from engine-profiles.json (re-read when the file changes).
+    A missing or broken file keeps the last good copy, or the built-in defaults below."""
+    now = time.time()
+    if now - _profiles['time'] < 5:
+        return _profiles['data']
+    _profiles['time'] = now
+    try:
+        mtime = PROFILE_FILE.stat().st_mtime
+        if mtime != _profiles['mtime']:
+            data = json.loads(PROFILE_FILE.read_text(encoding='utf-8-sig'))
+            engines = data.get('engines')
+            if isinstance(engines, dict):
+                _profiles.update(mtime=mtime, data={'version': int(data.get('version', 1)),
+                                                    'engines': {k: v for k, v in engines.items() if isinstance(v, dict)}})
+    except (OSError, ValueError, TypeError):
+        pass
+    return _profiles['data']
 
 
 QWEN_CLIP = 'qwen3vl_8b_int8_convrot.safetensors'
@@ -54,8 +79,12 @@ def generate(data, catalog, source=None, reference=None, mask=None):
     mode = data.get('mode', 'txt2img')
     edit = mode == 'img2img'
     continuous = edit and data.get('continuous') is True
-    if mode not in ('txt2img', 'img2img') or (edit and engine not in ('sd', 'klein', 'zimage', 'qwen')):
-        raise ValueError('圖生圖請選擇 SD / SDXL、Klein 9B 或 Qwen')
+    if mode not in ('txt2img', 'img2img') or (edit and engine not in ('sd', 'klein', 'zimage', 'moody', 'qwen')):
+        raise ValueError('圖生圖請選擇 SD / SDXL、Klein 9B、Z-Image、Moody Moss 或 Qwen')
+    if edit and engine == 'qwen' and not catalog.get('qwenEdit'):
+        raise ValueError('Qwen 改圖需要 Qwen-Image 2.1 權重與支援參考圖的 ComfyUI 節點')
+    if edit and engine == 'moody' and not catalog.get('moodyEdit'):
+        raise ValueError('Moody Moss 圖生圖需要 LoadImage、ImageScale、VAEEncode 節點')
     if continuous and (engine != 'klein' or not catalog.get('kleinContinuous')):
         raise ValueError('Klein 連續改圖模型或節點尚未就緒')
     if mask and (not continuous or not catalog.get('editMask')):
@@ -66,8 +95,6 @@ def generate(data, catalog, source=None, reference=None, mask=None):
         raise ValueError(f'Klein 寫實轉換需要 {KLEIN_LORA} 和對應的 ComfyUI 節點')
     if edit and engine == 'sd' and not catalog.get('sdEdit'):
         raise ValueError('SD / SDXL 圖生圖需要相容 checkpoint 與完整的 ComfyUI 節點')
-    if edit and engine == 'qwen' and not catalog.get('qwenEdit'):
-        raise ValueError('Qwen 改圖需要 Qwen-Image 2.1 權重與支援參考圖的 ComfyUI 節點')
     if engine not in ('sd', 'qwen', 'moss', 'klein', 'moody', 'zimage'):
         raise ValueError('未知的生圖引擎')
     prompt = str(data.get('prompt', '')).strip()
@@ -76,13 +103,14 @@ def generate(data, catalog, source=None, reference=None, mask=None):
     if not prompt or len(prompt) > 20000:
         raise ValueError('請輸入提示詞（最多 20000 字元）')
     defaults = {'sd': (1024, 20, 7), 'qwen': (1024, 25, 1), 'moss': (512, 8, 3), 'moody': (1024, 25, 3), 'klein': (512, 8, 1), 'zimage': (512, 8, 1)}[engine]
-    width = number(data, 'width', defaults[0], 256, 2048, True)
-    height = number(data, 'height', 768 if engine == 'zimage' else defaults[0], 256, 2048, True)
+    profile = load_profiles()['engines'].get(engine, {})
+    width = number(data, 'width', profile.get('width', defaults[0]), 256, 2048, True)
+    height = number(data, 'height', profile.get('height', 768 if engine == 'zimage' else defaults[0]), 256, 2048, True)
     multiple = 16 if engine in ('moss', 'klein', 'moody') else 32
     if width % multiple or height % multiple:
         raise ValueError(f'尺寸須為 {multiple} 的倍數')
-    steps = number(data, 'steps', defaults[1], 1, 100, True)
-    cfg = number(data, 'cfg', defaults[2], 0, 30)
+    steps = number(data, 'steps', profile.get('steps', defaults[1]), 1, 100, True)
+    cfg = number(data, 'cfg', profile.get('cfg', defaults[2]), 0, 30)
     if engine == 'zimage':
         steps, cfg = 8, 1
     seed = number(data, 'seed', -1, -1, 2**53-1, True)
@@ -94,6 +122,8 @@ def generate(data, catalog, source=None, reference=None, mask=None):
         raise ValueError('所選模型未安裝，請重新選擇')
     negative = str(data.get('negative', ''))[:20000]
     meta = dict(engine=engine, model=model, prompt=prompt, negative=negative, width=width, height=height, steps=steps, cfg=cfg, seed=seed)
+    if isinstance(data.get('promptOriginal'), str):
+        meta['promptOriginal'] = data['promptOriginal'][:20000]
     wf = {'7': node('SaveImage', filename_prefix=f'VOID-mobile/{engine}', images=['6', 0])}
     if engine == 'zimage':
         wf = deepcopy(Z_IMAGE_GRAPH)
@@ -243,10 +273,12 @@ def generate(data, catalog, source=None, reference=None, mask=None):
         denoise, latent = 1, ['2', 2] if edit and engine == 'qwen' else ['4', 0]
         if edit and engine != 'qwen':
             denoise = number(data, 'denoise', .55, .01, 1)
+            # Moody already uses '8' (text encoder) and '9' (VAE) for its loaders, so its edit nodes get their own ids.
+            load_id, scale_id = ('31', '32') if engine == 'moody' else ('8', '9')
             wf.update({
-                '8': node('LoadImage', image=source),
-                '9': node('ImageScale', image=['8', 0], upscale_method='lanczos', width=width, height=height, crop='center'),
-                '4': node('VAEEncode', pixels=['9', 0], vae=vae),
+                load_id: node('LoadImage', image=source),
+                scale_id: node('ImageScale', image=[load_id, 0], upscale_method='lanczos', width=width, height=height, crop='center'),
+                '4': node('VAEEncode', pixels=[scale_id, 0], vae=vae),
             })
             meta.update(mode=mode, denoise=denoise)
         wf['5'] = node('KSampler', model=model_ref, positive=pos, negative=neg, latent_image=latent, seed=seed, steps=steps, cfg=cfg, sampler_name=sampler, scheduler=scheduler, denoise=denoise)

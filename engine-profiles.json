@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "_說明": "每個生圖引擎的建議設定。Pocket 讀這份檔：切換引擎時自動套用尺寸、步數、CFG、取樣器；enabled=false 會在 Pocket 隱藏該引擎（模型檔不動）。改完存檔，約 30 秒內生效，不用重啟。",
+  "engines": {
+    "sd":     { "label": "SD / SDXL", "enabled": true, "style": "tags", "width": 1024, "height": 1024, "steps": 20, "cfg": 7, "sampler": "euler_ancestral", "scheduler": "karras",
+                "sizes": { "square": [1024, 1024], "portrait": [832, 1216], "landscape": [1216, 832] }, "commercial": "看 checkpoint" },
+    "qwen":   { "label": "Qwen-Image 2.1", "enabled": true, "style": "natural", "width": 1024, "height": 1024, "steps": 25, "cfg": 1, "sampler": "euler", "scheduler": "simple",
+                "sizes": { "square": [1024, 1024], "portrait": [832, 1216], "landscape": [1216, 832] }, "commercial": "否（研究授權）" },
+    "moody":  { "label": "Moody Moss", "enabled": true, "style": "natural", "width": 1024, "height": 1024, "steps": 25, "cfg": 3, "sampler": "euler", "scheduler": "simple",
+                "sizes": { "square": [1024, 1024], "portrait": [832, 1216], "landscape": [1216, 832] }, "commercial": "需確認作者條件" },
+    "zimage": { "label": "Z-Image-Turbo", "enabled": true, "style": "natural", "width": 832, "height": 1216, "steps": 8, "cfg": 1,
+                "sizes": { "square": [1024, 1024], "portrait": [832, 1216], "landscape": [1216, 832] }, "commercial": "未確認" },
+    "klein":  { "label": "Klein 9B", "enabled": true, "style": "natural", "width": 1024, "height": 1024, "steps": 8, "cfg": 1,
+                "sizes": { "square": [1024, 1024], "portrait": [832, 1216], "landscape": [1216, 832] }, "commercial": "否（非商用授權）" }
+  }
+}

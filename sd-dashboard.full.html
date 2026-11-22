@@ -2653,6 +2653,7 @@ function renderTaskEditor() {
         PROMPT <span style="font-size:9px;color:var(--muted2)">${idx+1} / ${tasks.length}</span>
         <div style="display:flex;gap:4px;align-items:center">
           <span class="icon-btn" id="hist-btn" onclick="togglePromptHistory()">▾</span>
+          <span class="icon-btn" onclick="VoidRngBridge.roll(this)" title="從 RNG 隨機抽一組提示詞（取代目前內容）">🎲</span>
           <span class="icon-btn" onclick="openEnhancePanel()" title="Enhance prompt">✨</span>
           <span class="icon-btn" onclick="clearPrompt(${idx})">CLR</span>
         </div>
@@ -5030,17 +5031,18 @@ window.toggleFav = toggleFav;
 window.setCardRating = setCardRating;
 window.deleteFromGallery = deleteFromGallery;
 </script>
-<script src="js/void-engines.js?v=12"></script>
+<script src="js/void-engines.js?v=13"></script>
 <script src="js/void-recognition.js?v=3"></script>
 <script src="js/void-desktop.js?v=32.1-recognition"></script>
 <script src="js/void-mobile-link.js?v=1"></script>
 
-<script src="js/void-rng-bridge.js?v=2"></script>
+<script src="js/void-rng-bridge.js?v=3"></script>
 
 
 <script src="js/void-motion-graph.js?v=3"></script>
 <script src="js/void-studio.js?v=14"></script>
 <script src="js/void-layout.js?v=2"></script>
-<script src="js/void-image-drop.js?v=1"></script>
+<script src="js/void-image-drop.js?v=2"></script>
+<script src="js/void-dressing-link.js?v=1"></script>
 </body>
 </html>

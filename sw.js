@@ -1,16 +1,17 @@
 // Bump CACHE when static assets change (Full V3 panel)
-const CACHE = "sd-panel-desktop-v67-motion-decode";
+const CACHE = "sd-panel-desktop-v71-rng-roll";
 const PRECACHE = [
-  "./js/void-image-drop.js?v=1",
+  "./js/void-dressing-link.js?v=1",
+  "./js/void-image-drop.js?v=2",
   "./void-layout.css?v=5",
   "./js/void-layout.js?v=2",
   "./js/void-studio.js?v=14",
   "./js/void-motion-graph.js?v=3",
-  "./js/void-rng-bridge.js?v=2",
+  "./js/void-rng-bridge.js?v=3",
   "./js/void-shared-gallery.js?v=10",
   "./js/void-mobile-link.js?v=1",
   "./js/void-recognition.js?v=3",
-  "./js/void-engines.js?v=9",
+  "./js/void-engines.js?v=13",
   "./void-desktop.css?v=29.3",
   "./js/void-desktop.js?v=32.1-recognition",
   "./sd-dashboard.full.html",
@@ -49,6 +50,7 @@ function isPanelHtml(url) {
 
 self.addEventListener("fetch", e => {
   const url = e.request.url;
+  if (url.includes("/void-rng/")) return;
   if (/\/void-motion\.(html|css)|\/js\/void-motion(-graph|-gallery)?\.js/.test(url)) return;
   if (url.includes("127.0.0.1:8188") || url.includes("localhost:8188")) return;
   if (url.includes("127.0.0.1:8899") || url.includes("localhost:8899")) return;

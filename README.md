@@ -1,5 +1,7 @@
 # VOID FULL V4
 
+> **install-pack 分支：VOID GEN + Pocket 完整安裝包。** 雙擊 `Install-VOID.cmd` 就會下載 ComfyUI、自訂節點和驗證過的模型，裝完自動啟動。完整計畫、需求、驗收清單見 **[docs/install-plan.md](docs/install-plan.md)**。
+
 VOID 是在 Windows 主機上使用 ComfyUI 的創作工作區。桌面與手機共用任務佇列及作品庫，獨立訪客帳號使用自己的圖庫。
 
 - [Windows 安裝與首次啟動](docs/install-v4.md#安裝)

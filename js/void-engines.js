@@ -59,12 +59,12 @@ window.VoidEngines = (() => {
   const desireClip = 'qwen3vl_4b_fp8_scaled.safetensors';
   const desireVae = 'qwen_image_vae.safetensors';
   const isKleinEdit = () => isKlein() && currentMode === 'img2img';
-  const supportsImageEdit = () => !isActive() || isKlein() || isZImage();
+  const supportsImageEdit = () => !isActive() || isKlein() || isZImage() || isMoody();
   const label = () => isZImage() ? 'Z-Image-Turbo' : isMoody() ? 'Moody Moss Mix' : isDesireX() ? 'Krea 2 · DesireX' : isKlein() ? 'Klein 9B' : isMoss() ? 'MOSS' : 'Qwen';
   const requiredNodes = () => isZImage()
     ? [...Object.values(zImageGraph || {}).map(node => node.class_type), ...(currentMode === 'img2img' ? ['LoadImage', 'ImageScale', 'VAEEncode'] : [])]
     : isMoody()
-    ? ['UNETLoader', 'CLIPLoader', 'VAELoader', 'CLIPTextEncode', 'EmptyFlux2LatentImage', 'KSampler', 'VAEDecode', 'SaveImage']
+    ? ['UNETLoader', 'CLIPLoader', 'VAELoader', 'CLIPTextEncode', 'EmptyFlux2LatentImage', 'KSampler', 'VAEDecode', 'SaveImage', ...(currentMode === 'img2img' ? ['LoadImage', 'ImageScale', 'VAEEncode'] : [])]
     : isKlein()
     ? ['UnetLoaderGGUF', 'CLIPLoader', 'VAELoader', 'CLIPTextEncode', ...(isKleinEdit() ? ['LoraLoaderModelOnly', 'LoadImage', 'ImageScaleToTotalPixels', 'VAEEncode', 'ReferenceLatent'] : []), 'EmptyFlux2LatentImage', 'RandomNoise', 'CFGGuider', 'KSamplerSelect', 'Flux2Scheduler', 'SamplerCustomAdvanced', 'VAEDecode', 'SaveImage']
     : isMoss()
@@ -159,7 +159,7 @@ window.VoidEngines = (() => {
         ? 'MOSS 已就緒 · 預設 512×512、8 步、CFG 3、batch 1。文字編碼使用 CPU，記憶體需求較高。'
         : isKlein() ? (isKleinEdit() ? 'Klein 9B 圖生圖已就緒。上傳來源圖片後可套用寫實 LoRA。' : 'Klein 9B 文生圖已就緒。')
         : isZImage() ? 'Z-Image-Turbo 已就緒 · 單張 · 8 步'
-        : isMoody() ? 'Moody Moss Mix V4.1 已就緒 · 1024×1024、25 步、CFG 3。'
+        : isMoody() ? (currentMode === 'img2img' ? 'Moody Moss Mix V4.1 圖生圖已就緒 · 改圖強度越高，結果越不同（建議 0.4～0.7）。' : 'Moody Moss Mix V4.1 已就緒 · 1024×1024、25 步、CFG 3。')
         : isDesireX() ? 'DesireX X3 已就緒 · TXT→IMG。首次載入較久。'
         : 'Qwen 已就緒 · 建議 1024×1024、25 步、CFG 1、batch 1。首次載入較久。';
   }
@@ -224,7 +224,7 @@ window.VoidEngines = (() => {
     const defaults = isZImage() ? {'steps-num':8, 'cfg-num':1, 'size-w':512, 'size-h':768, 'denoise-slider':0.35, batch:1}
       : isMoss() ? {'steps-num':8, 'cfg-num':3, 'size-w':512, 'size-h':512, 'moss-shift':5, batch:1}
       : isKlein() ? {'steps-num':8, 'cfg-num':1, 'size-w':512, 'size-h':512, 'klein-strength':0.8, batch:1}
-      : isMoody() ? {'steps-num':25, 'cfg-num':3, 'sampler-select':'euler', 'scheduler-select':'simple', 'size-w':1024, 'size-h':1024, batch:1}
+      : isMoody() ? {'steps-num':25, 'cfg-num':3, 'sampler-select':'euler', 'scheduler-select':'simple', 'size-w':1024, 'size-h':1024, 'denoise-slider':0.55, batch:1}
       : isDesireX() ? {'steps-num':8, 'cfg-num':1, 'sampler-select':'euler', 'scheduler-select':'simple', 'size-w':1024, 'size-h':1024, batch:1}
       : isActive() ? {'steps-num':25, 'cfg-num':1, 'sampler-select':'euler', 'scheduler-select':'simple', 'size-w':1024, 'size-h':1024} : {};
     const profile = profiles?.engines?.[engine];
@@ -303,7 +303,7 @@ window.VoidEngines = (() => {
         '19':node('Flux2Scheduler', {steps:continuous ? 8 : Number($('steps-num').value), width, height})
       }};
     }
-    if (source) throw new Error(`${label()} 圖片編輯尚未啟用`);
+    if (source && !isMoody()) throw new Error(`${label()} 圖片編輯尚未啟用`);
     if (isMoss()) {
       return {saveNodeId:'7', wf:{
         '1':node('MOSSOfficialDiffusionLoader', {model_name:model, device:'auto', precision:'bf16'}),
@@ -328,6 +328,17 @@ window.VoidEngines = (() => {
       '7': node('SaveImage', {images:['6',0], filename_prefix:isMoody() ? 'void-moody' : isDesireX() ? 'void-desirex' : 'void-qwen'})
     };
     if (isMoody()) wf['3'] = node('CLIPTextEncode', {clip:['8',0], text:task.negative || ''});
+    // Image-to-image: encode the uploaded picture with the model's own VAE and let KSampler start from it (denoise < 1).
+    if (isMoody() && currentMode === 'img2img') {
+      if (!source) throw new Error('請上傳來源圖片。');
+      const denoise = Number($('denoise-slider').value);
+      if (!(denoise > 0 && denoise <= 1)) throw new Error('改圖強度須為 0～1。');
+      const {width, height} = wf['4'].inputs;
+      wf['11'] = node('LoadImage', {image:source});
+      wf['12'] = node('ImageScale', {image:['11',0], upscale_method:'lanczos', width, height, crop:'center'});
+      wf['4'] = node('VAEEncode', {pixels:['12',0], vae:['9',0]});
+      wf['5'].inputs.denoise = denoise;
+    }
     if (isDesireX()) wf['3'] = task.negative?.trim()
       ? node('CLIPTextEncode', {clip:['8',0], text:task.negative})
       : node('ConditioningZeroOut', {conditioning:['2',0]});
@@ -373,13 +384,14 @@ window.VoidEngines = (() => {
         zImageClip:workflow['8'].inputs.clip_name, zImageVae:workflow['9'].inputs.vae_name};
     }
     const sample = workflow['5'].inputs;
-    const size = isMoss() ? sample : workflow['4'].inputs;
+    // A Moody image-to-image graph has no EmptyFlux2LatentImage: the size lives on its ImageScale node.
+    const size = isMoss() ? sample : (isMoody() && workflow['12'] ? workflow['12'] : workflow['4']).inputs;
     return {engine, prompt:task.prompt, negative:task.negative, width:size.width, height:size.height,
-      steps:sample.steps, cfg:sample.cfg, loras:[], batch:sample.batch_size || size.batch_size,
+      steps:sample.steps, cfg:sample.cfg, loras:[], batch:sample.batch_size || size.batch_size || 1,
       ...(isMoss()
         ? {mossClip:workflow['2'].inputs.model_name, mossVae:workflow['3'].inputs.model_name, mossShift:sample.shift, sampler:'MOSS Euler', scheduler:'MOSS official'}
         : {[isMoody() ? 'moodyClip' : isDesireX() ? 'desireClip' : 'qwenClip']:workflow['8'].inputs.clip_name,
           [isMoody() ? 'moodyVae' : isDesireX() ? 'desireVae' : 'qwenVae']:workflow['9'].inputs.vae_name, sampler:sample.sampler_name, scheduler:sample.scheduler})};
   }
-  return {adaptTask, isActive, supportsImageEdit, modeChanged:() => {if ((isKlein() || isZImage()) && info) updateStatus();}, switchEngine, loadModels, validate, buildWorkflow, missingComponents, captureMeta, getEngine:() => engine};
+  return {adaptTask, isActive, supportsImageEdit, modeChanged:() => {if ((isKlein() || isZImage() || isMoody()) && info) updateStatus();}, switchEngine, loadModels, validate, buildWorkflow, missingComponents, captureMeta, getEngine:() => engine};
 })();

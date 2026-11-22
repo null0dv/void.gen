@@ -68,4 +68,23 @@
       else{setMode('img2img');if(currentMode!=='img2img')throw new Error('請先停止目前的任務再載入圖片');_loadImg2imgFile(file);}
     }).catch(error=>setStatus(error.message,'error'));
   },true);
-})();
+  // Ctrl+V: paste a clipboard image (e.g. Win+Shift+S screenshot) into the current upload slot.
+  // Text pastes are left alone.
+  document.addEventListener('paste',event=>{
+    const file=[...(event.clipboardData?.files||[])].find(imageFile);
+    if(!file)return;
+    const studio=document.getElementById('studio-dialog');
+    let role;
+    if(studio&&!studio.hidden)role=document.activeElement?.closest?.('#studio-reference-controls')?'ref':'main';
+    else if(['create',undefined].includes(document.body.dataset.fullView))role=currentMode==='img2txt'?'caption':'source';
+    else return;
+    event.preventDefault();event.stopImmediatePropagation();
+    void (async()=>{
+      if(file.size>32*1024*1024)throw new Error('請使用 32 MB 以內的圖片');
+      const named=new File([file],'pasted-image.'+((file.type.split('/')[1]||'png').replace('jpeg','jpg')),{type:file.type||'image/png'});
+      if(role==='main'||role==='ref')await VoidStudio.addFile(named,role);
+      else if(role==='caption'){setMode('img2txt');_load2txtFile(named);}
+      else{setMode('img2img');if(currentMode!=='img2img')throw new Error('請先停止目前的任務再載入圖片');_loadImg2imgFile(named);}
+      setStatus('已貼上截圖','ok');
+    })().catch(error=>setStatus(error.message,'error'));
+  },true);})();

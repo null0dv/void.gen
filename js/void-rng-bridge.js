@@ -5,14 +5,60 @@
   const result = document.getElementById('rng-result');
   const feedback = document.getElementById('rng-feedback');
   let lastPreview = '';
+  let frameReady = null;
+  let rollId = 0;
+  const pendingRolls = new Map();
+
+  function loadFrame() {
+    if (!frameReady) {
+      if (frame.getAttribute('src') && frame.contentDocument?.readyState === 'complete') frameReady = Promise.resolve();
+      else {
+        frameReady = new Promise(resolve => frame.addEventListener('load', resolve, {once:true}));
+        if (!frame.getAttribute('src')) frame.src = 'void-rng/index.html?embed=full';
+      }
+    }
+    return frameReady;
+  }
 
   function open(tags) {
     if (tags !== undefined) reference.value = tags;
     feedback.textContent = '可在預覽中編輯，再送入目前任務。';
     VoidStudio.navigate('rng');
-    if (!frame.getAttribute('src')) frame.src = 'void-rng/index.html?embed=full';
+    if (!frame.getAttribute('src')) loadFrame();
     else frame.contentWindow.postMessage({type:'void-rng-refresh'}, location.origin);
   }
+
+  async function roll(button) {
+    if (isGenerating || window.VoidRecognition?.isBusy()) { setStatus('請等目前操作完成再抽詞', 'err'); return; }
+    if (button?.dataset.busy) return;
+    if (button) { button.dataset.busy = '1'; button.style.opacity = '.4'; }
+    const id = ++rollId;
+    try {
+      await loadFrame();
+      const prompt = await new Promise((resolve, reject) => {
+        const timer = setTimeout(() => { pendingRolls.delete(id); reject(new Error('RNG 沒有回應')); }, 20000);
+        pendingRolls.set(id, data => {
+          clearTimeout(timer);
+          data.error ? reject(new Error(data.error)) : resolve(data.prompt);
+        });
+        frame.contentWindow.postMessage({type:'void-rng-roll', id}, location.origin);
+      });
+      if (!prompt) throw new Error('這次沒抽到提示詞，請確認 RNG 頁有勾選欄位');
+      if (prompt.length > 20000) throw new Error('提示詞超過 20,000 字元');
+      if (currentMode === 'img2txt') setMode('txt2img');
+      const editor = document.getElementById('te-prompt');
+      if (!editor) throw new Error('請先選擇草稿');
+      editor.value = prompt;
+      editor.dispatchEvent(new Event('input', {bubbles:true}));
+      localStorage.setItem('sd-tasks', JSON.stringify(tasks));
+      setStatus('已從 RNG 隨機抽一組提示詞', 'ok');
+    } catch (error) {
+      setStatus('隨機抽詞失敗：' + error.message, 'err');
+    } finally {
+      if (button) { delete button.dataset.busy; button.style.opacity = ''; }
+    }
+  }
+  window.VoidRngBridge = {roll};
 
   function send(append) {
     const field = document.getElementById('te-prompt');
@@ -43,7 +89,14 @@
   document.getElementById('rng-append').onclick = () => send(true);
   document.getElementById('rng-replace').onclick = () => send(false);
   window.addEventListener('message', event => {
-    if (event.origin !== location.origin || event.source !== frame.contentWindow || dialog.hidden) return;
+    if (event.origin !== location.origin || event.source !== frame.contentWindow) return;
+    if (event.data?.type === 'void-rng-roll-result') {
+      const finish = pendingRolls.get(event.data.id);
+      pendingRolls.delete(event.data.id);
+      finish?.(event.data);
+      return;
+    }
+    if (dialog.hidden) return;
     const {type, prompt} = event.data || {};
     if (type !== 'void-rng-preview' || typeof prompt !== 'string' || prompt.length > 20000 || prompt === lastPreview) return;
     lastPreview = prompt;

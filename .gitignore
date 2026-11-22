@@ -96,3 +96,13 @@
 !.claude/skills/
 !.claude/skills/void-gen-cloud/
 !.claude/skills/void-gen-cloud/**
+!Install-VOID.ps1
+!Install-VOID.cmd
+!tools/void_setup.py
+!prompt_adapt.py
+!engine-profiles.json
+!docs/install-plan.md
+!dressing/
+!dressing/*.py
+!dressing/web/
+!dressing/web/**

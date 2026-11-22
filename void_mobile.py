@@ -23,17 +23,59 @@ from PIL import Image, ImageOps
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from mobile_workflows import (generate, caption, Z_IMAGE_NODES, Z_IMAGE_MODEL, Z_IMAGE_CLIP, Z_IMAGE_VAE, SD_EDIT_NODES, MASK_NODES, MOODY_MODEL, MOODY_VAE, MOODY_NODES, MOODY_CLIP, QWEN_CLIP, QWEN_MODEL, KLEIN_CLIP,
+from prompt_adapt import looks_like_tags, build_messages, clean_output, is_minor_coded, REALISTIC_NEGATIVE
+from mobile_workflows import (load_profiles, generate, caption, Z_IMAGE_NODES, Z_IMAGE_MODEL, Z_IMAGE_CLIP, Z_IMAGE_VAE, SD_EDIT_NODES, MASK_NODES, MOODY_MODEL, MOODY_VAE, MOODY_NODES, MOODY_CLIP, QWEN_CLIP, QWEN_MODEL, KLEIN_CLIP,
                               KLEIN_VAE, KLEIN_LORA, KLEIN_NODES, KLEIN_EDIT_NODES)
 
-PANEL_ROOT = Path(__file__).resolve().parent
-ROOT = PANEL_ROOT.parent
+APP = Path(__file__).resolve().parent  # void.gen: panel, Pocket, RNG data
+ROOT = Path(os.environ.get('VOID_ROOT') or APP.parent).resolve()  # holds ComfyUI_windows_portable, void-data
 TERMINAL = ('done', 'error', 'cancelled')
-IMAGE_EXT = {'.png', '.jpg', '.jpeg', '.webp'}
+IMAGE_EXT = {'.png', '.jpg', '.jpeg', '.jfif', '.webp'}  # .jfif is a JPEG (old-computer imports)
 GUEST_OUTPUT = '_void_guests'
 # 訪客的混用圖庫：主人的圖以這個前綴列在訪客圖庫裡，唯讀（可看、下載、複製 Prompt、套用參數）。
 OWNER_PREFIX = '@owner/'
 OWNER_READONLY = '這是主人的圖，訪客只能瀏覽、下載、複製 Prompt 和套用參數。'
+
+
+def move_file(source, target):
+    """Move one file, also across drives (ComfyUI output on D:, void-data on C:).
+
+    A same-drive move is a plain rename. Across drives the file is copied to a
+    temporary name beside the target, checked byte for byte, put in place, and
+    only then is the original removed; any failure leaves the original untouched
+    and raises OSError.
+    """
+    source, target = Path(source), Path(target)
+    if target.exists():
+        raise FileExistsError(f'目標已有同名檔案：{target}')
+    try:
+        os.rename(source, target)
+        return
+    except OSError as error:
+        if getattr(error, 'winerror', None) != 17 and error.errno != 18:  # ERROR_NOT_SAME_DEVICE / EXDEV
+            raise
+    partial = target.with_name(target.name + '.partial-' + uuid.uuid4().hex[:8])
+    try:
+        shutil.copy2(source, partial)
+        def digest(path):
+            h = hashlib.sha256()
+            with open(path, 'rb') as handle:
+                for chunk in iter(lambda: handle.read(1 << 20), b''):
+                    h.update(chunk)
+            return h.digest()
+        if digest(source) != digest(partial):
+            raise OSError(f'跨磁碟複製後內容不一致，原檔保留：{source}')
+        os.rename(partial, target)
+    except BaseException:
+        with contextlib.suppress(OSError):
+            partial.unlink()
+        raise
+    try:
+        source.unlink()
+    except OSError:
+        with contextlib.suppress(OSError):
+            target.unlink()  # keep exactly one copy: the original
+        raise
 
 
 def recycle_windows_paths(paths):
@@ -60,7 +102,7 @@ def recycle_windows_paths(paths):
     if result or operation.fAnyOperationsAborted:
         raise OSError(f'Windows 資源回收筒移動未完成（{result}），未移走的資料仍保留')
 
-MOTION_GRAPH = json.loads((PANEL_ROOT / 'mobile_motion_graph.json').read_text(encoding='utf-8'))
+MOTION_GRAPH = json.loads((APP / 'mobile_motion_graph.json').read_text(encoding='utf-8'))
 MOTION_SIZES = {'landscape': (640, 384), 'portrait': (384, 640), 'square': (512, 512)}
 
 
@@ -191,10 +233,11 @@ class Gateway:
         sd_models = [m for m in choices('CheckpointLoaderSimple', 'ckpt_name')
                      if not any(f in m.lower() for f in ('flux', 'qwen', 'moss', 'wan2', 'sd3', 'stable-diffusion-3'))]
         qwen_models = [m for m in choices('UnetLoaderGGUF', 'unet_name') if 'qwen' in m.lower() and '2.1' in m]
-        return {'sdEdit': bool(sd_models and SD_EDIT_NODES <= info.keys()), 'sdEditModels': sd_models, 'editMask': MASK_NODES <= info.keys(),
+        return {'profiles': load_profiles(), 'sdEdit': bool(sd_models and SD_EDIT_NODES <= info.keys()), 'sdEditModels': sd_models, 'editMask': MASK_NODES <= info.keys(),
+                'zimageEdit': {'LoadImage', 'ImageScale', 'VAEEncode'} <= info.keys(),
+                'moodyEdit': {'LoadImage', 'ImageScale', 'VAEEncode'} <= info.keys(),
                 'qwenEdit': bool(qwen_models and 'LoadImage' in info
                                  and 'images' in info.get('TextEncodeQwenImage21', {}).get('input', {}).get('required', {})),
-                'zimageEdit': {'LoadImage', 'ImageScale', 'VAEEncode'} <= info.keys(),
                 'kleinContinuous': bool(klein_models and (KLEIN_EDIT_NODES - {'LoraLoaderModelOnly'}) <= info.keys()),
                 'kleinEdit': bool(klein_models and KLEIN_EDIT_NODES <= info.keys()
                                   and KLEIN_LORA in choices('LoraLoaderModelOnly', 'lora_name')),
@@ -272,6 +315,14 @@ class Gateway:
                         for key in ('tags', 'albums', 'rating'):
                             if key in previous:
                                 meta[key] = previous[key]
+                        # Fields recovered from older records (e.g. the desktop browser gallery) only fill gaps.
+                        recovered = [key for key in previous.get('recovered', []) if isinstance(key, str)]
+                        for key in recovered:
+                            if key in previous and meta.get(key) in (None, '', []):
+                                meta[key] = previous[key]
+                        if recovered:
+                            meta['recovered'] = recovered
+                            meta['recoveredFrom'] = previous.get('recoveredFrom', '')
                         updates.append((hashlib.sha256(rel.encode()).hexdigest()[:24], rel, stat.st_mtime, stat.st_size, json.dumps(meta, ensure_ascii=False)))
                     except (OSError, ValueError, Image.DecompressionBombError):
                         continue
@@ -619,7 +670,7 @@ def create_app(gateway=None):
             raise web.HTTPForbidden(text='請在主機上的 VOID 作品庫查看訪客作品。')
         origin = request.headers.get('Origin')
         desktop_origin = origin in ('http://127.0.0.1:8080', 'http://localhost:8080')
-        desktop_path = (request.path in ('/api/import', '/api/trash', '/api/trash/restore', '/api/trash/empty', '/api/upload', '/api/jobs', '/api/resources', '/api/projects') or request.path.startswith('/api/projects/')
+        desktop_path = (request.path in ('/api/profiles', '/api/prompt-adapt', '/api/import', '/api/trash', '/api/trash/restore', '/api/trash/empty', '/api/upload', '/api/jobs', '/api/resources', '/api/projects') or request.path.startswith('/api/projects/')
                         or (request.path.startswith('/api/jobs/') and request.path.endswith('/cancel'))
                         or ((request.path == '/api/gallery' or request.path.startswith(('/api/jobs/', '/media/', '/thumb/', '/video/'))) and request.method in ('GET', 'OPTIONS'))
                         or (request.path.startswith('/api/gallery/') and request.method in ('PATCH', 'OPTIONS'))
@@ -688,7 +739,9 @@ def create_app(gateway=None):
         except Exception:
             stats, online = {}, False
         devices = stats.get('devices', [])
-        return web.json_response({'online': online, 'remoteUrl': config.get('url', ''), 'keepAwake': g.keep_awake, 'device': devices[0].get('name', '') if devices else '', 'version': 1, 'isolatedGuests': True})
+        return web.json_response({'online': online, 'remoteUrl': config.get('url', ''), 'keepAwake': g.keep_awake, 'device': devices[0].get('name', '') if devices else '', 'version': 1, 'isolatedGuests': True,
+                                  # The story tab needs the AI workbench's Nana lobby; a plain VOID install hides it.
+                                  'roleplay': (ROOT / 'AI-Vault/telegram-lobby/data' / ('guest/pocket-roleplay.key' if g.guest else 'pocket-roleplay.key')).is_file()})
 
     async def catalog(request):
         try:
@@ -989,7 +1042,7 @@ def create_app(gateway=None):
         return web.json_response(g.gallery_item(row))
 
     async def rng_catalog(request):
-        root = PANEL_ROOT / 'void-rng/data'
+        root = APP / 'void-rng/data'
         def read(name):
             return json.loads((root / (name + '.json')).read_text(encoding='utf-8-sig'))
         characters = read('char-banks')
@@ -1032,6 +1085,8 @@ def create_app(gateway=None):
             response = web.FileResponse(thumb)
         else:
             response = web.FileResponse(path)
+            if path.suffix.lower() == '.jfif':
+                response.headers['Content-Type'] = 'image/jpeg'  # not every system knows .jfif
             if request.query.get('download') == '1':
                 from urllib.parse import quote
                 response.headers['Content-Disposition'] = "attachment; filename*=UTF-8''" + quote(path.name)
@@ -1126,7 +1181,7 @@ def create_app(gateway=None):
                     'favorite': bool(row and row['favorite'])}
         (destination / 'restore.json').write_text(json.dumps(manifest, ensure_ascii=False), encoding='utf-8')
         try:
-            source.rename(destination / filename)
+            await asyncio.to_thread(move_file, source, destination / filename)
         except OSError as error:
             return web.json_response({'error': '原檔移至回收區失敗，圖庫紀錄已保留：' + str(error)}, status=409)
         await g.scan(True)
@@ -1195,7 +1250,7 @@ def create_app(gateway=None):
                         raise ValueError('原始位置已有同名檔案')
                     meta = manifest.get('meta') or image_meta(source)
                     target.parent.mkdir(parents=True, exist_ok=True)
-                    source.rename(target)
+                    await asyncio.to_thread(move_file, source, target)
                     rel = target.relative_to(g.output).as_posix()
                     stat = target.stat()
                     g.db.execute('INSERT INTO gallery(id,rel,mtime,size,meta,favorite) VALUES(?,?,?,?,?,?) ON CONFLICT(rel) DO UPDATE SET mtime=excluded.mtime,size=excluded.size,meta=excluded.meta,favorite=excluded.favorite',
@@ -1254,21 +1309,77 @@ def create_app(gateway=None):
             response.headers['Content-Disposition'] = f'attachment; filename="{job["id"]}.mp4"'
         return response
 
+    async def profiles_route(request):
+        return web.json_response(load_profiles())
+
+    async def prompt_adapt(request):
+        """Tag-style prompt -> natural language through the local Ollama model (only for engines whose profile style is 'natural').
+        Never blocks a generation: any problem returns the original prompt with a reason."""
+        data = await request.json()
+        if not isinstance(data, dict):
+            raise ValueError('無效的請求')
+        prompt = str(data.get('prompt', '')).strip()
+        engine = str(data.get('engine', ''))
+        if not prompt or len(prompt) > 4000:
+            raise ValueError('提示詞需為 1～4000 字')
+        mode = 'realistic' if data.get('mode') == 'realistic' else 'natural'
+        same = {'prompt': prompt, 'adapted': False}
+        if mode == 'realistic':
+            if is_minor_coded(prompt):
+                return web.json_response({**same, 'reason': 'declined'})
+        else:
+            if load_profiles()['engines'].get(engine, {}).get('style') != 'natural':
+                return web.json_response({**same, 'reason': 'not-needed'})
+            if not looks_like_tags(prompt):
+                return web.json_response({**same, 'reason': 'already-natural'})
+        try:
+            queue = await g.comfy_request('/queue', timeout=5)
+            if queue.get('queue_running') or queue.get('queue_pending'):
+                return web.json_response({**same, 'reason': 'busy'})  # do not load a language model next to a running generation
+        except (ClientError, ValueError, asyncio.TimeoutError):
+            pass
+        model = os.environ.get('VOID_ADAPT_MODEL', 'heretic9b')
+        try:
+            async with g.session.post('http://127.0.0.1:11434/api/chat', timeout=ClientTimeout(total=90), json={
+                    'model': model, 'stream': False, 'think': False, 'keep_alive': 0, 'messages': build_messages(prompt, mode),
+                    'options': {'num_ctx': 4096, 'num_predict': 700 if mode == 'realistic' else 500, 'temperature': 0.4}}) as upstream:
+                body = await upstream.json()
+                if upstream.status >= 400:
+                    raise ValueError(str(body.get('error', upstream.status)))
+            text = clean_output(body.get('message', {}).get('content', ''))
+        except (ClientError, asyncio.TimeoutError, ValueError, KeyError, TypeError):
+            return web.json_response({**same, 'reason': 'ollama-unavailable'})
+        if not text:
+            return web.json_response({**same, 'reason': 'empty'})
+        if mode == 'realistic':
+            if text.upper().startswith('REFUSE'):
+                return web.json_response({**same, 'reason': 'declined'})
+            return web.json_response({'prompt': text, 'adapted': True, 'original': prompt, 'model': model, 'negative': REALISTIC_NEGATIVE})
+        return web.json_response({'prompt': text, 'adapted': True, 'original': prompt, 'model': model})
+
     async def static(request):
         name = request.match_info.get('name') or 'index.html'
         rng_scripts = {'lexicon-store.js', 'prompt-formatter.js', 'p-format-core.js'}
         if name in rng_scripts:
-            path = PANEL_ROOT / 'void-rng/js' / name
+            path = APP / 'void-rng/js' / name
         elif name in ('index.html', 'app.js', 'style.css', 'manifest.webmanifest', 'sw.js', 'icon.svg', 'icon-192.png', 'icon-512.png'):
-            path = PANEL_ROOT / 'mobile' / name
+            path = APP / 'mobile' / name
         else:
             raise web.HTTPNotFound()
         response = web.FileResponse(path)
         response.headers['Cache-Control'] = 'no-cache'
         return response
 
-    app.router.add_get('/api/roleplay', roleplay)
-    app.router.add_post('/api/roleplay', roleplay)
+    # VOID character dressing integration (optional local module).
+    # The AI workbench keeps its own copy (with the asset library); a plain install uses void.gen/dressing.
+    dressing_root = ROOT / 'AI-Vault/_system/void-dressing'
+    if not (dressing_root / 'void_dressing.py').is_file():
+        dressing_root = APP / 'dressing'
+    if (dressing_root / 'void_dressing.py').is_file():
+        sys.path.insert(0, str(dressing_root))
+        from void_dressing import install_dressing
+        install_dressing(app, g, ROOT, globals())
+
     app.router.add_get('/api/status', status)
     app.router.add_get('/api/catalog', catalog)
     app.router.add_get('/api/resources', resources)
@@ -1279,6 +1390,12 @@ def create_app(gateway=None):
     app.router.add_patch('/api/resources', resources)
     app.router.add_options('/api/resources', resources)
     app.router.add_get('/api/rng', rng_catalog)
+    app.router.add_post('/api/prompt-adapt', prompt_adapt)
+    app.router.add_options('/api/prompt-adapt', prompt_adapt)
+    app.router.add_get('/api/profiles', profiles_route)
+    app.router.add_options('/api/profiles', profiles_route)
+    app.router.add_get('/api/roleplay', roleplay)
+    app.router.add_post('/api/roleplay', roleplay)
     app.router.add_get('/api/jobs', jobs)
     app.router.add_post('/api/jobs', jobs)
     app.router.add_get('/api/jobs/{id}', job_record)
