@@ -1,4 +1,4 @@
-# VOID GEN 雲端版：架構與路線圖
+# VOID GEN CLOUD (COLAB)：架構與路線圖
 
 要改雲端流程、做下一階段時讀這份。日常操作看 SKILL.md。
 

@@ -1,11 +1,13 @@
 ---
 name: void-gen-cloud
-description: 把 VOID GEN（ComfyUI 生圖工作區）或 MiniMax H3 圖轉影片放到 Google Colab GPU 上跑：安裝 colab CLI、登入、選機器、開機安裝、加裝引擎、開介面、把圖拉回本機或 Drive、關機。使用者提到「VOID 雲端」「Colab 跑 VOID」「雲端算圖」「雲端生影片」「H3」「開 L4／A100／G4」「把雲端的圖拿回來」，或要規劃、優化、交接這套雲端流程時使用。
+description: 把 VOID GEN（ComfyUI 生圖工作區）或 MiniMax H3 圖轉影片放到 Google Colab GPU 上跑：安裝 colab CLI、登入、選機器、開機安裝、加裝引擎、開介面、把圖拉回本機或 Drive、關機。使用者提到「VOID GEN CLOUD」「VOID 雲端」「Colab 跑 VOID」「雲端算圖」「雲端生影片」「H3」「開 L4／A100／G4」「把雲端的圖拿回來」，或要規劃、優化、交接這套雲端流程時使用。
 ---
 
-# VOID GEN 雲端運算
+# VOID GEN CLOUD (COLAB)
 
 本機（Windows）下指令，Colab 只負責 GPU 運算。2026-11-11 實際跑通 SDXL、Klein 9B、H3；2026-11-22 新版 `start`／`add`／`fetch`／`stop` 在 L4 上整套實測通過（0.53 單元），同日 `motion` 用 Wan 2.2 把 3 張動漫圖做成 10 秒影片（1.18 單元）。
+
+給人看的使用摘要在 [docs/colab.md](../../../docs/colab.md)；這份是給 Agent 的完整操作手冊。
 
 工具都在 repo 根目錄（`colab_cli.py` 本機總控、`colab_vm.py` 雲端安裝、`colab_motion.py` 圖轉影片；SSH 備援在 `cloud/`）。以下路徑都從 void.gen 資料夾起算。架構、待辦、實測數字在 [references/](references/)。
 

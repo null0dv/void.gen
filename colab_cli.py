@@ -1,4 +1,4 @@
-"""從本機用 Google colab CLI 把 VOID 跑在 Colab GPU 上（參考 shanshiba-workflow-colab 的 cloud/colab_h3.py）。
+"""VOID GEN CLOUD (COLAB)：從本機用 Google colab CLI 把 VOID 跑在 Colab GPU 上（參考 shanshiba-workflow-colab 的 cloud/colab_h3.py）。
 
 前置（只做一次，見 .claude/skills/void-gen-cloud）：
     uv tool install --python <現有 python.exe> google-colab-cli
