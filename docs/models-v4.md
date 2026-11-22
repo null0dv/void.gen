@@ -29,7 +29,7 @@ ComfyUI 內建。SDXL Base 可用來驗證安裝。
 
 | 下載檔案 | 放入 models 下的資料夾 |
 | --- | --- |
-| [qwen-image-2.1-UC-Q4_K_M.gguf](https://huggingface.co/abenzerps/Qwen-Image-2.1-Uncensored-Quantized/resolve/main/qwen-image-2.1-UC-Q4_K_M.gguf) | `diffusion_models/` |
+| [qwen-image-2.1-UC-Q4_K_M.gguf](https://huggingface.co/KasugaiSakura/Qwen-Image-2.1-Uncensored-Abenzerps-GGUF/resolve/main/qwen-image-2.1-UC-Q4_K_M.gguf) | `diffusion_models/` |
 | [qwen3vl_8b_int8_convrot.safetensors](https://huggingface.co/abenzerps/Qwen-Image-2.1-Uncensored-Quantized/resolve/main/text_encoders/qwen3vl_8b_int8_convrot.safetensors) | `text_encoders/` |
 | [qwen_image_2.1_vae_bf16.safetensors](https://huggingface.co/abenzerps/Qwen-Image-2.1-Uncensored-Quantized/resolve/main/vae/qwen_image_2.1_vae_bf16.safetensors) | `vae/` |
 

@@ -82,3 +82,17 @@
 !colab_cli.py
 !colab_vm.py
 !/z-image-turbo-api.json
+!models.lock.json
+!colab_motion.py
+!colab_bench.py
+!colab_upload_big.py
+!tools/
+!tools/build_models_lock.py
+!tools/peek_setup_log.py
+!cloud/
+!cloud/void-ssh.ps1
+!cloud/void-scp.ps1
+!.claude/
+!.claude/skills/
+!.claude/skills/void-gen-cloud/
+!.claude/skills/void-gen-cloud/**

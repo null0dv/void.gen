@@ -6,17 +6,8 @@
 
 ## 從本機用 colab CLI 執行
 
-參考 [shanshiba-workflow-colab](https://github.com/mathruffian-dot/shanshiba-workflow-colab) 的做法，不必開 Notebook。本機的 `colab_cli.py` 會透過 Google 的 `colab` CLI 建立 GPU 機器並掛載 Drive。它也會上傳原始碼，再以背景程序執行 `colab_vm.py` 安裝與啟動。最後用 SSH 把 VOID 轉發到本機。
+不開 Notebook，從本機終端機控制 Colab：`colab_cli.py` 開機（L4 → A100 → T4 依序試）、上傳原始碼，`colab_vm.py` 在雲端安裝並啟動，`open` 用 SSH 轉發到 `http://127.0.0.1:7860/`。預設不掛 Drive，`fetch`／`stop` 會把新圖拉回本機 ComfyUI 的 `output/VOID-Cloud/<日期>`。
 
-```
-uv tool install google-colab-cli
-colab usage
-python colab_cli.py check
-python colab_cli.py start --gpu L4 --profiles sdxl
-python colab_cli.py open
-python colab_cli.py stop
-```
-
-`open` 會轉發到 `http://127.0.0.1:7860/`，手機介面在 `/mobile/`。它每 5 分鐘戳一次 VM，避免閒置約 20 分鐘後被收回。如果 SSH 轉發失敗，就照畫面提示改用 Colab 的 proxyPort 網址。`colab` CLI 官方只支援 Linux 和 macOS。Windows 需要先套用 shanshiba 的 `cloud/colab_cli_windows_patch.py`。用完一定要執行 `stop`，讓圖庫資料庫備份到 Drive，並關機停止計費。`logs` 可以查看安裝與服務日誌。
+安裝、登入、指令、選機器和疑難排解寫在 [void-gen-cloud skill](../../.claude/skills/void-gen-cloud/SKILL.md)。模型清單仍以[模型下載表](models-v4.md)為準，`models.lock.json` 記錄每個檔案的大小與 SHA-256（改表後跑 `tools/build_models_lock.py`）。
 
 Colab 版使用單人工作區。訪客登入、Windows 資源回收筒及 Windows 主機訪客圖庫是獨立功能。Colab 執行階段結束後，需重新啟動才能使用工作區。

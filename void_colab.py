@@ -5,13 +5,20 @@ import mimetypes
 import re
 import shutil
 import sqlite3
+import sys
 from contextlib import closing
 from pathlib import Path
 from urllib.parse import urlsplit
 
 from aiohttp import ClientSession, WSMsgType, web
 
-from void_mobile import Gateway, PANEL_ROOT, create_app
+# Since 2026-11-22 the gateway's real copy lives one folder up (PRO root); void.gen/void_mobile.py is only a stub
+# that runs it as a script, so import the root copy directly.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import void_mobile  # noqa: E402
+from void_mobile import Gateway, create_app  # noqa: E402
+
+PANEL_ROOT = getattr(void_mobile, 'PANEL_ROOT', Path(__file__).resolve().parent)
 
 
 def backup_database(source, destination):

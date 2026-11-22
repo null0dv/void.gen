@@ -1,0 +1,114 @@
+{
+ "version": 1,
+ "source": "docs/models-v4.md",
+ "files": {
+  "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors": {
+   "size": 6938078334,
+   "sha256": "31e35c80fc4829d14f90153f4c74cd59c90b779f6afe05a74cd6120b893f7e5b"
+  },
+  "https://huggingface.co/unsloth/FLUX.2-klein-9B-GGUF/resolve/main/flux-2-klein-9b-Q4_K_M.gguf": {
+   "size": 5673900320,
+   "sha256": "23cadc53168a1b9c607a79d2b8cf942deeb0b48dcdb6024bf757360c7a746c19"
+  },
+  "https://huggingface.co/Comfy-Org/Flux-2-Klein-9B/resolve/main/split_files/text_encoders/qwen_3_8b_fp4mixed.safetensors": {
+   "size": 6802593327,
+   "sha256": "bbf16f981d98e16d080c566134814c4e9f6aadd0d0e1383c60bc44ba939d760d"
+  },
+  "https://huggingface.co/Comfy-Org/Flux-2-Klein-9B/resolve/main/split_files/vae/flux2-vae.safetensors": {
+   "size": 336211292,
+   "sha256": "868fe7b343cc8f3a19dbcfcafbc3d5f888802be3f89bd81b65b3621a066ce8f3"
+  },
+  "https://huggingface.co/WarmBloodAban/Flux2_Klein_Anything_to_Real_Characters/resolve/main/Flux2%20Klein%E5%8A%A8%E6%BC%AB%E8%BD%AC%E5%86%99%E5%AE%9E%E7%9C%9F%E4%BA%BA%20AnythingtoRealCharacters.safetensors": {
+   "size": 165704392,
+   "sha256": "157dbf28b72e53b2645dd57ad5974e10d2e4c8166d066d077063d008279d8c80"
+  },
+  "https://huggingface.co/KasugaiSakura/Qwen-Image-2.1-Uncensored-Abenzerps-GGUF/resolve/main/qwen-image-2.1-UC-Q4_K_M.gguf": {
+   "size": 4604558112,
+   "sha256": "e79c8a009f2ecbdb6c70fd663d9aea9ee304a0d91f347e4169a756b8ad141b41"
+  },
+  "https://huggingface.co/abenzerps/Qwen-Image-2.1-Uncensored-Quantized/resolve/main/text_encoders/qwen3vl_8b_int8_convrot.safetensors": {
+   "size": 9350798360,
+   "sha256": "8bfd0f6e12abf2d2d697ecc888e5e90b0d6741d6708f05799f53afa560452e8f"
+  },
+  "https://huggingface.co/abenzerps/Qwen-Image-2.1-Uncensored-Quantized/resolve/main/vae/qwen_image_2.1_vae_bf16.safetensors": {
+   "size": 675509688,
+   "sha256": "bb21f7473051e1ac368515dd3f2e15cd44d7a11748ee8823e1ddca3e4876b7c9"
+  },
+  "https://huggingface.co/t8star/Moss-Image-Comfy/resolve/f915fc11d561db1a01201ceeee555783f47adb5d/diffusion_models/moss-image-sft-bf16.safetensors": {
+   "size": 10164665272,
+   "sha256": "93d4ccbcd91cef93c5ea93d9de9d8d4f94cefbd02134e5ed21326fa026226f6c"
+  },
+  "https://huggingface.co/t8star/Moss-Image-Comfy/resolve/f915fc11d561db1a01201ceeee555783f47adb5d/text_encoders/moss-image-qwen35-bf16.safetensors": {
+   "size": 16785482912,
+   "sha256": "1cb2c3fb5a2c469033f7688e1626314ada560620027219a9c8290cdecab2ca13"
+  },
+  "https://huggingface.co/t8star/Moss-Image-Comfy/resolve/f915fc11d561db1a01201ceeee555783f47adb5d/vae/moss-image-vae.safetensors": {
+   "size": 249522340,
+   "sha256": "56e130263bb955e1bdf535673b723b2ff3a95d05bfa1433a7f4355845d67021c"
+  },
+  "https://huggingface.co/bullerwins/Wan2.2-I2V-A14B-GGUF/resolve/main/wan2.2_i2v_high_noise_14B_Q3_K_S.gguf": {
+   "size": 6515012096,
+   "sha256": "63a4a712190f3e3a76ce4a84232316f038301adad43e270fd969455ee749f9d3"
+  },
+  "https://huggingface.co/bullerwins/Wan2.2-I2V-A14B-GGUF/resolve/main/wan2.2_i2v_low_noise_14B_Q3_K_S.gguf": {
+   "size": 6515012096,
+   "sha256": "152bdb167537cf54bf5307e75f665a35afc89a7804ddde820981d7a2a612a8d8"
+  },
+  "https://huggingface.co/city96/umt5-xxl-encoder-gguf/resolve/main/umt5-xxl-encoder-Q3_K_S.gguf": {
+   "size": 2858489696,
+   "sha256": "f64f8d6dc4d8a24276df69d0ccea789aae686f7417950a41e6568c30cb478a5c"
+  },
+  "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors": {
+   "size": 253815318,
+   "sha256": "2fc39d31359a4b0a64f55876d8ff7fa8d780956ae2cb13463b0223e15148976b"
+  },
+  "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/loras/wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors": {
+   "size": 1226977424,
+   "sha256": "d176c808d6fc461999b68e321efcb7501b20b8c3797523ed0df14f7d1deff11e"
+  },
+  "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/loras/wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors": {
+   "size": 1226977424,
+   "sha256": "024f21de095bc8fad9809ded3e9e49a2e170dcf27075da8145ba7d60d8aab7f9"
+  },
+  "https://huggingface.co/microsoft/Florence-2-large/resolve/21a599d414c4d928c9032694c424fb94458e3594/model.safetensors": {
+   "size": 1553563458,
+   "sha256": "4f38ce741c6b71188fe2b3419a55e11917a8a7b321ae2e63c61da0191b0ebad7"
+  },
+  "https://huggingface.co/microsoft/Florence-2-large/resolve/21a599d414c4d928c9032694c424fb94458e3594/config.json": {
+   "size": 2445,
+   "sha256": null
+  },
+  "https://huggingface.co/microsoft/Florence-2-large/resolve/21a599d414c4d928c9032694c424fb94458e3594/generation_config.json": {
+   "size": 51,
+   "sha256": null
+  },
+  "https://huggingface.co/microsoft/Florence-2-large/resolve/21a599d414c4d928c9032694c424fb94458e3594/preprocessor_config.json": {
+   "size": 806,
+   "sha256": null
+  },
+  "https://huggingface.co/microsoft/Florence-2-large/resolve/21a599d414c4d928c9032694c424fb94458e3594/tokenizer.json": {
+   "size": 1355863,
+   "sha256": null
+  },
+  "https://huggingface.co/microsoft/Florence-2-large/resolve/21a599d414c4d928c9032694c424fb94458e3594/tokenizer_config.json": {
+   "size": 34,
+   "sha256": null
+  },
+  "https://huggingface.co/microsoft/Florence-2-large/resolve/21a599d414c4d928c9032694c424fb94458e3594/vocab.json": {
+   "size": 1099884,
+   "sha256": null
+  },
+  "https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_w4a8_gptq.safetensors": {
+   "size": 7343591088,
+   "sha256": "4cc6a1543ad2061806da46f35f90cadb4801dcba246c44782cf42ec0feb6407c"
+  },
+  "https://huggingface.co/Comfy-Org/Krea-2/resolve/main/text_encoders/qwen3vl_4b_fp8_scaled.safetensors": {
+   "size": 5242467968,
+   "sha256": "54bd5144df0bbc25dd6ccadfcb826b521445a1b06ae5a42570bdd2974ca87094"
+  },
+  "https://huggingface.co/Comfy-Org/Krea-2/resolve/main/vae/qwen_image_vae.safetensors": {
+   "size": 253806246,
+   "sha256": "a70580f0213e67967ee9c95f05bb400e8fb08307e017a924bf3441223e023d1f"
+  }
+ }
+}
